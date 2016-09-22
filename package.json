@@ -1,0 +1,36 @@
+{
+	"name": "beame-insta-ssl",
+	"version": "0.0.1",
+	"description": "Quick TLS (SSL) security for you server by Beame.io",
+	"main": "index.js",
+	"engine": "node >= 4.4.0",
+	"bin": {
+		"beame-insta-ssl": "src/beame-insta-ssl.js"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git@github.com:beameio/beame-insta-ssl.git"
+	},
+	"keywords": [
+		"beame",
+		"SSL cert",
+		"x509",
+		"localhost",
+		"proxy tunnel",
+		"ssl tunnel",
+		"self signed ",
+		"CA",
+		"signing",
+		"crypto"
+	],
+	"author": "beame.io",
+	"license": "MIT",
+	"bugs": {
+		"url": "https://github.com/beameio/beame-insta-ssl/issues"
+	},
+	"homepage": "https://github.com/beameio/beame-insta-ssl#readme",
+	"dependencies": {
+		"beame-sdk": "file:///home/ilya/beame-sdk",
+		"minimist": "^1.2.0"
+	}
+}

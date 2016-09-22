@@ -1,0 +1,4 @@
+Usage:
+	beame-insta-ssl create <token_from_email>
+	beame-insta-ssl tunnel <local_destination_port> [--hostname <destination_host>] [--fqdn fqdn]
+	beame-insta-ssl export <fqdn> [<destination_folder>]
