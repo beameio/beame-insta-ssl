@@ -31,6 +31,7 @@
 	"homepage": "https://github.com/beameio/beame-insta-ssl#readme",
 	"dependencies": {
 		"beame-sdk": "file:///home/ilya/beame-sdk",
-		"minimist": "^1.2.0"
+		"minimist": "^1.2.0",
+		"http-proxy": "^1.15.1"
 	}
 }
