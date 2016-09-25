@@ -1,6 +1,18 @@
 #!/usr/bin/env node
 'use strict';
 
+// TODO: more and better input validation
+// TODO: consistent usage of console.log() vs console.error()
+
+const properties2fnames = {
+	X509: '@FQDN@.pem',
+	PRIVATE_KEY: '@FQDN@.key',
+	CA: '@FQDN@.ca',
+	PKCS7: '@FQDN@.chain.pkcs7',
+	PKCS12: '@FQDN@.pkcs12',
+	PWD: '@FQDN@.pkcs12.pwd'
+};
+
 const fs = require('fs');
 const path = require('path');
 
@@ -47,6 +59,10 @@ function printAligned(obj) {
 	};
 }
 
+function expandFileName(fname, fqdn) {
+	return fname.replace('@FQDN@', fqdn);
+}
+
 if(args._[0] == 'create') {
 	let token = JSON.parse(args._[1]);
 	let cred = new Credential(BeameStore);
@@ -66,13 +82,13 @@ if(args._[0] == 'create') {
 
 if(args._[0] == 'tunnel') {
 	// TODO: more input validation
-	var cert, fqdn, dstHost, dstPort, dstHostname, dstProto;
+	let cert, fqdn, dstHost, dstPort, dstHostname, dstProto;
 
 	// FQDN
 	if(args.fqdn) {
 		fqdn = args.fqdn;
 	} else {
-		const allCerts = BeameStore.list();
+		let allCerts = BeameStore.list();
 		if(allCerts.length > 1) {
 			console.log("tunnel requires --fqdn parameter because you have more than one certificate");
 			console.log("Possible FQDNs are:");
@@ -119,6 +135,67 @@ if(args._[0] == 'tunnel') {
 		console.log(`Tunnel error: ${e}`);
 		process.exit(3);
 	}
+}
+
+if(args._[0] == 'list') {
+	BeameStore.list().forEach(cred => {
+		console.log(cred.fqdn);
+	});
+	process.exit(0);
+}
+
+if(args._[0] == 'export') {
+	let fqdn = args._[1];
+	let dir = args._[2];
+	if(!fqdn) {
+		console.error(`FQDN not provided`);
+		process.exit(2);
+	}
+	if(!dir) {
+		console.error(`DESTINATION_FOLDER not provided`);
+		process.exit(2);
+	}
+	let cert = BeameStore.getCredential(fqdn);
+	if(!cert) {
+		console.error(`Certificate for FQDN ${fqdn} not found. Use "beame-insta-ssl list" command to list available certificates.`);
+		process.exit(2);
+	}
+
+	// Step 1: validation
+	if(!fs.existsSync(dir)) {
+		console.log(`ERROR: Specified DESTINATION_FOLDER ${dir} does not exist`);
+		process.exit(1);
+	}
+
+	let stat = fs.statSync(dir);
+	if(!stat.isDirectory()) {
+		console.log(`ERROR: Specified DESTINATION_FOLDER ${dir} is not a directory`);
+		process.exit(1);
+	}
+
+	for(let k in properties2fnames) {
+		let dst = path.join(dir, expandFileName(properties2fnames[k], fqdn));
+		console.log(dst);
+		if(fs.existsSync(dst)) {
+			console.log(`ERROR: File ${dst} already exists`);
+			process.exit(2);
+		}
+		if(!cert.getKey(k)) {
+			console.log(`ERROR: File ${dst} can not be created. Certificate does not have corresponding key ${k}`);
+			process.exit(2);
+		}
+	}
+
+	// Step 2: write all files
+	for(let k in properties2fnames) {
+		let dst = path.join(dir, expandFileName(properties2fnames[k], fqdn));
+		console.log(`Writing ${dst}`);
+		fs.writeFileSync(dst, cert.getKey(k));
+	}
+
+	console.log('Done');
+
+	process.exit(0);
 }
 
 if(!commandHandled) {

@@ -5,6 +5,7 @@ certificate to operate a tunnel.
 
 Here are the steps to obtain SSL cetificate from Beame.io:
 
-* Visit https://p2payp4q8f5ruo22.q6ujqecc83gg6fod.v1.d.beameio.net/product/insta-ssl (not ready yet)
+* Visit https://p2payp4q8f5ruo22.q6ujqecc83gg6fod.v1.d.beameio.net/insta-ssl (not ready yet)
 * Get email with further instructions
 * Run the command mentioned in the instructions
+* Run "beame-insta-ssl" without any arguments for instructions

@@ -1,6 +1,7 @@
 Usage:
 
 	beame-insta-ssl create BIG_TOKEN_FROM_EMAIL
+	beame-insta-ssl list
 	beame-insta-ssl tunnel [ DESTINATION_HOST: ]DESTINATION_PORT DESTINATION_PROTO [--hostname <HOSTNAME>] [--fqdn FQDN]
 	beame-insta-ssl export <fqdn> <destination_folder>
 
@@ -9,6 +10,9 @@ Usage:
 
 		Creates 'SOMETHING.beameio.net' certificate.
 
+	beame-insta-ssl list
+
+		Lists certificates
 
 	beame-insta-ssl tunnel [DESTINATION_HOST:]DESTINATION_PORT DESTINATION_PROTO [--hostname <HOSTNAME>] [--fqdn FQDN]
 
@@ -26,11 +30,11 @@ Usage:
 		[--fqdn FQDN]           - The FQDN to use for the remote end of the tunnel. If you only have one,
 		                          which should be the usual case, you don't need to specify the FQDN.
 
-
 	beame-insta-ssl export <FQDN> <DESTINATION_FOLDER>
 
 		FQDN               - the FQDN of the certificate to export
 		DESTINATION_FOLDER - the folder to export the certificate to. The folder must exist.
 		                     The export operation will place 'FQDN.*' files in the folder.
 		                     No files will be overwritten. Please make sure you have restrictive
-		                     permissions for that folder.
+		                     permissions for that folder. Current version of beame-insta-ssl
+							 does not handle resulting files' permissions.
