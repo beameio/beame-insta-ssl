@@ -67,6 +67,8 @@ if(args._[0] == 'create') {
 	let token = JSON.parse(args._[1]);
 	let cred = new Credential(BeameStore);
 
+	commandHandled = true;
+
 	cred.createEntityWithAuthServer(token.authToken, token.authSrvFqdn, token.name, token.email).then(metadata=> {
 		console.log('');
 		console.log('OK. Certificate created. Certificate information follows:');

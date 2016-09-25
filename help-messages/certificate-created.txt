@@ -3,3 +3,5 @@ Congratulations!
 
 You have just obtained a certificate from Beame.io.  You can now
 proceed and create a tunnel or use the certificate as you wish.
+
+Run "beame-insta-ssl" without any arguments to see help.
