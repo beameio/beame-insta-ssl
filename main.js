@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 'use strict';
 
 const fs = require('fs');
@@ -10,6 +11,7 @@ const beame = require('beame-sdk');
 const BeameStore = new beame.BeameStore();
 const Credential = beame.Credential;
 
+var commandHandled = false;
 
 function getHelpMessage(fileName) {
 	return fs.readFileSync(path.join(__dirname, 'help-messages', fileName), {'encoding': 'utf-8'});
@@ -65,7 +67,6 @@ if(args._[0] == 'create') {
 if(args._[0] == 'tunnel') {
 	// TODO: more input validation
 	var cert, fqdn, dstHost, dstPort, dstHostname, dstProto;
-	var dstHostPort = args._[1];
 
 	// FQDN
 	if(args.fqdn) {
@@ -88,6 +89,7 @@ if(args._[0] == 'tunnel') {
 	}
 
 	// dstHost:dstPort
+	var dstHostPort = args._[1];
 	if(typeof dstHostPort == 'number') {
 		dstHost = 'localhost';
 		dstPort = dstHostPort;
@@ -101,10 +103,25 @@ if(args._[0] == 'tunnel') {
 	dstHostname = args.hostname || dstHost;
 
 	// dstProto
-	// Continue here
+	dstProto = args._[2];
+	if(dstProto != 'http' && dstProto != 'https') {
+		console.log('DESTINATION_PROTO must be either http or https');
+		process.exit(1);
+	}
 
-	console.log(`Starting tunnel ${fqdn} -> ${dstHost}:${dstPort} `);
+	const tunnel = require('./tunnel');
+
+	console.log(`Starting tunnel ${fqdn} -> ${dstHost}:${dstPort} ${dstProto}`);
+	try {
+		tunnel.httpsTunnel(fqdn, cert, dstHost, dstPort, dstProto, dstHostname);
+		commandHandled = true;
+	} catch(e) {
+		console.log(`Tunnel error: ${e}`);
+		process.exit(3);
+	}
 }
 
-console.error(`Unkonwn command: ${args._[0]}`);
-process.exit(1);
+if(!commandHandled) {
+	console.error(`Unkonwn command: ${args._[0]}`);
+	process.exit(1);
+}

@@ -5,7 +5,7 @@
 	"main": "index.js",
 	"engine": "node >= 4.4.0",
 	"bin": {
-		"beame-insta-ssl": "src/beame-insta-ssl.js"
+		"beame-insta-ssl": "main.js"
 	},
 	"repository": {
 		"type": "git",
