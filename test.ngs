@@ -1,0 +1,40 @@
+#!/usr/bin/env ngs
+
+BEAME_DIR = ENV.HOME / '.beame'
+BEAME_INSTA_SSL_BIN = ENV.HOME / 'beame-insta-ssl/main.js'
+BEAME_SDK_BIN = ENV.HOME / 'beame-sdk/src/cli/beame.js'
+
+if Path(BEAME_DIR) {
+	throw Error("Beame directory exists ($BEAME_DIR). Will not run tests.")
+}
+
+exit_code = 0
+developer = null
+
+{ type TestFail(Error) }
+
+F do_test(name:Str, f:Fun) {
+	echo("")
+	echo("==================== TEST: $name ====================")
+	result = try {
+		msg = f()
+		"OK: $msg"
+	} catch(tf:TestFail) {
+		global exit_code = max([exit_code, 1])
+		"FAIL: ${tf.message}"
+	} catch(e) {
+		global exit_code = max([exit_code, 2])
+		"FAIL: $e"
+	}
+	echo("  RESULT: $result")
+}
+
+do_test("No certificates", {
+	try {
+		$($BEAME_INSTA_SSL_BIN list)
+		throw TestFail('Exited with code 0')
+	} catch(e:ProcessFail) {
+		'you have no certificates' not in e.process.stdout throws TestFail("No expected text in output")
+		return 'Expected text found'
+	}
+})
