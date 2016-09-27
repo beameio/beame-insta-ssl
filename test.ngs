@@ -113,3 +113,18 @@ do_test("Non-terminating tunnel", {
 	out != t throws TestFail('Result from server is missing or incorrect')
 	'Result from server is OK'
 })
+
+do_test("Terminating tunnel", {
+	t = time().Str()
+	threads = [
+		Thread({ $(node testHttpServer.js $fqdn $t) })
+		Thread({ $($BEAME_INSTA_SSL_BIN tunnel 65500 http) })
+	]
+	$(sleep 5)
+	out = try `curl --silent --max-time 30 "https://$fqdn/"`
+	$(pkill -f 'testHttpServer.js')
+	$(pkill -f 'tunnel 65500')
+	threads.join()
+	out != t throws TestFail('Result from server is missing or incorrect')
+	'Result from server is OK'
+})
