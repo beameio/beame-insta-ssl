@@ -29,7 +29,13 @@ function getHelpMessage(fileName) {
 	return fs.readFileSync(path.join(__dirname, 'help-messages', fileName), {'encoding': 'utf-8'});
 }
 
-var credsCount = BeameStore.list().length;
+// There will be automatically imported certificates in the store.
+// Filtering them out.
+function list() {
+	return BeameStore.list(null, {mustHavePrivateKey: true});
+}
+
+var credsCount = list().length;
 
 if(!credsCount) {
 	console.log(getHelpMessage('no-certificates.txt'));
@@ -71,7 +77,7 @@ if(args._[0] == 'tunnel') {
 	if(args.fqdn) {
 		fqdn = args.fqdn;
 	} else {
-		let allCerts = BeameStore.list();
+		let allCerts = list();
 		if(allCerts.length > 1) {
 			console.log("tunnel requires --fqdn parameter because you have more than one certificate");
 			console.log("Possible FQDNs are:");
@@ -121,7 +127,7 @@ if(args._[0] == 'tunnel') {
 }
 
 if(args._[0] == 'list') {
-	BeameStore.list().forEach(cred => {
+	list().forEach(cred => {
 		console.log(cred.fqdn);
 	});
 	process.exit(0);

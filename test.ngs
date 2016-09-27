@@ -1,32 +1,29 @@
 #!/usr/bin/env ngs
 
-BEAME_DIR = ENV.HOME / '.beame'
-BEAME_INSTA_SSL_BIN = ENV.HOME / 'beame-insta-ssl/main.js'
-BEAME_SDK_BIN = ENV.HOME / 'beame-sdk/src/cli/beame.js'
+assert('BEAME_INTERNAL_AUTH_SERVER_FQDN' in ENV, 'Environment variable BEAME_INTERNAL_AUTH_SERVER_FQDN must be set')
+
+HOME = ENV.HOME
+
+BEAME_DIR = HOME / '.beame'
 
 if Path(BEAME_DIR) {
 	throw Error("Beame directory exists ($BEAME_DIR). Will not run tests.")
 }
 
+BEAME_INSTA_SSL_BIN = HOME / 'beame-insta-ssl/main.js'
+BEAME_SDK_BIN = HOME / 'beame-sdk/src/cli/beame.js'
+BEAME_DEV_AUTH_FQDN = 'n6ge8i9q4b4b5vb6.h40d7vrwir2oxlnn.v1.d.beameio.net'
+EXPECTED_EXPORTED_FILE_EXTENSIONS = %[pem key ca chain.pkcs7 pkcs12 pkcs12.pwd]
+
 exit_code = 0
-developer = null
 
 { type TestFail(Error) }
 
 F do_test(name:Str, f:Fun) {
 	echo("")
-	echo("==================== TEST: $name ====================")
-	result = try {
-		msg = f()
-		"OK: $msg"
-	} catch(tf:TestFail) {
-		global exit_code = max([exit_code, 1])
-		"FAIL: ${tf.message}"
-	} catch(e) {
-		global exit_code = max([exit_code, 2])
-		"FAIL: $e"
-	}
-	echo("  RESULT: $result")
+	echo("=== TEST: $name ===")
+	msg = f()
+	echo("  OK: $msg")
 }
 
 do_test("No certificates", {
@@ -37,4 +34,63 @@ do_test("No certificates", {
 		'you have no certificates' not in e.process.stdout throws TestFail("No expected text in output")
 		return 'Expected text found'
 	}
+})
+
+do_test("Copy $BEAME_DEV_AUTH_FQDN into store", {
+	$(cp -a "$HOME/$BEAME_DEV_AUTH_FQDN" "$HOME/.beame/v2/$BEAME_DEV_AUTH_FQDN")
+	'Copied'
+})
+
+do_test("Create token for test L0 entity", {
+	global token = ``$BEAME_SDK_BIN creds signWithFqdn --fqdn $BEAME_DEV_AUTH_FQDN --data NONE``
+	assert(token is Str, "Token expected to be a string")
+	token
+})
+
+do_test("Create test L0 entity", {
+    t = time()
+	beame_insta_ssl_token = {
+		'authToken': token
+		'authSrvFqdn': ENV.BEAME_INTERNAL_AUTH_SERVER_FQDN
+		'name': "instal-ssl-test-L0-$t"
+		'email': "insta-ssl-L0-${t}@example.com"
+	}
+	txt = `$BEAME_INSTA_SSL_BIN create ${beame_insta_ssl_token.encode_json()}`
+	cert_created_line = txt.lines().filter(X ~ Pfx('Certificate created'))[0]
+	global fqdn = cert_created_line.split(' ')[-1]
+	"Entity $fqdn created"
+})
+
+do_test("Remove $BEAME_DEV_AUTH_FQDN from store", {
+	$(rm -r "$HOME/.beame/v2/$BEAME_DEV_AUTH_FQDN")
+	'Removed'
+})
+
+do_test("List certificates", {
+	certs = `$BEAME_INSTA_SSL_BIN list`.lines()
+	assert(certs == [fqdn])
+	'List is OK'
+})
+
+do_test("Export certificates", {
+	dir = `mktemp --tmpdir -d test-beame-insta-ssl.XXXXXXXXXX` - MaybeSfx('\n')
+	err = null
+	ret = null
+	try {
+		$($BEAME_INSTA_SSL_BIN export $fqdn $dir)
+		EXPECTED_EXPORTED_FILE_EXTENSIONS.each(F(ext) {
+			f = "$dir/$fqdn.$ext"
+			not($(test -s $f)) throws TestFail("File $f not found")
+		})
+	} catch(e) {
+		err = e
+	}
+	$(rm -r $dir)
+	err throws err
+	'All expected files are present'
+})
+
+do_test("Non-terminating tunnel", {
+	x
+
 })
