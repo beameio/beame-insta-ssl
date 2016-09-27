@@ -26,7 +26,7 @@ F do_test(name:Str, f:Fun) {
 	echo("  OK: $msg")
 }
 
-do_test("No certificates", {
+do_test("Run without certificates", {
 	try {
 		$($BEAME_INSTA_SSL_BIN list)
 		throw TestFail('Exited with code 0')
@@ -72,7 +72,7 @@ do_test("List certificates", {
 	'List is OK'
 })
 
-do_test("Export certificates", {
+do_test("Export certificate", {
 	dir = `mktemp --tmpdir -d test-beame-insta-ssl.XXXXXXXXXX` - MaybeSfx('\n')
 	err = null
 	ret = null
@@ -90,7 +90,26 @@ do_test("Export certificates", {
 	'All expected files are present'
 })
 
-do_test("Non-terminating tunnel", {
-	x
+do_test("Waiting for hostname $fqdn to be resolvable", {
+	for(i;45) {
+		resolve = `dig "+short" $fqdn`
+		resolve returns "Resolves to ${resolve.lines()[-1]}"
+		$(sleep 2)
+	}
+	throw TestFail("No resolve for $fqdn")
+})
 
+do_test("Non-terminating tunnel", {
+	t = time().Str()
+	threads = [
+		Thread({ $(node testHttpsServer.js $fqdn $t) })
+		Thread({ $($BEAME_INSTA_SSL_BIN tunnel 65500 https) })
+	]
+	$(sleep 5)
+	out = try `curl --silent --max-time 30 "https://$fqdn/"`
+	$(pkill -f 'testHttpsServer.js')
+	$(pkill -f 'tunnel 65500')
+	threads.join()
+	out != t throws TestFail('Result from server is missing or incorrect')
+	'Result from server is OK'
 })

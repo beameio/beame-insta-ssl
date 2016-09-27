@@ -76,6 +76,11 @@ if(args._[0] == 'tunnel') {
 	// FQDN
 	if(args.fqdn) {
 		fqdn = args.fqdn;
+		cert = BeameStore.getCredential(fqdn);
+		if(!cert) {
+			console.error(`Certificate for FQDN ${fqdn} not found`);
+			process.exit(2);
+		}
 	} else {
 		let allCerts = list();
 		if(allCerts.length > 1) {
@@ -86,11 +91,8 @@ if(args._[0] == 'tunnel') {
 			});
 			process.exit(2);
 		}
-	}
-	cert = BeameStore.getCredential(fqdn);
-	if(!cert) {
-		console.error(`Certificate for FQDN ${fqdn} not found`);
-		process.exit(2);
+		cert = allCerts[0];
+		fqdn = cert.fqdn;
 	}
 
 	// dstHost:dstPort
