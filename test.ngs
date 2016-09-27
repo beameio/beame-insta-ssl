@@ -117,7 +117,7 @@ do_test("Non-terminating tunnel", {
 do_test("Terminating tunnel", {
 	t = time().Str()
 	threads = [
-		Thread({ $(node testHttpServer.js $fqdn $t) })
+		Thread({ $(node testHttpServer.js $t) })
 		Thread({ $($BEAME_INSTA_SSL_BIN tunnel 65500 http) })
 	]
 	$(sleep 5)
