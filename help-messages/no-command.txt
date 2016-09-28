@@ -23,6 +23,10 @@ Usage:
 		traffic and transform the requests to HTTP. This way you can
 		run existing HTTP server unmodifed.
 
+		Examples:
+			beame-insta-ssl tunnel 8080 http
+			beame-insta-ssl tunnel 192.168.0.200:8443 https --hostname web200.localdomain
+
 		[ DESTINATION_HOST: ]   - your end of the tunnel, defaults to localhost
 		DESTINATION_PORT        - your end of the tunnel
 		DESTINATION_PROTO       - protocol to use on your end of the tunnel ("http" or "https")

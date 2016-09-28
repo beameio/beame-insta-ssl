@@ -121,7 +121,7 @@ if(args._[0] == 'tunnel') {
 
 	const tunnel = require('./tunnel');
 
-	console.log(`Starting tunnel ${fqdn} -> ${dstHost}:${dstPort} ${dstProto}`);
+	console.log(`Starting tunnel https://${fqdn} -> ${dstProto}://${dstHost}:${dstPort}`);
 	try {
 		tunnel.httpsTunnel(fqdn, cert, dstHost, dstPort, dstProto, dstHostname);
 		commandHandled = true;
