@@ -35,21 +35,6 @@ function list() {
 	return BeameStore.list(null, {mustHavePrivateKey: true});
 }
 
-var credsCount = list().length;
-
-if(!credsCount) {
-	console.log(getHelpMessage('no-certificates.txt'));
-	process.exit(1);
-}
-
-if(args._.length == 0) {
-	console.log(getHelpMessage('no-command.txt'));
-	process.exit(1);
-}
-
-function expandFileName(fname, fqdn) {
-	return fname.replace('@FQDN@', fqdn);
-}
 
 if(args._[0] == 'create') {
 	let token = JSON.parse(args._[1]);
@@ -67,6 +52,22 @@ if(args._[0] == 'create') {
 		console.log('ERROR', e);
 		process.exit(1);
 	});
+}
+
+var credsCount = list().length;
+
+if(!credsCount) {
+	console.log(getHelpMessage('no-certificates.txt'));
+	process.exit(1);
+}
+
+if(args._.length == 0) {
+	console.log(getHelpMessage('no-command.txt'));
+	process.exit(1);
+}
+
+function expandFileName(fname, fqdn) {
+	return fname.replace('@FQDN@', fqdn);
 }
 
 if(args._[0] == 'tunnel') {
