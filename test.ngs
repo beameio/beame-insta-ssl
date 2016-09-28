@@ -15,7 +15,7 @@ BEAME_SDK_BIN = HOME / 'beame-sdk/src/cli/beame.js'
 BEAME_DEV_AUTH_FQDN = 'n6ge8i9q4b4b5vb6.h40d7vrwir2oxlnn.v1.d.beameio.net'
 EXPECTED_EXPORTED_FILE_EXTENSIONS = %[pem key ca chain.pkcs7 pkcs12 pkcs12.pwd]
 
-exit_code = 0
+# ---------- Tests "framework" ----------
 
 { type TestFail(Error) }
 
@@ -26,28 +26,24 @@ F do_test(name:Str, f:Fun) {
 	echo("  OK: $msg")
 }
 
-do_test("Run without certificates", {
-	try {
-		$($BEAME_INSTA_SSL_BIN list)
-		throw TestFail('Exited with code 0')
-	} catch(e:ProcessFail) {
-		'you have no certificates' not in e.process.stdout throws TestFail("No expected text in output")
-		return 'Expected text found'
-	}
-})
+# ---------- Tests code ----------
 
-do_test("Copy $BEAME_DEV_AUTH_FQDN into store", {
+
+doc Copies Beame test requests signing credential into store for L0 entity creation
+F copy_to_store() {
 	$(cp -a "$HOME/$BEAME_DEV_AUTH_FQDN" "$HOME/.beame/v2/$BEAME_DEV_AUTH_FQDN")
 	'Copied'
-})
+}
 
-do_test("Create token for test L0 entity", {
+doc Creates token needed for signing request for level 0 entity
+F create_token() {
 	global token = ``$BEAME_SDK_BIN creds signWithFqdn --fqdn $BEAME_DEV_AUTH_FQDN --data NONE``
 	assert(token is Str, "Token expected to be a string")
 	token
-})
+}
 
-do_test("Create test L0 entity", {
+doc Creates level 0 entity
+F create_L0() {
     t = time()
 	beame_insta_ssl_token = {
 		'authToken': token
@@ -59,14 +55,83 @@ do_test("Create test L0 entity", {
 	cert_created_line = txt.lines().filter(X ~ Pfx('Certificate created'))[0]
 	global fqdn = cert_created_line.split(' ')[-1]
 	"Entity $fqdn created"
-})
+}
 
-do_test("Remove $BEAME_DEV_AUTH_FQDN from store", {
+doc Removes Beame test requests signing credential from store
+F remove_from_store() {
 	$(rm -r "$HOME/.beame/v2/$BEAME_DEV_AUTH_FQDN")
 	'Removed'
+}
+
+doc Checks that process outputs specific text and exists with non-zero code
+F should_fail_with_text(cmd:Command, text:Str) {
+	try {
+		$($cmd)
+		throw TestFail('Exited with code 0')
+	} catch(e:ProcessFail) {
+		text not in e.process.stdout throws TestFail("No expected text in output")
+		return 'Expected text found'
+	}
+}
+
+doc Tests non-terminating tunnel
+F non_terminating_tunnel(cmd:Command) {
+	t = time().Str()
+	threads = [
+		Thread({ $(node testHttpsServer.js $fqdn $t) })
+		Thread({ $($cmd) })
+	]
+	$(sleep 5)
+	out = try `curl --silent --max-time 30 "https://$fqdn/"`
+	$(pkill -f 'testHttpsServer.js')
+	$(pkill -f 'tunnel 65500')
+	threads.join()
+	out != t throws TestFail('Result from server is missing or incorrect')
+	'Result from server is OK'
+}
+
+doc Tests terminating tunnel
+F terminating_tunnel(cmd:Command) {
+	t = time().Str()
+	threads = [
+		Thread({ $(node testHttpServer.js $t) })
+		Thread({ $($cmd) })
+	]
+	$(sleep 5)
+	out = try `curl --silent --max-time 30 "https://$fqdn/"`
+	$(pkill -f 'testHttpServer.js')
+	$(pkill -f 'tunnel 65500')
+	threads.join()
+	out != t throws TestFail('Result from server is missing or incorrect')
+	'Result from server is OK'
+}
+
+doc Waits till hostname becomes resolvable (has DNS record)
+F wait_resolvable(h:Str) {
+	do_test("Waiting for hostname $h to be resolvable", {
+		for(i;45) {
+			resolve = `dig "+short" $h`
+			resolve returns "Resolves to ${resolve.lines()[-1]}"
+			$(sleep 2)
+		}
+		throw TestFail("No resolve for $h")
+	})
+}
+
+# ---------- No certificates test ----------
+
+do_test("Run without certificates", {
+	should_fail_with_text(%($BEAME_INSTA_SSL_BIN list), 'you have no certificates')
 })
 
-do_test("List certificates", {
+# ---------- One certificate test ----------
+
+do_test("Copy $BEAME_DEV_AUTH_FQDN into store", copy_to_store)
+do_test("Create token for test L0 entity", create_token)
+do_test("Create test L0 entity", create_L0);
+do_test("Remove $BEAME_DEV_AUTH_FQDN from store", remove_from_store)
+
+do_test("List certificates - one certificate", {
 	certs = `$BEAME_INSTA_SSL_BIN list`.lines()
 	assert(certs == [fqdn])
 	'List is OK'
@@ -90,41 +155,41 @@ do_test("Export certificate", {
 	'All expected files are present'
 })
 
-do_test("Waiting for hostname $fqdn to be resolvable", {
-	for(i;45) {
-		resolve = `dig "+short" $fqdn`
-		resolve returns "Resolves to ${resolve.lines()[-1]}"
-		$(sleep 2)
-	}
-	throw TestFail("No resolve for $fqdn")
+wait_resolvable(fqdn)
+
+do_test("Non-terminating tunnel without fqdn", {
+	non_terminating_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 https))
 })
 
-do_test("Non-terminating tunnel", {
-	t = time().Str()
-	threads = [
-		Thread({ $(node testHttpsServer.js $fqdn $t) })
-		Thread({ $($BEAME_INSTA_SSL_BIN tunnel 65500 https) })
-	]
-	$(sleep 5)
-	out = try `curl --silent --max-time 30 "https://$fqdn/"`
-	$(pkill -f 'testHttpsServer.js')
-	$(pkill -f 'tunnel 65500')
-	threads.join()
-	out != t throws TestFail('Result from server is missing or incorrect')
-	'Result from server is OK'
+do_test("Terminating tunnel without fqdn", {
+	terminating_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 http))
 })
 
-do_test("Terminating tunnel", {
-	t = time().Str()
-	threads = [
-		Thread({ $(node testHttpServer.js $t) })
-		Thread({ $($BEAME_INSTA_SSL_BIN tunnel 65500 http) })
-	]
-	$(sleep 5)
-	out = try `curl --silent --max-time 30 "https://$fqdn/"`
-	$(pkill -f 'testHttpServer.js')
-	$(pkill -f 'tunnel 65500')
-	threads.join()
-	out != t throws TestFail('Result from server is missing or incorrect')
-	'Result from server is OK'
+# ---------- 2 or more certificates test ----------
+
+old_fqdn = fqdn
+do_test("Copy $BEAME_DEV_AUTH_FQDN into store", copy_to_store)
+do_test("Create token for additional test L0 entity", create_token)
+do_test("Create additional test L0 entity", create_L0)
+do_test("Remove $BEAME_DEV_AUTH_FQDN from store", remove_from_store)
+
+do_test("List certificates - one certificate", {
+	certs = `$BEAME_INSTA_SSL_BIN list`.lines()
+	assert(certs == [fqdn])
+	'List is OK'
+})
+
+
+do_test("Run tunnel not specifying fqdn", {
+	should_fail_with_text(%($BEAME_INSTA_SSL_BIN tunnel 65500 https), 'more than one')
+})
+
+wait_resolvable(fqdn)
+
+do_test("Non-terminating tunnel with fqdn", {
+	non_terminating_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 https --fqdn $fqdn))
+})
+
+do_test("Terminating tunnel with fqdn", {
+	terminating_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 http --fqdn $fqdn))
 })
