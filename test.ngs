@@ -195,5 +195,5 @@ do_test("Terminating tunnel with fqdn", {
 })
 
 do_test("Terminating tunnel with fqdn and hostname", {
-	terminating_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 http --fqdn $fqdn --hostname test1.exapmle.com), 'test1.exapmle.com')
+	terminating_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 http --fqdn $fqdn --hostname test1.example.com), 'test1.example.com')
 })
