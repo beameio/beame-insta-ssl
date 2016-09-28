@@ -52,18 +52,20 @@ if(args._[0] == 'create') {
 		console.log('ERROR', e);
 		process.exit(1);
 	});
-}
 
-var credsCount = list().length;
+} else {
 
-if(!credsCount) {
-	console.log(getHelpMessage('no-certificates.txt'));
-	process.exit(1);
-}
+	var credsCount = list().length;
 
-if(args._.length == 0) {
-	console.log(getHelpMessage('no-command.txt'));
-	process.exit(1);
+	if(!credsCount) {
+		console.log(getHelpMessage('no-certificates.txt'));
+		process.exit(1);
+	}
+
+	if(args._.length == 0) {
+		console.log(getHelpMessage('no-command.txt'));
+		process.exit(1);
+	}
 }
 
 function expandFileName(fname, fqdn) {
