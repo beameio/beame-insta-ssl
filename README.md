@@ -4,6 +4,15 @@
 
 Is a tool that allows to have access to a machine with HTTPS, via a random hostname, without having a public IP address.
 
+When using Beame.io, the private key never leaves your computer/server. Beame does not look into your traffic. While theoretically Beame.io could issue `*.beameio.net` certificate and terminate your traffic (which we don't do), this is preventable by checking certificate fingerprints.
+
+## ... but there is already Ngrok !?
+
+From Ngrok documentation:
+> If you want your certificates to match and be protected from man-in-the-middle attacks, you need two things. First, you'll need to buy an SSL (TLS) certificate
+
+You either pay for a certificate or Ngrok terminates SSL for you which is not very secure. With beame-insta-ssl you have free _and_ secure communications.
+
 ## Who is it for ?
 
 Web developers, web designers, anyone whose workprouct is displayied in a browser.
@@ -52,4 +61,3 @@ This is an old world example, of running a virutal host on HTTP.
 To easily export credentials from the `~/.beame` folder use the `export` command that looks like the following:
 
 	beame-insta-ssl export k6pbq8cp5tnthu5d.v1.d.beameio.net ./k6pbq8cp5tnthu5d.v1.d.beameio.net
-
