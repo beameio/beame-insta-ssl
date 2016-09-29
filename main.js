@@ -37,7 +37,7 @@ function list() {
 
 
 if(args._[0] == 'create') {
-	let token = JSON.parse(args._[1]);
+	let token = JSON.parse(new Buffer(args._[1], 'base64'));
 	let cred = new Credential(BeameStore);
 
 	commandHandled = true;
