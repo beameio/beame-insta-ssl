@@ -11,7 +11,7 @@ When using Beame.io, the private key never leaves your computer/server. Beame do
 From Ngrok documentation:
 > If you want your certificates to match and be protected from man-in-the-middle attacks, you need two things. First, you'll need to buy an SSL (TLS) certificate
 
-You either pay for a certificate or Ngrok terminates SSL for you which is not very secure. With beame-insta-ssl you have free _and_ secure communications.
+You either pay for a certificate or Ngrok terminates SSL for you which is not very secure, and you need to be on a premuium package with ngrok. With beame-insta-ssl you have free _and_ secure communications.
 
 ## Who is it for ?
 
