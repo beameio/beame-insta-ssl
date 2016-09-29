@@ -51,5 +51,5 @@ This is an old world example, of running a virutal host on HTTP.
 
 To easily export credentials from the `~/.beame` folder use the `export` command that looks like the following:
 
-beame-insta-ssl export k6pbq8cp5tnthu5d.v1.d.beameio.net ./k6pbq8cp5tnthu5d.v1.d.beameio.net
+	beame-insta-ssl export k6pbq8cp5tnthu5d.v1.d.beameio.net ./k6pbq8cp5tnthu5d.v1.d.beameio.net
 
