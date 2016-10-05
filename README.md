@@ -25,16 +25,16 @@ Your first beame credential is free and will remain free forever.
 
 The main purpose here is to show to the world how the beame-sdk can be leveraged to create on-demand credentials and tunnels. We think you are going to like this idea, and generate many more beame credentials, for (a) authentication of your backend servers, (b) authentication of mobile clients, (c) authentication of users, and (d) encryption of cloud strage.
 
-## What is the most common and valubale use case?
+## What is the most common and valuable use case?
 I am developing for iOS, and I want to test my web application against my backend code, but it is much more convinient for me to test locally. Beame allows me to expose my local development server to the mobile device with SSL terminated at my local workstation.
 
 ## What is the difference between terminating and non terminating ?
 
-Ultimatly, non-terminating is better, but requires more set up. You need to inject the certificates.
+Ultimately, non-terminating is better, but requires more set up. You need to inject the certificates.
 
 ## How much data can I transfer?
 
-Right now we are not limiting it, but might if we get unresonable usage.
+Right now we are not limiting it, but might if we get unreasonable usage.
 
 ## Can I lose my beame domain?
 
