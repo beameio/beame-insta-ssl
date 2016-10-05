@@ -26,6 +26,17 @@ F do_test(name:Str, f:Fun) {
 	echo("  OK: $msg")
 }
 
+# ---------- Utilities ----------
+
+F base64(s:Str) {
+	fname = "/tmp/base64.${c_getpid()}"
+	$(echo $s >$fname)
+	ret = `base64 -w0 <$fname`
+	$(rm $fname)
+	log("base64 done")
+	ret
+}
+
 # ---------- Tests code ----------
 
 
@@ -51,7 +62,7 @@ F create_L0() {
 		'name': "insta-ssl-test-L0-$t"
 		'email': "insta-ssl-L0-${t}@example.com"
 	}
-	txt = `$BEAME_INSTA_SSL_BIN create ${beame_insta_ssl_token.encode_json()}`
+	txt = `$BEAME_INSTA_SSL_BIN create ${beame_insta_ssl_token.encode_json().base64()}`
 	cert_created_line = txt.lines().filter(X ~ Pfx('Certificate created'))[0]
 	global fqdn = cert_created_line.split(' ')[-1]
 	"Entity $fqdn created"
