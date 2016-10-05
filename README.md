@@ -2,43 +2,43 @@
 
 ## What is beame-insta-ssl?
 
-Is a tool that allows to have access to a machine with HTTPS, via a random hostname, without having a public IP address.
+This is a tool that allows you to have access to a machine with HTTPS via a random hostname without needing to have a public IP address.
 
-When using Beame.io, the private key never leaves your computer/server. Beame does not look into your traffic. While theoretically Beame.io could issue `*.beameio.net` certificate and terminate your traffic (which we don't do), this is preventable by checking certificate fingerprints.
+When using Beame.io, the private key never leaves your computer/server. Beame cannot look into your traffic. While theoretically Beame.io could issue a `*.beameio.net` certificate and terminate your traffic (which we don't do), this is preventable by checking certificate fingerprints.
 
-## ... but there is already Ngrok !?
+## ... but there is already Ngrok!?
 
 From Ngrok documentation:
 > If you want your certificates to match and be protected from man-in-the-middle attacks, you need two things. First, you'll need to buy an SSL (TLS) certificate
 
-You either pay for a certificate or Ngrok terminates SSL for you which is not very secure, and you need to be on a premuium package with ngrok. With beame-insta-ssl you have free _and_ secure communications.
+You either pay for a certificate or Ngrok terminates SSL for you, which is not very secure, and you need to be on a premuium package with ngrok. With beame-insta-ssl you get both free _and_ secure communications.
 
-## Who is it for ?
+## Who is beame-insta-ssl for?
 
-Web developers, web designers, anyone whose workprouct is displayied in a browser.
+Web developers, web designers, anyone whose work prouct is displayed in a browser.
 
 ## How much does it cost?
 
-The first beame credential, is free and forever will be free.
+Your first beame credential is free and will remain free forever.
 
-## How do you guys make money ?
+## How do you guys make money?
 
-The main purpose here is to show to the world, how beame-sdk can be leveraged to create on demand credentials and tunnels. We think you are going to like this idea, and generate many more beame credentials, for (a) authentication of your backend servers (b) authentication of mobile clients, (c) authentication of users (d) encryption of cloud strage.
+The main purpose here is to show to the world how the beame-sdk can be leveraged to create on-demand credentials and tunnels. We think you are going to like this idea, and generate many more beame credentials, for (a) authentication of your backend servers, (b) authentication of mobile clients, (c) authentication of users, and (d) encryption of cloud strage.
 
-## What is the most common and valubale usecase?
-I am developing for iOS, and I want to test my web application against my backend code, but it is much more convinient for me test locally, so beame allows me to expose my local development server to the mobile device with SSL terminated at my local workstation.
+## What is the most common and valubale use case?
+I am developing for iOS, and I want to test my web application against my backend code, but it is much more convinient for me to test locally. Beame allows me to expose my local development server to the mobile device with SSL terminated at my local workstation.
 
 ## What is the difference between terminating and non terminating ?
 
-Ultimatly, non terminating is better, but requires more setup. You need to inject the certificates
+Ultimatly, non-terminating is better, but requires more set up. You need to inject the certificates.
 
 ## How much data can I transfer?
 
-Right now we are not limiting it, but if there will be unresoable usage.
+Right now we are not limiting it, but might if we get unresonable usage.
 
-## Can I loose my beame domain?
+## Can I lose my beame domain?
 
-Yes, if you use it for phishing we will blacklist it and revoke your cert.
+Yes. If you use it for phishing we will blacklist it and revoke your cert.
 
 # How do you do you begin using the beame-insta-ssl?
 
