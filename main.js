@@ -53,6 +53,7 @@ if (args._[0] == 'create') {
 
 	commandHandled = true;
 
+	console.error('token %j', token);
 	cred.createEntityWithAuthServer(token.authToken, token.authSrvFqdn, token.name, token.email).then(metadata=> {
 		console.log('');
 		console.log(`Certificate created! Certificate FQDN is ${metadata.fqdn}`);
