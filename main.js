@@ -1,25 +1,35 @@
 #!/usr/bin/env node
 'use strict';
 
+/**
+ * @typedef {Object} RegistrationToken
+ * Should be synchronized with token from Auth Server
+ * @property {String} authToken
+ * @property {String} authSrvFqdn
+ * @property {String} name
+ * @property {String} email
+ */
+
+
+
 // TODO: more and better input validation
 // TODO: consistent usage of console.log() vs console.error()
 
 const properties2fnames = {
-	X509: '@FQDN@.pem',
+	X509:        '@FQDN@.pem',
 	PRIVATE_KEY: '@FQDN@.key',
-	CA: '@FQDN@.ca',
-	PKCS7: '@FQDN@.chain.pkcs7',
-	PKCS12: '@FQDN@.pkcs12',
-	PWD: '@FQDN@.pkcs12.pwd'
+	CA:          '@FQDN@.ca',
+	PKCS7:       '@FQDN@.chain.pkcs7',
+	PKCS12:      '@FQDN@.pkcs12',
+	PWD:         '@FQDN@.pkcs12.pwd'
 };
 
-const fs = require('fs');
+const fs   = require('fs');
 const path = require('path');
 
-const args = require('minimist')(process.argv.slice(2));
+const args  = require('minimist')(process.argv.slice(2));
 const beame = require('beame-sdk');
 
-// console.log(Object.keys(beame));
 const BeameStore = new beame.BeameStore();
 const Credential = beame.Credential;
 
@@ -36,9 +46,10 @@ function list() {
 }
 
 
-if(args._[0] == 'create') {
-	let token = JSON.parse(new Buffer(args._[1], 'base64'));
-	let cred = new Credential(BeameStore);
+if (args._[0] == 'create') {
+	/** @type {RegistrationToken} */
+	let token = JSON.parse(new Buffer(args._[1], 'base64').toString());
+	let cred  = new Credential(BeameStore);
 
 	commandHandled = true;
 
@@ -57,12 +68,12 @@ if(args._[0] == 'create') {
 
 	var credsCount = list().length;
 
-	if(!credsCount) {
+	if (!credsCount) {
 		console.log(getHelpMessage('no-certificates.txt'));
 		process.exit(1);
 	}
 
-	if(args._.length == 0) {
+	if (args._.length == 0) {
 		console.log(getHelpMessage('no-command.txt'));
 		process.exit(1);
 	}
@@ -72,21 +83,21 @@ function expandFileName(fname, fqdn) {
 	return fname.replace('@FQDN@', fqdn);
 }
 
-if(args._[0] == 'tunnel') {
+if (args._[0] == 'tunnel') {
 	// TODO: more input validation
 	let cert, fqdn, dstHost, dstPort, dstHostname, dstProto;
 
 	// FQDN
-	if(args.fqdn) {
+	if (args.fqdn) {
 		fqdn = args.fqdn;
 		cert = BeameStore.getCredential(fqdn);
-		if(!cert) {
+		if (!cert) {
 			console.error(`Certificate for FQDN ${fqdn} not found`);
 			process.exit(2);
 		}
 	} else {
 		let allCerts = list();
-		if(allCerts.length > 1) {
+		if (allCerts.length > 1) {
 			console.log("tunnel requires --fqdn parameter because you have more than one certificate");
 			console.log("Possible FQDNs are:");
 			allCerts.forEach(cred => {
@@ -100,13 +111,13 @@ if(args._[0] == 'tunnel') {
 
 	// dstHost:dstPort
 	var dstHostPort = args._[1];
-	if(typeof dstHostPort == 'number') {
+	if (typeof dstHostPort == 'number') {
 		dstHost = 'localhost';
 		dstPort = dstHostPort;
 	} else {
 		dstHostPort = dstHostPort.split(':');
-		dstHost = dstHostPort[0];
-		dstPort = parseInt(dstHostPort[1]);
+		dstHost     = dstHostPort[0];
+		dstPort     = parseInt(dstHostPort[1]);
 	}
 
 	// dstHostname
@@ -114,7 +125,7 @@ if(args._[0] == 'tunnel') {
 
 	// dstProto
 	dstProto = args._[2];
-	if(dstProto != 'http' && dstProto != 'https') {
+	if (dstProto != 'http' && dstProto != 'https') {
 		console.log('DESTINATION_PROTO must be either http or https');
 		process.exit(1);
 	}
@@ -125,63 +136,63 @@ if(args._[0] == 'tunnel') {
 	try {
 		tunnel.httpsTunnel(fqdn, cert, dstHost, dstPort, dstProto, dstHostname);
 		commandHandled = true;
-	} catch(e) {
+	} catch (e) {
 		console.log(`Tunnel error: ${e}`);
 		process.exit(3);
 	}
 }
 
-if(args._[0] == 'list') {
+if (args._[0] == 'list') {
 	list().forEach(cred => {
 		console.log(cred.fqdn);
 	});
 	process.exit(0);
 }
 
-if(args._[0] == 'export') {
+if (args._[0] == 'export') {
 	let fqdn = args._[1];
-	let dir = args._[2];
-	if(!fqdn) {
+	let dir  = args._[2];
+	if (!fqdn) {
 		console.error(`FQDN not provided`);
 		process.exit(2);
 	}
-	if(!dir) {
+	if (!dir) {
 		console.error(`DESTINATION_FOLDER not provided`);
 		process.exit(2);
 	}
 	let cert = BeameStore.getCredential(fqdn);
-	if(!cert) {
+	if (!cert) {
 		console.error(`Certificate for FQDN ${fqdn} not found. Use "beame-insta-ssl list" command to list available certificates.`);
 		process.exit(2);
 	}
 
 	// Step 1: validation
-	if(!fs.existsSync(dir)) {
+	if (!fs.existsSync(dir)) {
 		console.log(`ERROR: Specified DESTINATION_FOLDER ${dir} does not exist`);
 		process.exit(1);
 	}
 
 	let stat = fs.statSync(dir);
-	if(!stat.isDirectory()) {
+	if (!stat.isDirectory()) {
 		console.log(`ERROR: Specified DESTINATION_FOLDER ${dir} is not a directory`);
 		process.exit(1);
 	}
 
-	for(let k in properties2fnames) {
+	for (let k in properties2fnames) {
 		let dst = path.join(dir, expandFileName(properties2fnames[k], fqdn));
 		console.log(dst);
-		if(fs.existsSync(dst)) {
+		if (fs.existsSync(dst)) {
 			console.log(`ERROR: File ${dst} already exists`);
 			process.exit(2);
 		}
-		if(!cert.getKey(k)) {
+		if (!cert.getKey(k)) {
 			console.log(`ERROR: File ${dst} can not be created. Certificate does not have corresponding key ${k}`);
 			process.exit(2);
 		}
 	}
 
 	// Step 2: write all files
-	for(let k in properties2fnames) {
+	for (let k in properties2fnames) {
 		let dst = path.join(dir, expandFileName(properties2fnames[k], fqdn));
 		console.log(`Writing ${dst}`);
 		fs.writeFileSync(dst, cert.getKey(k));
@@ -192,7 +203,7 @@ if(args._[0] == 'export') {
 	process.exit(0);
 }
 
-if(!commandHandled) {
-	console.error(`Unkonwn command: ${args._[0]}`);
+if (!commandHandled) {
+	console.error(`Unknown command: ${args._[0]}`);
 	process.exit(1);
 }
