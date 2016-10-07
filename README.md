@@ -56,7 +56,7 @@ Use the command above if you don't want to install certificates into your own se
 
 	Starting tunnel https://qwertyuio.asdfghjkl.v1.d.beameio.net -> http://localhost:8008
 
-Just run your server on desired port (_8008_ in the above example) and point your browser to your random Beame _https://_ hostname (_https://qwertyuio.asdfghjkl.v1.d.beameio.net_ in sample output)
+Just run your server on desired port (_8008_ in the above example) and point your browser to your random Beame hostname (_https://qwertyuio.asdfghjkl.v1.d.beameio.net_ in sample output)
 
 And here's old world example, of running a virutal host on HTTP.
 
