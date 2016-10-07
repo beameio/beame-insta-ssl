@@ -4,7 +4,7 @@
 
 This is a tool that allows you to have access to a machine with HTTPS via a random hostname without needing to have a public IP address.
 
-When using Beame.io, the private key never leaves your computer/server. Beame cannot look into your traffic. While, theoretically, Beame.io could issue a `*.beameio.net` certificate and terminate your traffic (which we don't do), this is preventable by checking certificate fingerprints.
+When using Beame.io, the private key never leaves your computer/server. Beame cannot look into your traffic. While, theoretically, Beame.io could issue a wildcard `*.beameio.net` certificate and terminate your traffic (which we don't do), this is preventable by checking certificate fingerprints.
 
 ## ... but there is already Ngrok!?
 
@@ -15,7 +15,7 @@ You either pay for a certificate or Ngrok terminates SSL for you, which is not v
 
 ## Who is beame-insta-ssl for?
 
-Web developers, web designers, anyone whose work prouct is displayed in a browser.
+Web developers, web designers, anyone whose work product is displayed in a browser.
 
 ## How much does it cost?
 
@@ -36,11 +36,11 @@ Ultimately, non-terminating is better, but requires more set up. You need to inj
 
 Right now we are not limiting it, but might if we get unreasonable usage.
 
-## Can I lose my beame domain?
+## Can I loose my beame domain?
 
 Yes. If you use it for phishing we will blacklist it and revoke your cert.
 
-# How do you do you begin using the beame-insta-ssl?
+# How do you begin using the beame-insta-ssl?
 
 	sudo npm install -g https://github.com/beameio/beame-insta-ssl.git
 
@@ -64,5 +64,5 @@ And here's old world example, of running a virutal host on HTTP.
 
 Credentials, that you create, are stored on your machine in `$HOME/.beame` folder. You can easily export them to desired location, by using the `export` command that looks like the following:
 
-	beame-insta-ssl export qwertyuio.asdfghjkl.v1.d.beameio.net _destination_folder_path/
+	beame-insta-ssl export qwertyuio.asdfghjkl.v1.d.beameio.net ./destination_folder_path
 
