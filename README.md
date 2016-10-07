@@ -58,10 +58,11 @@ Use the command above if you don't want to install certificates into your own se
 
 Just run your server on desired port (_8008_ in the above example) and point your browser to your random Beame hostname (_https://qwertyuio.asdfghjkl.v1.d.beameio.net_ in sample output)
 
-And here's old world example, of running a virutal host on HTTP.
+You can also specify particular Beame hostname to run a tunnel on, in case, for example, when you have more than one set of Beame credentials:
 
-	beame-insta-ssl tunnel 8008 http --hostname www.mysite.com
+	beame-insta-ssl tunnel 8008 http --fqdn qwertyuio.asdfghjkl.v1.d.beameio.net
 
+#Where my Beame data is stored?
 Credentials, that you create, are stored on your machine in `$HOME/.beame` folder. You can easily export them to desired location, by using the `export` command that looks like the following:
 
 	beame-insta-ssl export qwertyuio.asdfghjkl.v1.d.beameio.net ./destination_folder_path
