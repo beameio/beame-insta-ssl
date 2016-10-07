@@ -49,21 +49,21 @@ then please go visit https://p2payp4q8f5ruo22.q6ujqecc83gg6fod.v1.d.beameio.net
 
 You will receive an email message with a special command. Please run the command, and beame-insta-ssl will obtain your very own beame hostname, and issue a valid public certificate for it.
 
-Once the certificate is ready you can start using your tunnel. Sample command for bringing up a tunnel:
+Once the certificate is ready, you can start using your tunnel. Sample command for bringing up a tunnel:
 
 	beame-insta-ssl tunnel 8008 http
 
-Use the command above if you don't want to install certificates into your own server. You will receive following output:
+Use the command above if you want to have secure connection, but don't want to install certificates into your own server. You will receive following output:
 
 	Starting tunnel https://qwertyuio.asdfghjkl.v1.d.beameio.net -> http://localhost:8008
 
-Just run your server on desired port (_8008_ in the above example) and point your browser to your random Beame hostname (_https://qwertyuio.asdfghjkl.v1.d.beameio.net_ in sample output)
+Just run your server on desired port (_8008_ in the above example) and point any web browser to your random Beame hostname (_https://qwertyuio.asdfghjkl.v1.d.beameio.net_ in sample output above)
 
-You can also specify particular Beame hostname to run a tunnel on, in case, for example, when you have more than one set of Beame credentials:
+You can also specify particular Beame hostname to run a tunnel to, in case, for example, when you have more than one set of Beame credentials:
 
 	beame-insta-ssl tunnel 8008 http --fqdn qwertyuio.asdfghjkl.v1.d.beameio.net
 
-#Where my Beame data is stored?
+## Where my Beame data is stored?
 Credentials, that you create, are stored on your machine in `$HOME/.beame` folder. You can easily export them to desired location, by using the `export` command that looks like the following:
 
 	beame-insta-ssl export qwertyuio.asdfghjkl.v1.d.beameio.net ./destination_folder_path
