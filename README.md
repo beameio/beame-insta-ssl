@@ -1,3 +1,4 @@
+<img align="right" src="img/beame.png">
 # beame-insta-ssl
 
 ## What is beame-insta-ssl?
