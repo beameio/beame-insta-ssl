@@ -12,7 +12,7 @@ When using Beame.io, the private key never leaves your computer/server. Beame ca
 From Ngrok documentation:
 > If you want your certificates to match and be protected from man-in-the-middle attacks, you need two things. First, you'll need to buy an SSL (TLS) certificate
 
-You either pay for a certificate or Ngrok terminates SSL for you, which is not very secure, and you need to be on a premuium package with ngrok. With beame-insta-ssl you get both free _and_ secure communications.
+You either pay for a certificate or Ngrok terminates SSL for you, which is not very secure, and you need to be using a premium package with ngrok. With beame-insta-ssl, you get both free _and_ secure communications.
 
 ## Who is beame-insta-ssl for?
 
@@ -24,24 +24,24 @@ Your first beame credential is free and will remain free forever.
 
 ## How do you guys make money?
 
-The main purpose here is to show to the world how the beame-sdk can be leveraged to create on-demand credentials and tunnels. We think you are going to like this idea, and generate many more beame credentials, for (a) authentication of your backend servers, (b) authentication of mobile clients, (c) authentication of users, and (d) encryption of cloud strage.
+The main purpose here is to show to the world how the beame-sdk can be leveraged to create on-demand credentials and tunnels. We think you are going to like this idea and will generate many more beame credentials, for (a) authentication of your backend servers, (b) authentication of mobile clients, (c) authentication of users, and (d) encryption of cloud storage.
 
 ## What is the most common and valuable use case?
-I am developing for iOS, and I want to test my web application against my backend code, but it is much more convinient for me to test locally. Beame allows me to expose my local development server to the mobile device with SSL terminated at my local workstation.
+I am developing for iOS, and I want to test my web application against my backend code, but it is much more convenient for me to test locally. Beame allows me to expose my local development server to the mobile device with SSL terminated at my local workstation.
 
-## What is the difference between terminating and non terminating ?
+## What is the difference between terminating and non-terminating ?
 
-Ultimately, non-terminating is better, but requires more set up. You need to inject the certificates.
+Ultimately, non-terminating is better, but requires more setup. You need to inject the certificates.
 
 ## How much data can I transfer?
 
 Right now we are not limiting it, but might if we get unreasonable usage.
 
-## Can I loose my beame domain?
+## Can I lose my beame domain?
 
 Yes. If you use it for phishing we will blacklist it and revoke your cert.
 
-# How do you begin using the beame-insta-ssl?
+# How do I begin using the beame-insta-ssl?
 
 	sudo npm install -g https://github.com/beameio/beame-insta-ssl.git
 
@@ -53,7 +53,7 @@ Once the certificate is ready, you can start using your tunnel. Sample command f
 
 	beame-insta-ssl tunnel 8008 http
 
-Use the command above if you want to have secure connection, but don't want to install certificates into your own server. You will receive following output:
+Use the command above if you want to have a secure connection, but don't want to install certificates into your own server. You will receive the following output:
 
 	Starting tunnel https://qwertyuio.asdfghjkl.v1.d.beameio.net -> http://localhost:8008
 
@@ -63,8 +63,8 @@ You can also specify particular Beame hostname to run a tunnel to, in case, for 
 
 	beame-insta-ssl tunnel 8008 http --fqdn qwertyuio.asdfghjkl.v1.d.beameio.net
 
-## Where my Beame data is stored?
-Credentials, that you create, are stored on your machine in `$HOME/.beame` folder. You can easily export them to desired location, by using the `export` command that looks like the following:
+## Where is my Beame data is stored?
+Credentials created by you are stored on your machine in `$HOME/.beame` folder. You can easily export them to the desired location, by using the `export` command that looks like this:
 
 	beame-insta-ssl export qwertyuio.asdfghjkl.v1.d.beameio.net ./destination_folder_path
 
