@@ -45,7 +45,7 @@ Yes. If you use it for phishing we will blacklist it and revoke your cert.
 
 	sudo npm install -g https://github.com/beameio/beame-insta-ssl.git
 
-then please go visit https://p2payp4q8f5ruo22.q6ujqecc83gg6fod.v1.d.beameio.net
+then please go visit https://ypxf72akb6onjvrq.ohkv8odznwh5jpwm.v1.p.beameio.net/insta-ssl
 
 You will receive an email message with a special command. Please run the command, and beame-insta-ssl will obtain your very own beame hostname, and issue a valid public certificate for it.
 
