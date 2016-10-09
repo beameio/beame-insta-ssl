@@ -29,9 +29,9 @@ The main purpose here is to show to the world how the beame-sdk can be leveraged
 ## What is the most common and valuable use case?
 I am developing for iOS, and I want to test my web application against my backend code, but it is much more convenient for me to test locally. Beame allows me to expose my local development server to the mobile device with SSL terminated at my local workstation.
 
-## What is the difference between terminating and non-terminating ?
+## What is the difference between terminating and non-terminating?
 
-Ultimately, non-terminating is better, but requires more setup. You need to inject the certificates.
+Ultimately, non-terminating is better but requires more setup. You need to inject the certificates.
 
 ## How much data can I transfer?
 
