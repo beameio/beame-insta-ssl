@@ -7,6 +7,16 @@ This is a tool that allows you to expose securely a machine with HTTP or HTTPS s
 
 When using Beame.io, the private key never leaves your computer/server. Beame cannot look into your traffic. While, theoretically, Beame.io could issue a wildcard `*.beameio.net` certificate and terminate your traffic (which we don't do), this is preventable by checking certificate fingerprints.
 
+## Get started in three quick steps!
+
+Step 1: Register by email https://ypxf72akb6onjvrq.ohkv8odznwh5jpwm.v1.p.beameio.net/insta-ssl
+
+Step 2: Run	`npm install -g beame-insta-ssl`
+
+Step 3: Run the command in your email registration confirmation. beame-insta-ssl will obtain your very own beame hostname, and issue a valid public certificate for it.
+
+The certificate will be ready in moments and you can start using your tunnel right away. 
+
 ## ... but there is already Ngrok!?
 
 From Ngrok documentation:
@@ -41,15 +51,17 @@ Right now we are not limiting it, but might if we get unreasonable usage.
 
 Yes. If you use it for phishing we will blacklist it and revoke your cert.
 
-# How do I begin using the beame-insta-ssl?
+# Commands for using beame-insta-ssl:
 
-	sudo npm install -g https://github.com/beameio/beame-insta-ssl.git
+Step 1: Register by email https://ypxf72akb6onjvrq.ohkv8odznwh5jpwm.v1.p.beameio.net/insta-ssl
 
-then please go visit https://ypxf72akb6onjvrq.ohkv8odznwh5jpwm.v1.p.beameio.net/insta-ssl
+Step 2: Run	`npm install -g beame-insta-ssl`
 
-You will receive an email message with a special command. Please run the command, and beame-insta-ssl will obtain your very own beame hostname, and issue a valid public certificate for it.
+Step 3: Run the command in your email registration confirmation. beame-insta-ssl will obtain your very own beame hostname, and issue a valid public certificate for it.
 
-Once the certificate is ready, you can start using your tunnel. Sample command for bringing up a tunnel:
+The certificate will be ready in moments and you can start using your tunnel right away. 
+
+Sample command for bringing up a tunnel:
 
 	beame-insta-ssl tunnel 8008 http
 
