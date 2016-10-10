@@ -3,7 +3,7 @@
 
 ## What is beame-insta-ssl?
 
-This is a tool that allows you to have access to a machine with HTTPS via a random hostname without needing to have a public IP address.
+This is a tool that allows you to expose securely a machine with HTTP or HTTPS server via a random hostname without needing to have a public IP address.
 
 When using Beame.io, the private key never leaves your computer/server. Beame cannot look into your traffic. While, theoretically, Beame.io could issue a wildcard `*.beameio.net` certificate and terminate your traffic (which we don't do), this is preventable by checking certificate fingerprints.
 
