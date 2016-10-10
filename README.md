@@ -15,7 +15,10 @@ Step 2: Run	`npm install -g beame-insta-ssl`
 
 Step 3: Run the command in your email registration confirmation. beame-insta-ssl will obtain your very own beame hostname, and issue a valid public certificate for it.
 
-The certificate will be ready in moments and you can start using your tunnel right away. 
+The certificate will be ready in moments and you can start using your tunnel right away.
+
+<img src="img/video.gif">
+
 
 ## ... but there is already Ngrok!?
 
