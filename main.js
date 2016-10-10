@@ -42,7 +42,7 @@ function getHelpMessage(fileName) {
 // There will be automatically imported certificates in the store.
 // Filtering them out.
 function list() {
-	return BeameStore.list(null, {mustHavePrivateKey: true});
+	return BeameStore.list(null, {hasPrivateKey: true});
 }
 
 
