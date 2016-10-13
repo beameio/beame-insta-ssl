@@ -22,9 +22,9 @@ The certificate will be ready in moments and you can start using your tunnel rig
 
 ## ... but this is already done by ngrok, Let's Encrypt, and ___your service here___!?
 
-Yes but you have to either: pay for the SSL certificate, pay for premium tunneling services, get your SSL terminated for you (which is...not very secure), and/or reconfigure your DNS if you are using free certs. 
+Yes, but you have to either: pay for the SSL certificate, pay for premium tunneling services, get your SSL terminated for you (which is...not very secure), and/or reconfigure your DNS if you are using free certs. 
 
-With beame-insta-ssl, you get both free _and_ secure communications.
+With beame-insta-ssl, you get both free _and_ secure communications. Did we mention, it's ridiculously easy to use? :-)
 
 ## Who is beame-insta-ssl for?
 
