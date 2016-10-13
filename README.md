@@ -20,12 +20,11 @@ The certificate will be ready in moments and you can start using your tunnel rig
 <img src="img/video.gif">
 
 
-## ... but there is already Ngrok!?
+## ... but this is already done by ngrok, Let's Encrypt, and ___your service here___!?
 
-From Ngrok documentation:
-> If you want your certificates to match and be protected from man-in-the-middle attacks, you need two things. First, you'll need to buy an SSL (TLS) certificate
+Yes but you have to either: pay for the SSL certificate, pay for premium tunneling services, get your SSL terminated for you (which is...not very secure), and/or reconfigure your DNS if you are using free certs. 
 
-You either pay for a certificate or Ngrok terminates SSL for you, which is not very secure, and you need to be using a premium package with ngrok. With beame-insta-ssl, you get both free _and_ secure communications.
+With beame-insta-ssl, you get both free _and_ secure communications.
 
 ## Who is beame-insta-ssl for?
 
@@ -78,7 +77,7 @@ You can also specify particular Beame hostname to run a tunnel to, in case, for 
 
 	beame-insta-ssl tunnel 8008 http --fqdn qwertyuio.asdfghjkl.v1.d.beameio.net
 
-## Where is my Beame data is stored?
+## Where is my Beame data stored?
 Credentials created by you are stored on your machine in `$HOME/.beame` folder. You can easily export them to the desired location, by using the `export` command that looks like this:
 
 	beame-insta-ssl export qwertyuio.asdfghjkl.v1.d.beameio.net ./destination_folder_path
