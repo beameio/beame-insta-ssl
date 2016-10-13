@@ -22,7 +22,7 @@ The certificate will be ready in moments and you can start using your tunnel rig
 
 ## ... but this is already done by ngrok, Let's Encrypt, and ___your service here___!?
 
-Yes, but you have to either: pay for the SSL certificate, pay for premium tunneling services, get your SSL terminated for you (which is...not very secure), and/or reconfigure your DNS if you are using free certs. 
+Yes, but you have to either: pay for the SSL certificate, pay for premium tunneling services, get your TLS terminated for you (which is...not very secure), and/or reconfigure your DNS if you are using free certs. 
 
 With beame-insta-ssl, you get both free _and_ secure communications. Did we mention, it's ridiculously easy to use? :-)
 
@@ -39,7 +39,7 @@ Your first beame credential is free and will remain free forever.
 The main purpose here is to show to the world how the beame-sdk can be leveraged to create on-demand credentials and tunnels. We think you are going to like this idea and will generate many more beame credentials, for (a) authentication of your backend servers, (b) authentication of mobile clients, (c) authentication of users, and (d) encryption of cloud storage.
 
 ## What is the most common and valuable use case?
-I am developing for iOS, and I want to test my web application against my backend code, but it is much more convenient for me to test locally. Beame allows me to expose my local development server to the mobile device with SSL terminated at my local workstation.
+I am developing for iOS, and I want to test my web application against my backend code, but it is much more convenient for me to test locally. Beame allows me to expose my local development server to the mobile device with TLS terminated at my local workstation.
 
 ## What is the difference between terminating and non-terminating?
 
