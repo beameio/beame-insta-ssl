@@ -9,13 +9,13 @@ When using Beame.io, the private key never leaves your computer/server. Beame ca
 
 ## Get started in three quick steps!
 
-Step 1: Register by email https://ypxf72akb6onjvrq.ohkv8odznwh5jpwm.v1.p.beameio.net/insta-ssl
+Step 1: Sign up super-fast [here!](https://ypxf72akb6onjvrq.ohkv8odznwh5jpwm.v1.p.beameio.net/insta-ssl)
 
 Step 2: Run	`npm install -g beame-insta-ssl`
 
-Step 3: Run the command in your email registration confirmation. beame-insta-ssl will obtain your very own beame hostname, and issue a valid public certificate for it.
+Step 3: Run the command in the sign up confirmation email you just got from us. beame-insta-ssl will obtain your very own beame hostname, and issue a valid public certificate for it.
 
-The certificate will be ready in moments and you can start using your tunnel right away.
+The certificate will be ready in moments and you can start using your tunnel right away. Truly a one-stop-shop! 
 
 <img src="img/video.gif">
 
@@ -28,7 +28,7 @@ With beame-insta-ssl, you get both free _and_ secure communications. Did we ment
 
 ## Who is beame-insta-ssl for?
 
-Web developers, web designers, anyone whose work product is displayed in a browser.
+Web developers, web designers, anyone whose work product is displayed in a browser. 
 
 ## How much does it cost?
 
