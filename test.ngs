@@ -28,12 +28,21 @@ F do_test(name:Str, f:Fun) {
 
 # ---------- Utilities ----------
 
-F base64(s:Str) {
+F base64encode(s:Str) {
 	fname = "/tmp/base64.${c_getpid()}"
 	$(echo $s >$fname)
 	ret = `base64 -w0 <$fname`
 	$(rm $fname)
 	log("base64 done")
+	ret
+}
+
+F base64decode(s:Str) {
+	fname = "/tmp/base64decode.${c_getpid()}"
+	$(echo $s >$fname)
+	ret = `base64 -d <$fname`
+	$(rm $fname)
+	log("base64 decode done")
 	ret
 }
 
@@ -48,7 +57,7 @@ F copy_to_store() {
 
 doc Creates token needed for signing request for level 0 entity
 F create_token() {
-	global token = ``$BEAME_SDK_BIN creds signWithFqdn --fqdn $BEAME_DEV_AUTH_FQDN --data NONE``
+	global token = ``$BEAME_SDK_BIN token create --fqdn $BEAME_DEV_AUTH_FQDN --data NONE``
 	assert(token is Str, "Token expected to be a string")
 	token
 }
@@ -57,12 +66,12 @@ doc Creates level 0 entity
 F create_L0() {
     t = time()
 	beame_insta_ssl_token = {
-		'authToken': token
+		'authToken': token.base64decode().parse()
 		'authSrvFqdn': ENV.BEAME_INTERNAL_AUTH_SERVER_FQDN
 		'name': "insta-ssl-test-L0-$t"
 		'email': "insta-ssl-L0-${t}@example.com"
 	}
-	txt = `$BEAME_INSTA_SSL_BIN create ${beame_insta_ssl_token.encode_json().base64()}`
+	txt = `$BEAME_INSTA_SSL_BIN create ${beame_insta_ssl_token.encode_json().base64encode()}`
 	cert_created_line = txt.lines().filter(X ~ Pfx('Certificate created'))[0]
 	global fqdn = cert_created_line.split(' ')[-1]
 	"Entity $fqdn created"
