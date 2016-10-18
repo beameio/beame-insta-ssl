@@ -3,7 +3,7 @@ Hi.
 Currently, you have no certificates. You must have at least one
 certificate to operate a tunnel.
 
-Here are the steps to obtain SSL cetificate from Beame.io:
+Here are the steps to obtain SSL certificate from Beame.io:
 
 * Visit https://p2payp4q8f5ruo22.q6ujqecc83gg6fod.v1.d.beameio.net/insta-ssl
 * Get email with further instructions
