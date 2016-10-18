@@ -3,33 +3,32 @@
 
 ## What is beame-insta-ssl?
 
-This is a tool that allows you to expose securely a machine with HTTP or HTTPS server via a random hostname without needing to have a public IP address.
+This is a free, open-source tool that allows you to expose securely a machine with HTTP or HTTPS server via a random hostname without needing to have a public IP address.
 
 When using Beame.io, the private key never leaves your computer/server. Beame cannot look into your traffic. While, theoretically, Beame.io could issue a wildcard `*.beameio.net` certificate and terminate your traffic (which we don't do), this is preventable by checking certificate fingerprints.
 
 ## Get started in three quick steps!
 
-Step 1: Register by email https://ypxf72akb6onjvrq.ohkv8odznwh5jpwm.v1.p.beameio.net/insta-ssl
+Step 1: Sign up super-fast [here!](https://ypxf72akb6onjvrq.ohkv8odznwh5jpwm.v1.p.beameio.net/insta-ssl)
 
 Step 2: Run	`npm install -g beame-insta-ssl`
 
-Step 3: Run the command in your email registration confirmation. beame-insta-ssl will obtain your very own beame hostname, and issue a valid public certificate for it.
+Step 3: Run the command in the sign up confirmation email you just got from us. beame-insta-ssl will obtain your very own beame hostname, and issue a valid public certificate for it.
 
-The certificate will be ready in moments and you can start using your tunnel right away.
+The certificate will be ready in moments and you can start using your tunnel right away. Truly a one-stop-shop! 
 
 <img src="img/video.gif">
 
 
-## ... but there is already Ngrok!?
+## ... but this is already done by ngrok, Let's Encrypt, and ___your service here___!?
 
-From Ngrok documentation:
-> If you want your certificates to match and be protected from man-in-the-middle attacks, you need two things. First, you'll need to buy an SSL (TLS) certificate
+Yes, but you have to either: pay for the SSL certificate, pay for premium tunneling services, get your TLS terminated for you (which is...not very secure), and/or reconfigure your DNS if you are using free certs. 
 
-You either pay for a certificate or Ngrok terminates SSL for you, which is not very secure, and you need to be using a premium package with ngrok. With beame-insta-ssl, you get both free _and_ secure communications.
+With beame-insta-ssl, you get both free _and_ secure communications. Did we mention, it's ridiculously easy to use? :-)
 
 ## Who is beame-insta-ssl for?
 
-Web developers, web designers, anyone whose work product is displayed in a browser.
+Web developers, web designers, anyone whose work product is displayed in a browser. 
 
 ## How much does it cost?
 
@@ -37,10 +36,10 @@ Your first beame credential is free and will remain free forever.
 
 ## How do you guys make money?
 
-The main purpose here is to show to the world how the beame-sdk can be leveraged to create on-demand credentials and tunnels. We think you are going to like this idea and will generate many more beame credentials, for (a) authentication of your backend servers, (b) authentication of mobile clients, (c) authentication of users, and (d) encryption of cloud storage.
+The main purpose here is to show to the world how the [beame-sdk](https://github.com/beameio/beame-sdk) can be leveraged to create on-demand credentials and tunnels. We think you are going to like this idea and will generate many more beame credentials, for (a) authentication of your backend servers, (b) authentication of mobile clients, (c) authentication of users, and (d) encryption of cloud storage.
 
 ## What is the most common and valuable use case?
-I am developing for iOS, and I want to test my web application against my backend code, but it is much more convenient for me to test locally. Beame allows me to expose my local development server to the mobile device with SSL terminated at my local workstation.
+I am developing for iOS, and I want to test my web application against my backend code, but it is much more convenient for me to test locally. Beame allows me to expose my local development server to the mobile device with TLS terminated at my local workstation.
 
 ## What is the difference between terminating and non-terminating?
 
@@ -56,11 +55,11 @@ Yes. If you use it for phishing we will blacklist it and revoke your cert.
 
 # Commands for using beame-insta-ssl:
 
-Step 1: Register by email https://ypxf72akb6onjvrq.ohkv8odznwh5jpwm.v1.p.beameio.net/insta-ssl
+Step 1: Register by passing [simple anti-bot test](https://ypxf72akb6onjvrq.ohkv8odznwh5jpwm.v1.p.beameio.net/insta-ssl)
 
-Step 2: Run	`npm install -g beame-insta-ssl`
+Step 2: Install beame-insta-ssl by running	`npm install -g beame-insta-ssl`
 
-Step 3: Run the command in your email registration confirmation. beame-insta-ssl will obtain your very own beame hostname, and issue a valid public certificate for it.
+Step 3: Run the command in your registration confirmation email. beame-insta-ssl will obtain your very own beame hostname, and issue a valid public certificate for it.
 
 The certificate will be ready in moments and you can start using your tunnel right away. 
 
@@ -78,7 +77,7 @@ You can also specify particular Beame hostname to run a tunnel to, in case, for 
 
 	beame-insta-ssl tunnel 8008 http --fqdn qwertyuio.asdfghjkl.v1.d.beameio.net
 
-## Where is my Beame data is stored?
+## Where is my Beame data stored?
 Credentials created by you are stored on your machine in `$HOME/.beame` folder. You can easily export them to the desired location, by using the `export` command that looks like this:
 
 	beame-insta-ssl export qwertyuio.asdfghjkl.v1.d.beameio.net ./destination_folder_path
