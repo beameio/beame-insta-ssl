@@ -35,7 +35,7 @@ Your first beame credential is free and will remain free forever.
 
 ## How do you guys make money?
 
-This is a service that allows making encryption accessible to all and widely used, even by non-crypto experts. If you need more, or want to use this for enterprise, the [beame-sdk](https://github.com/beameio/beame-sdk) is the next level. It can be leveraged to create on-demand credentials and tunnels, and build private networks with cryptography based trust. We think you are going to like this idea and will generate many more beame credentials, for (a) authentication of your backend servers, (b) authentication of mobile clients, (c) authentication of users, and (d) encryption of cloud storage.
+This is a service that allows making encryption accessible to all and widely used, even by non-crypto experts. If you need more, or want to use this for enterprise, the **[beame-sdk](https://github.com/beameio/beame-sdk)** is the next level. It can be leveraged to create on-demand credentials and tunnels, and build private networks with cryptography based trust. We think you are going to like this idea and will generate many more beame credentials, for (a) authentication of your backend servers, (b) authentication of mobile clients, (c) authentication of users, and (d) encryption of cloud storage.
 
 ## What is the most common and valuable use case?
 I am developing for iOS, and I want to test my web application against my backend code, but it is much more convenient for me to test locally. Beame allows me to expose my local development server to the mobile device with TLS terminated at my local workstation.
