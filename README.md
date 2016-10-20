@@ -54,7 +54,7 @@ Yes. If you use it for phishing we will blacklist it and revoke your cert.
 
 # Commands for using beame-insta-ssl:
 
-Step 1: Register by passing [simple anti-bot test](https://ypxf72akb6onjvrq.ohkv8odznwh5jpwm.v1.p.beameio.net/insta-ssl)
+Step 1: [Sign up here, humans only,](https://ypxf72akb6onjvrq.ohkv8odznwh5jpwm.v1.p.beameio.net/insta-ssl) and receive your personal token by email (make sure you use an email you can access). 
 
 Step 2: Install beame-insta-ssl by running	`npm install -g beame-insta-ssl`
 
