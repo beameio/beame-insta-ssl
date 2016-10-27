@@ -50,7 +50,7 @@ Right now we are not limiting it, but might if we get unreasonable usage.
 
 ## Can I lose my beame domain?
 
-Yes. If you use it for phishing we will blacklist it and revoke your cert.
+Yes. If you use it for phishing we will blacklist it and revoke corresponding cert.
 
 # Commands for using beame-insta-ssl:
 
