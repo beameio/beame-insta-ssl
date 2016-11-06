@@ -83,11 +83,9 @@ function expandFileName(fname, fqdn) {
 	return fname.replace('@FQDN@', fqdn);
 }
 
-if (args._[0] == 'tunnel') {
-	// TODO: more input validation
-	let cert, fqdn, dstHost, dstPort, dstHostname, dstProto;
+function parseFqdnArg(args) {
+	let cert, fqdn;
 
-	// FQDN
 	if (args.fqdn) {
 		fqdn = args.fqdn;
 		cert = BeameStore.getCredential(fqdn);
@@ -106,8 +104,17 @@ if (args._[0] == 'tunnel') {
 			process.exit(2);
 		}
 		cert = allCerts[0];
-		fqdn = cert.fqdn;
 	}
+
+	return cert;
+}
+
+if (args._[0] == 'tunnel') {
+	// TODO: more input validation
+	let cert, fqdn, dstHost, dstPort, dstHostname, dstProto;
+
+	cert = parseFqdnArg(args);
+	fqdn = cert.fqdn;
 
 	// dstHost:dstPort
 	var dstHostPort = args._[1];
@@ -140,6 +147,21 @@ if (args._[0] == 'tunnel') {
 		console.log(`Tunnel error: ${e}`);
 		process.exit(3);
 	}
+}
+
+if (args._[0] == 'syncmeta') {
+	// TODO: more input validation
+	let cert, fqdn;
+
+	cert = parseFqdnArg(args);
+	fqdn = cert.fqdn;
+
+	cert.syncMetadata(fqdn).then(meta=> {
+		console.info(meta);
+	}).catch(error=> {
+		console.error(error);
+	});
+	commandHandled = true;
 }
 
 if (args._[0] == 'list') {
