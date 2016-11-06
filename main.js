@@ -83,7 +83,7 @@ function expandFileName(fname, fqdn) {
 	return fname.replace('@FQDN@', fqdn);
 }
 
-function parseArgs(args) {
+function parseFqdnArg(args) {
 	let cert, fqdn;
 
 	if (args.fqdn) {
@@ -104,7 +104,6 @@ function parseArgs(args) {
 			process.exit(2);
 		}
 		cert = allCerts[0];
-		fqdn = cert.fqdn;
 	}
 
 	return cert;
@@ -114,7 +113,7 @@ if (args._[0] == 'tunnel') {
 	// TODO: more input validation
 	let cert, fqdn, dstHost, dstPort, dstHostname, dstProto;
 
-	cert = parseArgs(args);
+	cert = parseFqdnArg(args);
 	fqdn = cert.fqdn;
 
 	// dstHost:dstPort
@@ -154,7 +153,7 @@ if (args._[0] == 'syncmeta') {
 	// TODO: more input validation
 	let cert, fqdn;
 
-	cert = parseArgs(args);
+	cert = parseFqdnArg(args);
 	fqdn = cert.fqdn;
 
 	cert.syncMetadata(fqdn).then(meta=> {
@@ -162,6 +161,7 @@ if (args._[0] == 'syncmeta') {
 	}).catch(error=> {
 		console.error(error);
 	});
+	commandHandled = true;
 }
 
 if (args._[0] == 'list') {
