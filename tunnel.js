@@ -27,6 +27,9 @@ function startHttpsTerminatingProxy(certs, targetHost, targetPort, targetHostNam
 					host: targetHostName
 				}
 			});
+			proxy.on('error', e => {
+				console.error(`Error connecting to ${targetHost}:${targetPort} - ${e}`);
+			});
 			proxy.listen(0, () => {
 				// console.log(proxy._server.address().port);
 				resolve(proxy._server.address().port);
