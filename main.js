@@ -132,7 +132,7 @@ if (args._[0] == 'tunnel') {
 
 	// dstProto
 	dstProto = args._[2];
-	if (dstProto != 'http' && dstProto != 'https') {
+	if (dstProto != 'http' && dstProto != 'https' && dstProto != 'eehttp') {
 		console.log('DESTINATION_PROTO must be either http or https');
 		process.exit(1);
 	}
@@ -141,7 +141,7 @@ if (args._[0] == 'tunnel') {
 
 	console.log(`Starting tunnel https://${fqdn} -> ${dstProto}://${dstHost}:${dstPort}`);
 	try {
-		tunnel.httpsTunnel(fqdn, cert, dstHost, dstPort, dstProto, dstHostname);
+		tunnel(fqdn, cert, dstHost, dstPort, dstProto, dstHostname);
 		commandHandled = true;
 	} catch (e) {
 		console.log(`Tunnel error: ${e}`);

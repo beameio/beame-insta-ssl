@@ -97,7 +97,7 @@ F should_fail_with_text(cmd:Command, text:Str) {
 }
 
 doc Tests non-terminating tunnel
-F non_terminating_tunnel(cmd:Command) {
+F https_target_tunnel(cmd:Command) {
 	t = time().Str()
 	threads = [
 		Thread({ $(node testHttpsServer.js $fqdn $t) })
@@ -113,14 +113,14 @@ F non_terminating_tunnel(cmd:Command) {
 }
 
 doc Tests terminating tunnel
-F terminating_tunnel(cmd:Command, expected_hostname:Str) {
+F http_target_tunnel(cmd:Command, expected_hostname:Str, proto='https') {
 	t = time().Str()
 	threads = [
 		Thread({ $(node testHttpServer.js $t) })
 		Thread({ $($cmd) })
 	]
 	$(sleep 10)
-	out = try `curl --silent --max-time 30 "https://$fqdn/"`
+	out = try `curl --silent --max-time 30 "$proto://$fqdn/"`
 	$(pkill -f 'testHttpServer.js')
 	$(pkill -f 'tunnel 65500')
 	threads.join()
@@ -204,12 +204,16 @@ do_test("Export certificate", {
 
 wait_resolvable(fqdn)
 
+do_test("eehttp tunnel without fqdn", {
+	http_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 eehttp), fqdn, 'http')
+})
+
 do_test("Non-terminating tunnel without fqdn", {
-	non_terminating_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 https))
+	https_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 https))
 })
 
 do_test("Terminating tunnel without fqdn", {
-	terminating_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 http), 'localhost')
+	http_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 http), 'localhost')
 })
 
 # ---------- 2 or more certificates test ----------
@@ -247,13 +251,13 @@ do_test("Run tunnel not specifying fqdn", {
 wait_resolvable(fqdn)
 
 do_test("Non-terminating tunnel with fqdn", {
-	non_terminating_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 https --fqdn $fqdn))
+	https_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 https --fqdn $fqdn))
 })
 
 do_test("Terminating tunnel with fqdn", {
-	terminating_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 http --fqdn $fqdn), 'localhost')
+	http_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 http --fqdn $fqdn), 'localhost')
 })
 
 do_test("Terminating tunnel with fqdn and hostname", {
-	terminating_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 http --fqdn $fqdn --hostname test1.example.com), 'test1.example.com')
+	http_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 http --fqdn $fqdn --hostname test1.example.com), 'test1.example.com')
 })
