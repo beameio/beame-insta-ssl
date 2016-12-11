@@ -60,7 +60,11 @@ if (args._[0] == 'create') {
 		console.log(getHelpMessage('certificate-created.txt'));
 		process.exit(0);
 	}).catch(e => {
-		console.log('ERROR', e);
+		if(e instanceof Error) {
+			console.error(e.stack);
+		} else {
+			console.error('ERROR', e);
+		}
 		process.exit(1);
 	});
 
