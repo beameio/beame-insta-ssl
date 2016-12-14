@@ -19,6 +19,16 @@ The certificate will be ready in moments and you can start using your tunnel rig
 
 <img src="img/video.gif">
 
+**Check out our Wiki with how to guides:**
+
+1. [Beginner's Guide to beame-insta-ssl with Screenshots](https://github.com/beameio/beame-insta-ssl/wiki/Beginner%E2%80%99s-Guide-to-Using-beame-insta-ssl)
+2. [Installing a Non-Terminating Tunnel to IIS on Windows](https://github.com/beameio/beame-insta-ssl/wiki/How-to-Install-a-Non-Terminating-Tunnel-to-IIS)
+
+How To Guides Coming soon:
+
+3. Tunneling to Apache with beame-insta-ssl (Mac, Windows, Linux)
+4. Tunneling to NGNIX with beame-insta-ssl (Mac, Windows, Lin
+
 ## ... but this is already done by ngrok, Let's Encrypt, and ___your service here___!?
 
 Yes, but you have to either: pay for the SSL certificate, pay for premium tunneling services, get your TLS terminated for you (which is...not very secure), and/or reconfigure your DNS if you are using free certs. 
