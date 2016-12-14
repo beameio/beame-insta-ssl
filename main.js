@@ -49,7 +49,6 @@ function list() {
 if (args._[0] == 'create') {
 	/** @type {RegistrationToken} */
 	let token = JSON.parse(new Buffer(args._[1], 'base64').toString());
-	/** @type {beameSDK.Credential} */
 	let cred  = new Credential(BeameStore);
 
 	commandHandled = true;
