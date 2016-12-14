@@ -28,12 +28,12 @@ const fs   = require('fs');
 const path = require('path');
 
 const args  = require('minimist')(process.argv.slice(2));
-const beame = require('beame-sdk');
+const beameSDK = require('beame-sdk');
 
-const BeameStore = new beame.BeameStore();
-const Credential = beame.Credential;
+const BeameStore = new beameSDK.BeameStore();
+const Credential = beameSDK.Credential;
 
-var commandHandled = false;
+let commandHandled = false;
 
 function getHelpMessage(fileName) {
 	return fs.readFileSync(path.join(__dirname, 'help-messages', fileName), {'encoding': 'utf-8'});
@@ -49,6 +49,7 @@ function list() {
 if (args._[0] == 'create') {
 	/** @type {RegistrationToken} */
 	let token = JSON.parse(new Buffer(args._[1], 'base64').toString());
+	/** @type {beameSDK.Credential} */
 	let cred  = new Credential(BeameStore);
 
 	commandHandled = true;
@@ -66,7 +67,7 @@ if (args._[0] == 'create') {
 
 } else {
 
-	var credsCount = list().length;
+	let credsCount = list().length;
 
 	if (!credsCount) {
 		console.log(getHelpMessage('no-certificates.txt'));
@@ -117,7 +118,7 @@ if (args._[0] == 'tunnel') {
 	fqdn = cert.fqdn;
 
 	// dstHost:dstPort
-	var dstHostPort = args._[1];
+	let dstHostPort = args._[1];
 	if (typeof dstHostPort == 'number') {
 		dstHost = 'localhost';
 		dstPort = dstHostPort;

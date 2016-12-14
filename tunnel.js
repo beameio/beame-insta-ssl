@@ -12,7 +12,7 @@ const ProxyClient = beame.ProxyClient;
 function startHttpsTerminatingProxy(certs, targetHost, targetPort, targetHostName) {
 	// certs - key, cert, ca
 	return new Promise((resolve, reject) => {
-		var httpProxy = require('http-proxy');
+		const httpProxy = require('http-proxy');
 		try {
 			const proxy = httpProxy.createProxyServer({
 				target:  {
@@ -62,7 +62,7 @@ function tunnel(fqdn, creds, targetHost, targetPort, targetProto, targetHostName
 	}
 
 	/** @type {Object} **/
-	var serverCerts = {
+	let serverCerts = {
 		key:  creds.getKey("PRIVATE_KEY"),
 		cert: creds.getKey("P7B"),
 		ca:   creds.getKey("CA")
