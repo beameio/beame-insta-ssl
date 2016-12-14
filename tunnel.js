@@ -12,7 +12,7 @@ const ProxyClient = beame.ProxyClient;
 function startHttpsTerminatingProxy(certs, targetHost, targetPort, targetHostName) {
 	// certs - key, cert, ca
 	return new Promise((resolve, reject) => {
-		var httpProxy = require('http-proxy');
+		const httpProxy = require('http-proxy');
 		try {
 			const proxy = httpProxy.createProxyServer({
 				target:  {
@@ -26,6 +26,9 @@ function startHttpsTerminatingProxy(certs, targetHost, targetPort, targetHostNam
 				headers: {
 					host: targetHostName
 				}
+			});
+			proxy.on('error', e => {
+				console.error(`Error connecting to ${targetHost}:${targetPort} - ${e}`);
 			});
 			proxy.listen(0, () => {
 				// console.log(proxy._server.address().port);
@@ -46,9 +49,9 @@ function startHttpsTerminatingProxy(certs, targetHost, targetPort, targetHostNam
  * @param {String} targetProto
  * @param {String} targetHostName
  */
-function httpsTunnel(fqdn, creds, targetHost, targetPort, targetProto, targetHostName) {
+function tunnel(fqdn, creds, targetHost, targetPort, targetProto, targetHostName) {
 
-	if (targetProto != 'http' && targetProto != 'https') {
+	if (targetProto != 'http' && targetProto != 'https' && targetProto != 'eehttp') {
 		throw new Error("httpsTunnel: targetProto must be either http or https");
 	}
 
@@ -59,32 +62,29 @@ function httpsTunnel(fqdn, creds, targetHost, targetPort, targetProto, targetHos
 	}
 
 	/** @type {Object} **/
-	var serverCerts = {
+	let serverCerts = {
 		key:  creds.getKey("PRIVATE_KEY"),
 		cert: creds.getKey("P7B"),
 		ca:   creds.getKey("CA")
 	};
 
-	if (targetProto == 'http') {
+	switch(targetProto) {
+	case 'http':
 		startHttpsTerminatingProxy(serverCerts, targetHost, targetPort, targetHostName || targetHost)
 			.then(terminatingProxyPort => {
-				new ProxyClient("HTTPS", fqdn,
-					edge_fqdn, 'localhost',
-					terminatingProxyPort, {},
-					null, serverCerts);
+				new ProxyClient("HTTPS", fqdn, edge_fqdn, 'localhost', terminatingProxyPort, {}, null, serverCerts);
 			})
 			.catch(e => {
 				throw new Error(`Error starting HTTPS terminating proxy: ${e}`);
 			});
-	} else {
-
-		new ProxyClient("HTTPS", fqdn,
-			edge_fqdn, targetHost,
-			targetPort, {},
-			null, serverCerts);
+		break;
+	case 'https':
+		new ProxyClient("HTTPS", fqdn, edge_fqdn, targetHost, targetPort, {}, null, serverCerts);
+		break;
+	case 'eehttp':
+		console.error("WARNING: You are using unsupported protocol 'eehttp'. This feature will be broken in future.");
+		new ProxyClient("HTTP", fqdn, edge_fqdn, targetHost, targetPort, {});
 	}
 }
 
-module.exports = {
-	httpsTunnel
-};
+module.exports = tunnel;

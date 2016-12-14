@@ -19,6 +19,15 @@ The certificate will be ready in moments and you can start using your tunnel rig
 
 <img src="img/video.gif">
 
+**Check out our Wiki with how to guides:**
+
+1. [Beginner's Guide to beame-insta-ssl with Screenshots](https://github.com/beameio/beame-insta-ssl/wiki/Beginner%E2%80%99s-Guide-to-Using-beame-insta-ssl)
+2. [Installing a Non-Terminating Tunnel to IIS on Windows](https://github.com/beameio/beame-insta-ssl/wiki/How-to-Install-a-Non-Terminating-Tunnel-to-IIS)
+
+How To Guides Coming soon:
+
+3. Tunneling to Apache with beame-insta-ssl (Mac, Windows, Linux)
+4. Tunneling to NGNIX with beame-insta-ssl (Mac, Windows, Lin
 
 ## ... but this is already done by ngrok, Let's Encrypt, and ___your service here___!?
 
@@ -36,7 +45,7 @@ Your first beame credential is free and will remain free forever.
 
 ## How do you guys make money?
 
-The main purpose here is to show to the world how the [beame-sdk](https://github.com/beameio/beame-sdk) can be leveraged to create on-demand credentials and tunnels. We think you are going to like this idea and will generate many more beame credentials, for (a) authentication of your backend servers, (b) authentication of mobile clients, (c) authentication of users, and (d) encryption of cloud storage.
+This is a service that allows making encryption accessible to all and widely used, even by non-crypto experts. If you need more, or want to use this for enterprise, the **[beame-sdk](https://github.com/beameio/beame-sdk)** is the next level. It can be leveraged to create on-demand credentials and tunnels, and build private networks with cryptography based trust. We think you are going to like this idea and will generate many more beame credentials, for (a) authentication of your backend servers, (b) authentication of mobile clients, (c) authentication of users, and (d) encryption of cloud storage.
 
 ## What is the most common and valuable use case?
 I am developing for iOS, and I want to test my web application against my backend code, but it is much more convenient for me to test locally. Beame allows me to expose my local development server to the mobile device with TLS terminated at my local workstation.
@@ -51,11 +60,11 @@ Right now we are not limiting it, but might if we get unreasonable usage.
 
 ## Can I lose my beame domain?
 
-Yes. If you use it for phishing we will blacklist it and revoke your cert.
+Yes. If you use it for phishing we will blacklist it and revoke corresponding cert.
 
 # Commands for using beame-insta-ssl:
 
-Step 1: Register by passing [simple anti-bot test](https://ypxf72akb6onjvrq.ohkv8odznwh5jpwm.v1.p.beameio.net/insta-ssl)
+Step 1: [Sign up here, humans only,](https://ypxf72akb6onjvrq.ohkv8odznwh5jpwm.v1.p.beameio.net/insta-ssl) and receive your personal token by email (make sure you use an email you can access). 
 
 Step 2: Install beame-insta-ssl by running	`npm install -g beame-insta-ssl`
 

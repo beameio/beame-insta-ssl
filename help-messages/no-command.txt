@@ -21,7 +21,7 @@ Usage:
 
 		If DESTINATION_PROTO is "http", the tunnel will terminate TLS
 		traffic and transform the requests to HTTP. This way you can
-		run existing HTTP server unmodifed.
+		run existing HTTP server unmodified.
 
 		Examples:
 			beame-insta-ssl tunnel 8080 http

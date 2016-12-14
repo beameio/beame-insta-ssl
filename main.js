@@ -28,12 +28,12 @@ const fs   = require('fs');
 const path = require('path');
 
 const args  = require('minimist')(process.argv.slice(2));
-const beame = require('beame-sdk');
+const beameSDK = require('beame-sdk');
 
-const BeameStore = new beame.BeameStore();
-const Credential = beame.Credential;
+const BeameStore = new beameSDK.BeameStore();
+const Credential = beameSDK.Credential;
 
-var commandHandled = false;
+let commandHandled = false;
 
 function getHelpMessage(fileName) {
 	return fs.readFileSync(path.join(__dirname, 'help-messages', fileName), {'encoding': 'utf-8'});
@@ -60,13 +60,17 @@ if (args._[0] == 'create') {
 		console.log(getHelpMessage('certificate-created.txt'));
 		process.exit(0);
 	}).catch(e => {
-		console.log('ERROR', e);
+		if(e instanceof Error) {
+			console.error(e.stack);
+		} else {
+			console.error('ERROR', e);
+		}
 		process.exit(1);
 	});
 
 } else {
 
-	var credsCount = list().length;
+	let credsCount = list().length;
 
 	if (!credsCount) {
 		console.log(getHelpMessage('no-certificates.txt'));
@@ -83,11 +87,9 @@ function expandFileName(fname, fqdn) {
 	return fname.replace('@FQDN@', fqdn);
 }
 
-if (args._[0] == 'tunnel') {
-	// TODO: more input validation
-	let cert, fqdn, dstHost, dstPort, dstHostname, dstProto;
+function parseFqdnArg(args) {
+	let cert, fqdn;
 
-	// FQDN
 	if (args.fqdn) {
 		fqdn = args.fqdn;
 		cert = BeameStore.getCredential(fqdn);
@@ -106,11 +108,20 @@ if (args._[0] == 'tunnel') {
 			process.exit(2);
 		}
 		cert = allCerts[0];
-		fqdn = cert.fqdn;
 	}
 
+	return cert;
+}
+
+if (args._[0] == 'tunnel') {
+	// TODO: more input validation
+	let cert, fqdn, dstHost, dstPort, dstHostname, dstProto;
+
+	cert = parseFqdnArg(args);
+	fqdn = cert.fqdn;
+
 	// dstHost:dstPort
-	var dstHostPort = args._[1];
+	let dstHostPort = args._[1];
 	if (typeof dstHostPort == 'number') {
 		dstHost = 'localhost';
 		dstPort = dstHostPort;
@@ -125,7 +136,7 @@ if (args._[0] == 'tunnel') {
 
 	// dstProto
 	dstProto = args._[2];
-	if (dstProto != 'http' && dstProto != 'https') {
+	if (dstProto != 'http' && dstProto != 'https' && dstProto != 'eehttp') {
 		console.log('DESTINATION_PROTO must be either http or https');
 		process.exit(1);
 	}
@@ -134,12 +145,27 @@ if (args._[0] == 'tunnel') {
 
 	console.log(`Starting tunnel https://${fqdn} -> ${dstProto}://${dstHost}:${dstPort}`);
 	try {
-		tunnel.httpsTunnel(fqdn, cert, dstHost, dstPort, dstProto, dstHostname);
+		tunnel(fqdn, cert, dstHost, dstPort, dstProto, dstHostname);
 		commandHandled = true;
 	} catch (e) {
 		console.log(`Tunnel error: ${e}`);
 		process.exit(3);
 	}
+}
+
+if (args._[0] == 'syncmeta') {
+	// TODO: more input validation
+	let cert, fqdn;
+
+	cert = parseFqdnArg(args);
+	fqdn = cert.fqdn;
+
+	cert.syncMetadata(fqdn).then(meta=> {
+		console.info(meta);
+	}).catch(error=> {
+		console.error(error);
+	});
+	commandHandled = true;
 }
 
 if (args._[0] == 'list') {

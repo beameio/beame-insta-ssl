@@ -46,12 +46,14 @@ F base64decode(s:Str) {
 	ret
 }
 
+F fqdn_dir(fqdn) "$HOME/.beame/v2/$fqdn"
+
 # ---------- Tests code ----------
 
 
 doc Copies Beame test requests signing credential into store for L0 entity creation
 F copy_to_store() {
-	$(cp -a "$HOME/$BEAME_DEV_AUTH_FQDN" "$HOME/.beame/v2/$BEAME_DEV_AUTH_FQDN")
+	$(cp -a "$HOME/$BEAME_DEV_AUTH_FQDN" ${fqdn_dir(BEAME_DEV_AUTH_FQDN)})
 	'Copied'
 }
 
@@ -64,7 +66,7 @@ F create_token() {
 
 doc Creates level 0 entity
 F create_L0() {
-    t = time()
+	t = time()
 	beame_insta_ssl_token = {
 		'authToken': token.base64decode().parse()
 		'authSrvFqdn': ENV.BEAME_INTERNAL_AUTH_SERVER_FQDN
@@ -79,7 +81,7 @@ F create_L0() {
 
 doc Removes Beame test requests signing credential from store
 F remove_from_store() {
-	$(rm -r "$HOME/.beame/v2/$BEAME_DEV_AUTH_FQDN")
+	$(rm -r ${fqdn_dir(BEAME_DEV_AUTH_FQDN)})
 	'Removed'
 }
 
@@ -95,7 +97,7 @@ F should_fail_with_text(cmd:Command, text:Str) {
 }
 
 doc Tests non-terminating tunnel
-F non_terminating_tunnel(cmd:Command) {
+F https_target_tunnel(cmd:Command) {
 	t = time().Str()
 	threads = [
 		Thread({ $(node testHttpsServer.js $fqdn $t) })
@@ -111,14 +113,14 @@ F non_terminating_tunnel(cmd:Command) {
 }
 
 doc Tests terminating tunnel
-F terminating_tunnel(cmd:Command, expected_hostname:Str) {
+F http_target_tunnel(cmd:Command, expected_hostname:Str, proto='https') {
 	t = time().Str()
 	threads = [
 		Thread({ $(node testHttpServer.js $t) })
 		Thread({ $($cmd) })
 	]
 	$(sleep 10)
-	out = try `curl --silent --max-time 30 "https://$fqdn/"`
+	out = try `curl --silent --max-time 30 "$proto://$fqdn/"`
 	$(pkill -f 'testHttpServer.js')
 	$(pkill -f 'tunnel 65500')
 	threads.join()
@@ -138,6 +140,19 @@ F wait_resolvable(h:Str) {
 	})
 }
 
+F corrupt_metadata_json() {
+	metadata = ``cat "${fqdn_dir(fqdn)}/metadata.json"``
+	metadata.edge_fqdn = 'corrupted'
+	$(echo ${metadata.encode_json()} >"${fqdn_dir(fqdn)}/metadata.json")
+	metadata_json_ok(fqdn) throws TestFail("Metadata JSON is OK while should be corrupted")
+	"Metadata file corrupted"
+}
+
+F metadata_json_ok(fqdn) {
+	metadata = ``cat "${fqdn_dir(fqdn)}/metadata.json"``
+	metadata.edge_fqdn != 'corrupted'
+}
+
 # ---------- No certificates test ----------
 
 do_test("Run without certificates", {
@@ -155,6 +170,18 @@ do_test("List certificates - one certificate", {
 	certs = `$BEAME_INSTA_SSL_BIN list`.lines()
 	assert(certs == [fqdn])
 	'List is OK'
+})
+
+do_test("Corrupt metadata JSON", corrupt_metadata_json)
+
+do_test("Update metadata", {
+	$($BEAME_INSTA_SSL_BIN syncmeta)
+	"OK"
+})
+
+do_test("Metadata OK", {
+	metadata_json_ok(fqdn).not() throws TestFail("Metadata JSON is not OK")
+	"OK"
 })
 
 do_test("Export certificate", {
@@ -177,12 +204,16 @@ do_test("Export certificate", {
 
 wait_resolvable(fqdn)
 
+do_test("eehttp tunnel without fqdn", {
+	http_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 eehttp), fqdn, 'http')
+})
+
 do_test("Non-terminating tunnel without fqdn", {
-	non_terminating_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 https))
+	https_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 https))
 })
 
 do_test("Terminating tunnel without fqdn", {
-	terminating_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 http), 'localhost')
+	http_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 http), 'localhost')
 })
 
 # ---------- 2 or more certificates test ----------
@@ -192,6 +223,19 @@ do_test("Copy $BEAME_DEV_AUTH_FQDN into store", copy_to_store)
 do_test("Create token for additional test L0 entity", create_token)
 do_test("Create additional test L0 entity", create_L0)
 do_test("Remove $BEAME_DEV_AUTH_FQDN from store", remove_from_store)
+
+do_test("Corrupt metadata JSON", corrupt_metadata_json)
+
+do_test("Update metadata", {
+	$($BEAME_INSTA_SSL_BIN syncmeta --fqdn $fqdn)
+	"OK"
+})
+
+do_test("Metadata OK", {
+	metadata_json_ok(fqdn).not() throws TestFail("Metadata JSON is not OK")
+	"OK"
+})
+
 
 do_test("List certificates - two certificates", {
 	certs = `$BEAME_INSTA_SSL_BIN list`.lines()
@@ -207,13 +251,13 @@ do_test("Run tunnel not specifying fqdn", {
 wait_resolvable(fqdn)
 
 do_test("Non-terminating tunnel with fqdn", {
-	non_terminating_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 https --fqdn $fqdn))
+	https_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 https --fqdn $fqdn))
 })
 
 do_test("Terminating tunnel with fqdn", {
-	terminating_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 http --fqdn $fqdn), 'localhost')
+	http_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 http --fqdn $fqdn), 'localhost')
 })
 
 do_test("Terminating tunnel with fqdn and hostname", {
-	terminating_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 http --fqdn $fqdn --hostname test1.example.com), 'test1.example.com')
+	http_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 http --fqdn $fqdn --hostname test1.example.com), 'test1.example.com')
 })
