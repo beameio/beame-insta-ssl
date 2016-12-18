@@ -11,11 +11,49 @@ When using Beame.io, the private key never leaves your computer/server. Beame ca
 
 Step 1: Sign up super-fast [here!](https://ypxf72akb6onjvrq.ohkv8odznwh5jpwm.v1.p.beameio.net/insta-ssl)
 
+(if you use Windows, see [Windows System Requirements](#Windows System Requirements) below before Step 2)
+
 Step 2: Run	`npm install -g beame-insta-ssl`
 
 Step 3: Run the command in the sign up confirmation email you just got from us. beame-insta-ssl will obtain your very own beame hostname, and issue a valid public certificate for it.
 
-The certificate will be ready in moments and you can start using your tunnel right away. Truly a one-stop-shop! 
+The certificate will be ready in moments and you can start using your tunnel right away. Truly a one-stop-shop!
+
+### Windows System Requirements <a name="Windows System Requirements"></a>
+
+Before running `npm install -g beame-insta-ssl` please make sure you have OpenSSL installed in `C:\OpenSSL-Win64` . If you you already have OpenSSL installed at that location, skip the instructions below and just issue `npm install -g beame-insta-ssl`. If you don't have OpenSSL in `C:\OpenSSL-Win64`, one of the possible ways of installing OpenSSL is described below (Install Visual C++ Build Tools and Python 2.7, Upgrade NPM, Install Perl, Install OpenSSL). The procedure was tested on Microsoft Windows Server 2012 R2 Standard and Windows 10. We recommend to use your “Windows PowerShell” and run it with administrator rights for the following commands:
+
+### Install Visual C++ Build Tools and Python 2.7
+
+`npm install --global --production windows-build-tools`. This typically takes 5 to 10 minutes, depending on the internet connection.
+
+### Upgrade NPM
+
+`npm -g install npm@latest`
+
+### Install Perl
+
+Perl is needed for building OpenSSL. If you already have Perl installed, please skip the `Install Perl` section.
+
+Get Perl from
+`https://downloads.activestate.com/ActivePerl/releases/5.24.0.2400/ActivePerl-5.24.0.2400-MSWin32-x64-300558.exe` (SHA256 is `9e6ab2bb1335372cab06ef311cbaa18fe97c96f9dd3d5c8413bc864446489b92`)
+or another source.
+ This version of Perl [might have](https://community.activestate.com/node/19784) [security](https://www.virustotal.com/en/file/9e6ab2bb1335372cab06ef311cbaa18fe97c96f9dd3d5c8413bc864446489b92/analysis/) [issue](https://www.metadefender.com/#!/results/file/c869301df9424b02aa49ce15d7bce692/regular/analysis) but my estimation is that it's false positive. Consider installing other versions or Perl built by other companies.
+
+### Install OpenSSL
+
+Download and extract `https://www.openssl.org/source/openssl-1.0.1t.tar.gz` (other versions might work but were not tested)
+
+Using "Visual C++ 2015 x64 Native Build Tools Command Prompt" under `C:\Program Files (x86)\Microsoft Visual C++ Build Tools\` in the OpenSSL directory issue the following commands:
+
+    perl Configure VC-WIN64A no-asm --prefix=C:\OpenSSL-Win64
+    .\ms\do_win64a.bat
+	# If the following "clean" fails it's OK, just continue with following commands
+    nmake -f ms\ntdll.mak clean
+    nmake -f ms\ntdll.mak
+    nmake -f ms\ntdll.mak install
+
+    npm install -g beame-insta-ssl
 
 <img src="img/video.gif">
 
@@ -27,7 +65,7 @@ The certificate will be ready in moments and you can start using your tunnel rig
 How To Guides Coming soon:
 
 3. Tunneling to Apache with beame-insta-ssl (Mac, Windows, Linux)
-4. Tunneling to NGNIX with beame-insta-ssl (Mac, Windows, Lin
+4. Tunneling to NGNIX with beame-insta-ssl (Mac, Windows, Linux)
 
 ## ... but this is already done by ngrok, Let's Encrypt, and ___your service here___!?
 
