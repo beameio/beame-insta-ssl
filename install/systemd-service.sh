@@ -22,6 +22,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 : ${BEAME_INSTA_SSL_SYSTEMD_FILE:="/etc/systemd/system/$BEAME_INSTA_SSL_SVC.service"}
 : ${BEAME_INSTA_SSL_SYSTEMD_EXTRA:=''}
 : ${BEAME_INSTA_SSL_DIR:="$(dirname "$SCRIPT_DIR")"}
+: ${BEAME_INSTA_SSL_ARGV:="tunnel 8443 https"}
 
 if [[ $BEAME_INSTA_SSL_NODEJS_BIN ]];then
 	echo "+ Will be using NodeJS at $BEAME_INSTA_SSL_NODEJS_BIN"
@@ -46,7 +47,7 @@ Type=simple
 Environment=NODE_ENV=production
 User=$BEAME_INSTA_SSL_USER
 WorkingDirectory=$BEAME_INSTA_SSL_DIR
-ExecStart=$BEAME_INSTA_SSL_NODEJS_BIN main.js serve"
+ExecStart=$BEAME_INSTA_SSL_NODEJS_BIN main.js $BEAME_INSTA_SSL_ARGV"
 Restart=always
 RestartSec=10
 
