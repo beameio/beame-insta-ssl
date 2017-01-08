@@ -47,7 +47,7 @@ Type=simple
 Environment=NODE_ENV=production
 User=$BEAME_INSTA_SSL_USER
 WorkingDirectory=$BEAME_INSTA_SSL_DIR
-ExecStart=$BEAME_INSTA_SSL_NODEJS_BIN main.js $BEAME_INSTA_SSL_ARGV"
+ExecStart=$BEAME_INSTA_SSL_NODEJS_BIN main.js $BEAME_INSTA_SSL_ARGV
 Restart=always
 RestartSec=10
 
