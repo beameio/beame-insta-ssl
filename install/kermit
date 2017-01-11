@@ -1,0 +1,8 @@
+SET MODEM TYPE NONE
+SET LINE /dev/ttyUSB2
+SET CARRIER-WATCH OFF
+lineout at+cfun=1
+input 5 OK
+if fail exit 1 First AT failed
+echo First AT went OK
+quit

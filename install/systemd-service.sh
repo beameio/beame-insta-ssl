@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# BEAME_INSTA_SSL_USER=pi BEAME_INSTA_SSL_ARGV='tunnel 5555 http --fqdn SOMETHING.beameio.net' BEAME_INSTA_SSL_DIR=/usr/lib/node_modules/beame-insta-ssl sudo -E ./systemd-service.sh
+
 set -eu
 
 err_trap_func() {

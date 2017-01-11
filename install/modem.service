@@ -1,0 +1,8 @@
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/root
+ExecStart=/bin/bash -c 'while ! kermit kermit;do sleep 3; echo Rerunning;done; echo Done'
+
+[Install]
+WantedBy=network.target
