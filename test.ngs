@@ -15,17 +15,6 @@ BEAME_SDK_BIN = HOME / 'beame-sdk/src/cli/beame.js'
 BEAME_DEV_AUTH_FQDN = 'n6ge8i9q4b4b5vb6.h40d7vrwir2oxlnn.v1.d.beameio.net'
 EXPECTED_EXPORTED_FILE_EXTENSIONS = %[pem key ca chain.pkcs7 pkcs12 pkcs12.pwd]
 
-# ---------- Tests "framework" ----------
-
-{ type TestFail(Error) }
-
-F do_test(name:Str, f:Fun) {
-	echo("")
-	echo("=== TEST: $name ===")
-	msg = f()
-	echo("  OK: $msg")
-}
-
 # ---------- Utilities ----------
 
 F base64encode(s:Str) {
@@ -54,14 +43,14 @@ F fqdn_dir(fqdn) "$HOME/.beame/v2/$fqdn"
 doc Copies Beame test requests signing credential into store for L0 entity creation
 F copy_to_store() {
 	$(cp -a "$HOME/$BEAME_DEV_AUTH_FQDN" ${fqdn_dir(BEAME_DEV_AUTH_FQDN)})
-	'Copied'
+	TestMessage('Copied')
 }
 
 doc Creates token needed for signing request for level 0 entity
 F create_token() {
-	global token = ``$BEAME_SDK_BIN token create --fqdn $BEAME_DEV_AUTH_FQDN --data NONE``
+	global token = `$BEAME_SDK_BIN token create --fqdn $BEAME_DEV_AUTH_FQDN --data NONE`
 	assert(token is Str, "Token expected to be a string")
-	token
+	TestMessage(token)
 }
 
 doc Creates level 0 entity
@@ -76,13 +65,13 @@ F create_L0() {
 	txt = `$BEAME_INSTA_SSL_BIN create ${beame_insta_ssl_token.encode_json().base64encode()}`
 	cert_created_line = txt.lines().filter(X ~ Pfx('Certificate created'))[0]
 	global fqdn = cert_created_line.split(' ')[-1]
-	"Entity $fqdn created"
+	TestMessage("Entity $fqdn created")
 }
 
 doc Removes Beame test requests signing credential from store
 F remove_from_store() {
 	$(rm -r ${fqdn_dir(BEAME_DEV_AUTH_FQDN)})
-	'Removed'
+	TestMessage('Removed')
 }
 
 doc Checks that process outputs specific text and exists with non-zero code
@@ -109,7 +98,7 @@ F https_target_tunnel(cmd:Command) {
 	$(pkill -f 'tunnel 65500')
 	threads.join()
 	out != t throws TestFail("Result from server is missing or incorrect: '$out' vs '$t'")
-	'Result from server is OK'
+	TestMessage('Result from server is OK')
 }
 
 doc Tests terminating tunnel
@@ -125,12 +114,12 @@ F http_target_tunnel(cmd:Command, expected_hostname:Str, proto='https') {
 	$(pkill -f 'tunnel 65500')
 	threads.join()
 	out != "$t-$expected_hostname" throws TestFail("Result from server is missing or incorrect: '$out' vs '$t-$expected_hostname'")
-	'Result from server is OK'
+	TestMessage('Result from server is OK')
 }
 
 doc Waits till hostname becomes resolvable (has DNS record)
 F wait_resolvable(h:Str) {
-	do_test("Waiting for hostname $h to be resolvable", {
+	test("Waiting for hostname $h to be resolvable", {
 		for(i;45) {
 			resolve = `dig "+short" $h`
 			resolve returns "Resolves to ${resolve.lines()[-1]}"
@@ -145,7 +134,7 @@ F corrupt_metadata_json() {
 	metadata.edge_fqdn = 'corrupted'
 	$(echo ${metadata.encode_json()} >"${fqdn_dir(fqdn)}/metadata.json")
 	metadata_json_ok(fqdn) throws TestFail("Metadata JSON is OK while should be corrupted")
-	"Metadata file corrupted"
+	TestMessage("Metadata file corrupted")
 }
 
 F metadata_json_ok(fqdn) {
@@ -155,36 +144,34 @@ F metadata_json_ok(fqdn) {
 
 # ---------- No certificates test ----------
 
-do_test("Run without certificates", {
+test("Run without certificates", {
 	should_fail_with_text(%($BEAME_INSTA_SSL_BIN list), 'you have no certificates')
 })
 
 # ---------- One certificate test ----------
 
-do_test("Copy $BEAME_DEV_AUTH_FQDN into store", copy_to_store)
-do_test("Create token for test L0 entity", create_token)
-do_test("Create test L0 entity", create_L0);
-do_test("Remove $BEAME_DEV_AUTH_FQDN from store", remove_from_store)
+test("Copy $BEAME_DEV_AUTH_FQDN into store", copy_to_store)
+test("Create token for test L0 entity", create_token)
+test("Create test L0 entity", create_L0);
+test("Remove $BEAME_DEV_AUTH_FQDN from store", remove_from_store)
 
-do_test("List certificates - one certificate", {
+test("List certificates - one certificate", {
 	certs = `$BEAME_INSTA_SSL_BIN list`.lines()
 	assert(certs == [fqdn])
-	'List is OK'
+	TestMessage('List is OK')
 })
 
-do_test("Corrupt metadata JSON", corrupt_metadata_json)
+test("Corrupt metadata JSON", corrupt_metadata_json)
 
-do_test("Update metadata", {
+test("Update metadata", {
 	$($BEAME_INSTA_SSL_BIN syncmeta)
-	"OK"
 })
 
-do_test("Metadata OK", {
+test("Metadata OK", {
 	metadata_json_ok(fqdn).not() throws TestFail("Metadata JSON is not OK")
-	"OK"
 })
 
-do_test("Export certificate", {
+test("Export certificate", {
 	dir = `mktemp --tmpdir -d test-beame-insta-ssl.XXXXXXXXXX` - MaybeSfx('\n')
 	err = null
 	ret = null
@@ -199,65 +186,62 @@ do_test("Export certificate", {
 	}
 	$(rm -r $dir)
 	err throws err
-	'All expected files are present'
+	TestMessage('All expected files are present')
 })
 
 wait_resolvable(fqdn)
 
-do_test("eehttp tunnel without fqdn", {
+test("eehttp tunnel without fqdn", {
 	http_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 eehttp), fqdn, 'http')
 })
 
-do_test("Non-terminating tunnel without fqdn", {
+test("Non-terminating tunnel without fqdn", {
 	https_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 https))
 })
 
-do_test("Terminating tunnel without fqdn", {
+test("Terminating tunnel without fqdn", {
 	http_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 http), 'localhost')
 })
 
 # ---------- 2 or more certificates test ----------
 
 old_fqdn = fqdn
-do_test("Copy $BEAME_DEV_AUTH_FQDN into store", copy_to_store)
-do_test("Create token for additional test L0 entity", create_token)
-do_test("Create additional test L0 entity", create_L0)
-do_test("Remove $BEAME_DEV_AUTH_FQDN from store", remove_from_store)
+test("Copy $BEAME_DEV_AUTH_FQDN into store", copy_to_store)
+test("Create token for additional test L0 entity", create_token)
+test("Create additional test L0 entity", create_L0)
+test("Remove $BEAME_DEV_AUTH_FQDN from store", remove_from_store)
 
-do_test("Corrupt metadata JSON", corrupt_metadata_json)
+test("Corrupt metadata JSON", corrupt_metadata_json)
 
-do_test("Update metadata", {
+test("Update metadata", {
 	$($BEAME_INSTA_SSL_BIN syncmeta --fqdn $fqdn)
-	"OK"
 })
 
-do_test("Metadata OK", {
+test("Metadata OK", {
 	metadata_json_ok(fqdn).not() throws TestFail("Metadata JSON is not OK")
-	"OK"
 })
 
 
-do_test("List certificates - two certificates", {
+test("List certificates - two certificates", {
 	certs = `$BEAME_INSTA_SSL_BIN list`.lines()
 	assert(certs.sort() == [old_fqdn, fqdn].sort())
-	'List is OK'
 })
 
 
-do_test("Run tunnel not specifying fqdn", {
+test("Run tunnel not specifying fqdn", {
 	should_fail_with_text(%($BEAME_INSTA_SSL_BIN tunnel 65500 https), 'more than one')
 })
 
 wait_resolvable(fqdn)
 
-do_test("Non-terminating tunnel with fqdn", {
+test("Non-terminating tunnel with fqdn", {
 	https_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 https --fqdn $fqdn))
 })
 
-do_test("Terminating tunnel with fqdn", {
+test("Terminating tunnel with fqdn", {
 	http_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 http --fqdn $fqdn), 'localhost')
 })
 
-do_test("Terminating tunnel with fqdn and hostname", {
+test("Terminating tunnel with fqdn and hostname", {
 	http_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 http --fqdn $fqdn --hostname test1.example.com), 'test1.example.com')
 })
