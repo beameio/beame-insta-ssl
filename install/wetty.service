@@ -1,0 +1,10 @@
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi
+ExecStart=/usr/bin/wetty -p 5555
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

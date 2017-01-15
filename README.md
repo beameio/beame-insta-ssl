@@ -13,7 +13,9 @@ Step 1: Sign up super-fast [here!](https://ypxf72akb6onjvrq.ohkv8odznwh5jpwm.v1.
 
 (if you use Windows, see [Windows System Requirements](#Windows System Requirements) below before Step 2)
 
-Step 2: Run	`npm install -g beame-insta-ssl`
+Step 2 for Mac/Linux: Run `sudo npm install -g beame-insta-ssl` (**please make sure you are using NodeJS version 6.9.X**). Depending on your configuration you might want to run `npm install -g beame-insta-ssl` instead (if you are using [`n`](https://github.com/tj/n) or other methods for creating per-user NodejS installations).
+
+Step 2 for Windows: Run `npm install -g beame-insta-ssl` (**please make sure you are using NodeJS version 6.9.X**).
 
 Step 3: Run the command in the sign up confirmation email you just got from us. beame-insta-ssl will obtain your very own beame hostname, and issue a valid public certificate for it.
 
