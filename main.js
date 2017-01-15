@@ -27,9 +27,9 @@ const properties2fnames = {
 const fs   = require('fs');
 const path = require('path');
 
-const args  = require('minimist')(process.argv.slice(2));
+const args     = require('minimist')(process.argv.slice(2));
 const beameSDK = require('beame-sdk');
-
+const CommonUtils = beameSDK.CommonUtils;
 const BeameStore = new beameSDK.BeameStore();
 const Credential = beameSDK.Credential;
 
@@ -47,26 +47,62 @@ function list() {
 
 
 if (args._[0] == 'create') {
-	/** @type {RegistrationToken} */
-	let token = JSON.parse(new Buffer(args._[1], 'base64').toString());
-	let cred  = new Credential(BeameStore);
 
 	commandHandled = true;
 
-	cred.createEntityWithAuthServer(token.authToken, token.authSrvFqdn, token.name, token.email).then(metadata=> {
+	const Constants = require('./constants');
+
+	const _onCredsReceived = (metadata) => {
 		console.log('');
 		console.log(`Certificate created! Certificate FQDN is ${metadata.fqdn}`);
 		console.log('');
 		console.log(getHelpMessage('certificate-created.txt'));
 		process.exit(0);
-	}).catch(e => {
-		if(e instanceof Error) {
+	};
+
+	const _onCredsFailure = (e) => {
+		if (e instanceof Error) {
 			console.error(e.stack);
 		} else {
 			console.error('ERROR', e);
 		}
 		process.exit(1);
-	});
+	};
+
+	/** @type {RegistrationToken} */
+	let token = JSON.parse(new Buffer(args._[1], 'base64').toString());
+	let cred  = new Credential(BeameStore);
+
+	let type = token.type || Constants.RequestType.RequestWithAuthServer;
+
+
+	switch (type) {
+		case Constants.RequestType.RequestWithAuthServer:
+			cred.createEntityWithAuthServer(token.authToken, token.authSrvFqdn, token.name, token.email).then(_onCredsReceived).catch(_onCredsFailure);
+			break;
+		case Constants.RequestType.RequestWithParentFqdn:
+			cred.createEntityWithAuthToken(token.authToken, token.name, token.email).then(_onCredsReceived).catch(_onCredsFailure);
+			break;
+		case Constants.RequestType.RequestWithFqdn:
+
+			let aut        = CommonUtils.parse(token.authToken),
+			    signedData = CommonUtils.parse(aut.signedData.data),
+			    payload    = {
+				    fqdn:        signedData.fqdn,
+				    parent_fqdn: aut.signedBy,
+				    sign:        token.authToken
+			    },
+			    metadata   = {
+				    name:  token.name,
+				    email: token.email
+			    };
+
+			cred.requestCerts(payload, metadata).then(_onCredsReceived).catch(_onCredsFailure);
+			break;
+		default:
+			return _onCredsFailure(`Unknown request type`);
+	}
+
 
 } else {
 
@@ -160,9 +196,9 @@ if (args._[0] == 'syncmeta') {
 	cert = parseFqdnArg(args);
 	fqdn = cert.fqdn;
 
-	cert.syncMetadata(fqdn).then(meta=> {
+	cert.syncMetadata(fqdn).then(meta => {
 		console.info(meta);
-	}).catch(error=> {
+	}).catch(error => {
 		console.error(error);
 	});
 	commandHandled = true;
