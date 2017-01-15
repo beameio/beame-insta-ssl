@@ -50,8 +50,6 @@ if (args._[0] == 'create') {
 
 	commandHandled = true;
 
-	const Constants = require('./constants');
-
 	const _onCredsReceived = (metadata) => {
 		console.log('');
 		console.log(`Certificate created! Certificate FQDN is ${metadata.fqdn}`);
@@ -73,35 +71,8 @@ if (args._[0] == 'create') {
 	let token = JSON.parse(new Buffer(args._[1], 'base64').toString());
 	let cred  = new Credential(BeameStore);
 
-	let type = token.type || Constants.RequestType.RequestWithAuthServer;
+	cred.createEntityWithRegistrationToken(token).then(_onCredsReceived).catch(_onCredsFailure);
 
-
-	switch (type) {
-		case Constants.RequestType.RequestWithAuthServer:
-			cred.createEntityWithAuthServer(token.authToken, token.authSrvFqdn, token.name, token.email).then(_onCredsReceived).catch(_onCredsFailure);
-			break;
-		case Constants.RequestType.RequestWithParentFqdn:
-			cred.createEntityWithAuthToken(token.authToken, token.name, token.email).then(_onCredsReceived).catch(_onCredsFailure);
-			break;
-		case Constants.RequestType.RequestWithFqdn:
-
-			let aut        = CommonUtils.parse(token.authToken),
-			    signedData = CommonUtils.parse(aut.signedData.data),
-			    payload    = {
-				    fqdn:        signedData.fqdn,
-				    parent_fqdn: aut.signedBy,
-				    sign:        token.authToken
-			    },
-			    metadata   = {
-				    name:  token.name,
-				    email: token.email
-			    };
-
-			cred.requestCerts(payload, metadata).then(_onCredsReceived).catch(_onCredsFailure);
-			break;
-		default:
-			return _onCredsFailure(`Unknown request type`);
-	}
 
 
 } else {
