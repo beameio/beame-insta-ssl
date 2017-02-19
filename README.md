@@ -102,7 +102,7 @@ Right now we are not limiting it, but might if we get unreasonable usage.
 
 Yes. If you use it for phishing we will blacklist it and revoke corresponding cert.
 
-# Commands for using beame-insta-ssl:
+## Commands for using beame-insta-ssl:
 
 Step 1: [Sign up here, humans only,](https://ypxf72akb6onjvrq.ohkv8odznwh5jpwm.v1.p.beameio.net/insta-ssl) and receive your personal token by email (make sure you use an email you can access). 
 
@@ -131,3 +131,29 @@ Credentials created by you are stored on your machine in `$HOME/.beame` folder. 
 
 	beame-insta-ssl export qwertyuio.asdfghjkl.v1.d.beameio.net ./destination_folder_path
 
+## Advanced: TCP over TLS tunnel using beame-insta-ssl
+
+Here are the commands that you can run to make a generic TCP tunnel over TLS tunnel provided by Beame.io . This example shows specific case of exposing SSH port. Tested on Linux with socat version 1.7.3.1, make sure your socat version is recent enough to support TLS1.2
+
+### How it works
+
+Establish tunnel using beame-insta-ssl "tunnel" command:
+
+                Beame.io infrastructure <--- ssh server
+
+Connect using tunnel, traffic between Beame.io infrastructure and ssh server flows inside the established tunnel, incoming firewall rules near SSH server do not apply.
+
+    client ---> Beame.io infrastructure ---> ssh server
+
+
+### Client side
+
+    FQDN=something.beameio.net
+    while true;do date;socat tcp-listen:50001,reuseaddr exec:"openssl s_client -host $FQDN -port 443 -servername $FQDN -quiet";done &
+    ssh -p 50001 127.0.0.1
+
+### Server side (where beame-insta-ssl is installed)
+
+    FQDN=something.beameio.net
+    ./main.js tunnel 50000 https --fqdn $FQDN &
+    while true;do date;socat openssl-listen:50000,reuseaddr,cert=$HOME/.beame/v2/$FQDN/p7b.cer,key=$HOME/.beame/v2/$FQDN/private_key.pem,method=TLS1.2,verify=0 TCP4:127.0.0.1:22;done
