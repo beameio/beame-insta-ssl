@@ -5,7 +5,7 @@
 
 const beameSDK    = require('beame-sdk');
 const CommonUtils = beameSDK.CommonUtils;
-const BeameStore  = beameSDK.BeameStore;
+const BeameStore  = new beameSDK.BeameStore;
 const BeameLogger = beameSDK.Logger;
 const logger      = new BeameLogger("BIS-Credentials");
 const fs          = require('fs');
@@ -31,15 +31,9 @@ function _lineToText(line) {
 	return table;
 }
 
-module.exports = {
-	create,
-	getCreds,
-	getRegToken,
-	syncmeta,
-	exportCred,
-	revokeCert,
-	renewCert
-};
+function _list() {
+	return BeameStore.list(null, {hasPrivateKey: true});
+}
 
 
 function create(token) {
@@ -121,18 +115,7 @@ function syncmeta(fqdn) {
 syncmeta.toText = _lineToText;
 
 
-/**
- * Return list of credentials
- * @public
- * @method Creds.list
- * @param {String|null} [regex] entity fqdn
- * @returns {Array.<Credential>}
- */
-function list(regex) {
-	logger.debug(`list  ${regex}`);
-	const store = new BeameStore();
-	return store.list(regex || '.');
-}
+const list = _list;
 
 list.toText = function (creds) {
 	let table = new Table({
@@ -257,3 +240,14 @@ function renewCert(signerAuthToken, fqdn, callback) {
 	CommonUtils.promise2callback(cred.renewCert(authToken, fqdn).then(returnOK), callback);
 }
 renewCert.toText = _lineToText;
+
+module.exports = {
+	create,
+	list,
+	getCreds,
+	getRegToken,
+	syncmeta,
+	exportCred,
+	revokeCert,
+	renewCert
+};

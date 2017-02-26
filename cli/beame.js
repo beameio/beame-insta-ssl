@@ -215,6 +215,7 @@ function usage() {
 			console.log('  ' + myname + ' ' + cmdName + ' ' + subCmdName + ' ' + params.join(' '));
 		});
 	});
+	/*
 	console.log("");
 	console.log("Registration URL: https://registration.beameio.net/");
 	console.log("");
@@ -224,6 +225,7 @@ function usage() {
 	console.log("	 (check with 'type _init_completion &>/dev/null && echo OK || echo FAIL')");
 	console.log("  * Add 'source " + path.resolve(__dirname, 'completion.sh') + "'");
 	console.log("	 to your ~/.bashrc or ~/.bash_profile (depends on your system)");
+	*/
 }
 
 if (argv._.length < 2) {
