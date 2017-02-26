@@ -1,6 +1,12 @@
 #!/usr/bin/env node
 'use strict';
 
+const beame_js = require('./cli/beame');
+
+beame_js();
+
+return;
+
 /**
  * @typedef {Object} RegistrationToken
  * Should be synchronized with token from Auth Server
@@ -18,8 +24,7 @@
 const properties2fnames = {
 	X509:        '@FQDN@.pem',
 	PRIVATE_KEY: '@FQDN@.key',
-	CA:          '@FQDN@.ca',
-	PKCS7:       '@FQDN@.chain.pkcs7',
+	P7B:         '@FQDN@.chain.p7b',
 	PKCS12:      '@FQDN@.pkcs12',
 	PWD:         '@FQDN@.pkcs12.pwd'
 };
