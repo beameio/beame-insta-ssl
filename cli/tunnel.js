@@ -6,9 +6,8 @@ const beameSDK   = require('beame-sdk');
 const BeameStore = beameSDK.BeameStore;
 const CommonUtils = beameSDK.CommonUtils;
 
-function tunnel(fqdn, hostname, dstHostPort, dstProto, callback) {
-	let cred, fqdn, dstHost, dstPort, dstHostname, dstProto;
-
+function tunnel(fqdn, hostname, dst, proto, callback) {
+	let cred, dstHost, dstPort, dstHostname;
 
 	const _doTunnel = () => {
 		return new Promise((resolve, reject) => {
@@ -18,22 +17,22 @@ function tunnel(fqdn, hostname, dstHostPort, dstProto, callback) {
 					return;
 				}
 
-				if (typeof dstHostPort == 'number') {
+				if (typeof dst == 'number') {
 					dstHost = 'localhost';
-					dstPort = dstHostPort;
+					dstPort = dst;
 				} else {
-					dstHostPort = dstHostPort.split(':');
-					dstHost     = dstHostPort[0];
-					dstPort     = parseInt(dstHostPort[1]);
+					dst     = dst.split(':');
+					dstHost = dst[0];
+					dstPort = parseInt(dst[1]);
 				}
 
 				dstHostname = hostname || dstHost;
 
 				const tunnelObj = require('../tunnel');
 
-				console.log(`Starting tunnel https://${fqdn} -> ${dstProto}://${dstHost}:${dstPort}`);
+				console.log(`Starting tunnel https://${fqdn} -> ${proto}://${dstHost}:${dstPort}`);
 
-				tunnelObj(fqdn, cert, dstHost, dstPort, dstProto, dstHostname);
+				tunnelObj(fqdn, cert, dstHost, dstPort, proto, dstHostname);
 			}
 		);
 	};
@@ -42,4 +41,6 @@ function tunnel(fqdn, hostname, dstHostPort, dstProto, callback) {
 
 }
 
-module.exports = tunnel;
+module.exports = {
+	tunnel
+};

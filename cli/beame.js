@@ -56,7 +56,12 @@ const parametersSchema = {
 	'serviceName':        {required: false},
 	'matchingFqdn':       {required: false},
 	'serviceId':          {required: false},
-	'userId':             {required: false}
+	'userId':             {required: false},
+	// CLI branch new keys
+	'dir':                {required: true},
+	'hostname':           {required: false},
+	'dst':                {required: true},
+	'proto':              {required: true},
 };
 
 function InvalidArgv(message) {
