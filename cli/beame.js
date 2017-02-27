@@ -13,7 +13,7 @@ const BeameLogger = beameSDK.Logger;
 const logger      = new BeameLogger("BeameInstaSSL");
 
 let commands = {};
-['creds', 'tunnel', 'dns'].forEach(cmdName => {
+['creds', 'tunnel'].forEach(cmdName => {
 	commands[cmdName] = require('./' + cmdName + '.js');
 });
 
@@ -65,6 +65,8 @@ const parametersSchema = {
 	'dst':                {required: true},
 	'proto':              {required: true},
 	'token':              {required: true, base64: true},
+	'value':              {required: false},
+	'useBestProxy':       {required: false},
 };
 
 function InvalidArgv(message) {
