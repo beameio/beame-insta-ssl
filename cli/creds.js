@@ -121,14 +121,23 @@ const list = _list;
 
 list.toText = function (creds) {
 	let table = new Table({
-		head:      ['name', 'fqdn', 'parent', 'priv/k'],
-		colWidths: [40, 65, 55, 10]
+		head:      ['name', 'fqdn', 'parent','valid' ,'priv/k'],
+		colWidths: [40, 65, 55, 25,10]
 	});
 	creds.forEach(item => {
-		table.push([item.getMetadataKey("Name"), item.fqdn, item.getMetadataKey('PARENT_FQDN'), item.getKey('PRIVATE_KEY') ? 'Y' : 'N']);
+		table.push([item.getMetadataKey("Name"), item.fqdn, item.getMetadataKey('PARENT_FQDN'),_getCertEnd(item) ,item.getKey('PRIVATE_KEY') ? 'Y' : 'N']);
 	});
 	return table;
 };
+
+function _getCertEnd(item){
+
+	try {
+		return (new Date(item.certData.validity.end)).toLocaleString();
+	} catch (e) {
+		return null;
+	}
+}
 
 function expandFileName(fname, fqdn) {
 	return fname.replace('@FQDN@', fqdn);
