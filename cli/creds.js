@@ -5,7 +5,8 @@
 
 const beameSDK    = require('beame-sdk');
 const CommonUtils = beameSDK.CommonUtils;
-const BeameStore  = new beameSDK.BeameStore;
+const BeameStore  = beameSDK.BeameStore;
+const Credential  = beameSDK.Credential;
 const BeameLogger = beameSDK.Logger;
 const logger      = new BeameLogger("BIS-Credentials");
 const fs          = require('fs');
@@ -32,7 +33,8 @@ function _lineToText(line) {
 }
 
 function _list() {
-	return BeameStore.list(null, {hasPrivateKey: true});
+	let store = new BeameStore();
+	return store.list(null, {hasPrivateKey: true});
 }
 
 
@@ -106,11 +108,11 @@ getRegToken.toText = x => x;
  * @param {String} fqdn
  * @returns {Promise}
  */
-function syncmeta(fqdn) {
+function syncmeta(fqdn,callback) {
 
 	let cred = new Credential(new BeameStore());
 
-	return cred.syncMetadata(fqdn);
+	CommonUtils.promise2callback(cred.syncMetadata(fqdn), callback);
 }
 syncmeta.toText = _lineToText;
 
@@ -191,6 +193,10 @@ function exportCred(fqdn, dir) {
 	);
 }
 
+function returnOK() {
+	return Promise.resolve({status: 'ok'});
+}
+
 /**
  * @public
  * @method Creds.revokeCert
@@ -201,7 +207,7 @@ function exportCred(fqdn, dir) {
 function revokeCert(signerFqdn, fqdn, callback) {
 	let cred = new Credential(new BeameStore());
 
-	CommonUtils.promise2callback(cred.revokeCert(signerFqdn, fqdn), callback);
+	CommonUtils.promise2callback(cred.revokeCert(signerFqdn, fqdn).then(returnOK), callback);
 }
 revokeCert.toText = _lineToText;
 
@@ -233,9 +239,7 @@ function renewCert(signerAuthToken, fqdn, callback) {
 
 	let cred = new Credential(new BeameStore());
 
-	function returnOK() {
-		return Promise.resolve({status: 'ok'});
-	}
+
 
 	CommonUtils.promise2callback(cred.renewCert(authToken, fqdn).then(returnOK), callback);
 }
