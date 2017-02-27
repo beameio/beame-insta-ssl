@@ -144,9 +144,17 @@ F metadata_json_ok(fqdn) {
 
 # ---------- No certificates test ----------
 
-test("Run without certificates", {
+test("Run without certificates (old CLI)") with {
 	should_fail_with_text(%($BEAME_INSTA_SSL_BIN list), 'you have no certificates')
-})
+}
+
+test("Run without certificates (new CLI, text)") with {
+	should_fail_with_text(%($BEAME_INSTA_SSL_BIN creds list), 'you have no certificates')
+}
+
+test("Run without certificates (new CLI, json)") with {
+	should_fail_with_text(%($BEAME_INSTA_SSL_BIN creds list --format json), 'you have no certificates')
+}
 
 # ---------- One certificate test ----------
 
@@ -155,11 +163,19 @@ test("Create token for test L0 entity", create_token)
 test("Create test L0 entity", create_L0);
 test("Remove $BEAME_DEV_AUTH_FQDN from store", remove_from_store)
 
-test("List certificates - one certificate", {
-	certs = `$BEAME_INSTA_SSL_BIN list`.lines()
-	assert(certs == [fqdn])
+test("List certificates - one certificate (old CLI)", {
+	certs = ``$BEAME_INSTA_SSL_BIN list --format json``
+	assert(certs.metadata.fqdn == [fqdn])
 	TestMessage('List is OK')
 })
+
+test("List certificates - one certificate (new CLI)", {
+	certs = ``$BEAME_INSTA_SSL_BIN list --format json``
+	assert(certs.metadata.fqdn == [fqdn])
+	TestMessage('List is OK')
+})
+
+xxx
 
 test("Corrupt metadata JSON", corrupt_metadata_json)
 

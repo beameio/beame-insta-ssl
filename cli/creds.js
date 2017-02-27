@@ -40,6 +40,7 @@ function _list() {
 
 function create(token) {
 
+	console.error('TOKEN', token);
 	let cred = new Credential(BeameStore);
 
 	return cred.createEntityWithRegistrationToken(token);

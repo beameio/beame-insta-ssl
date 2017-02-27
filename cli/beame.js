@@ -2,6 +2,9 @@
 
 "use strict";
 
+const fs   = require('fs');
+const path = require('path');
+
 const argv = require('minimist')(process.argv.slice(2));
 const _    = require('underscore');
 const beameSDK    = require('beame-sdk');
@@ -46,7 +49,6 @@ const parametersSchema = {
 	'authToken':          {required: true, base64: true},
 	'signerAuthToken':    {required: false, base64: true},
 	'regToken':           {required: false, base64: true},
-	'token':              {required: false, base64: true},
 	'name':               {required: false},
 	'email':              {required: false},
 	'encryptedData':      {required: true, base64: true, json: true},
@@ -62,6 +64,7 @@ const parametersSchema = {
 	'hostname':           {required: false},
 	'dst':                {required: true},
 	'proto':              {required: true},
+	'token':              {required: true, base64: true},
 };
 
 function InvalidArgv(message) {
@@ -70,6 +73,10 @@ function InvalidArgv(message) {
 }
 
 InvalidArgv.prototype = Error.prototype;
+
+function getHelpMessage(fileName) {
+	return fs.readFileSync(path.join(__dirname, '..', 'help-messages', fileName), {'encoding': 'utf-8'});
+}
 
 function getParamsNames(fun) {
 	const names       = fun.toString().match(/^[\s(]*function[^(]*\(([^)]*)\)/)[1]
@@ -92,9 +99,72 @@ function getParamsNames(fun) {
 }
 
 function main() {
-	let cmdName    = argv._[0],
-	    subCmdName = argv._[1],
-	    cmd        = commands[cmdName];
+	let cmdName, subCmdName, cmd;
+
+	// Old CLI compatibility - start
+	if (argv._[0] == 'create') {
+		argv.token = argv._[1];
+		argv._ = ['creds', 'create'];
+	}
+	// Old CLI compatibility - end
+
+	cmdName    = argv._[0];
+	subCmdName = argv._[1];
+	cmd        = commands[cmdName];
+
+	if (`${cmdName} ${subCmdName}` != 'creds create') {
+		let credsCount = require('./creds').list().length;
+
+		if (!credsCount) {
+			console.log(getHelpMessage('no-certificates.txt'));
+			process.exit(1);
+		}
+	}
+
+	if (argv._.length < 2) {
+		usage();
+		process.exit(1);
+	}
+
+	/*
+	if (argv._[0] == 'complete') {
+		if (argv._[1] == 'commands') {
+			console.log(_.keys(commands).join(' '));
+			process.exit(0);
+		}
+		if (argv._[1] == 'sub-commands') {
+			console.log(_.keys(commands[argv._[2]]).join(' '));
+			process.exit(0);
+		}
+		if (argv._[1] == 'switches') {
+			let f           = commands[argv._[2]][argv._[3]],
+				paramsNames = getParamsNames(f);
+			if (paramsNames.hasFormat) {
+				paramsNames.push('format');
+			}
+			let switches = paramsNames.map(function (p) {
+				return "--" + p;
+			}).join(' ');
+			console.log(switches);
+			process.exit(0);
+		}
+		if (argv._[1] == 'switch-value') {
+			let sw = argv._[2];
+			if (sw == 'fqdn') {
+				let store   = new BeameStore();
+				let results = store.list();
+				console.log(_.map(results, r => r.fqdn).join(' '));
+				process.exit(0);
+			}
+			if (parametersSchema[sw].options) {
+				console.log(parametersSchema[sw].options.join(' '));
+				process.exit(0);
+			}
+			process.exit(0);
+		}
+		process.exit(1);
+	}
+	*/
 
 	if (!cmd) {
 		logger.fatal("Command '" + cmdName + "' not found. Valid top-level commands are: " + Object.keys(commands));
@@ -187,8 +257,8 @@ function main() {
 }
 
 function usage() {
-	const path   = require('path'),
-	      myname = 'beame.js';
+	const path   = require('path');
+	const myname = 'beame.js';
 	console.log("Usage:");
 	_.each(commands, function (subCommands, cmdName) {
 		_.each(subCommands, function (subCmdFunc, subCmdName) {
@@ -215,59 +285,7 @@ function usage() {
 			console.log('  ' + myname + ' ' + cmdName + ' ' + subCmdName + ' ' + params.join(' '));
 		});
 	});
-	/*
-	console.log("");
-	console.log("Registration URL: https://registration.beameio.net/");
-	console.log("");
-	console.log("Setting up bash completion:");
-	console.log("  * Make sure you are using bash version 4");
-	console.log("  * Make sure you have set up the bash-completion package");
-	console.log("	 (check with 'type _init_completion &>/dev/null && echo OK || echo FAIL')");
-	console.log("  * Add 'source " + path.resolve(__dirname, 'completion.sh') + "'");
-	console.log("	 to your ~/.bashrc or ~/.bash_profile (depends on your system)");
-	*/
-}
-
-if (argv._.length < 2) {
-	usage();
-	process.exit(1);
-}
-
-if (argv._[0] == 'complete') {
-	if (argv._[1] == 'commands') {
-		console.log(_.keys(commands).join(' '));
-		process.exit(0);
-	}
-	if (argv._[1] == 'sub-commands') {
-		console.log(_.keys(commands[argv._[2]]).join(' '));
-		process.exit(0);
-	}
-	if (argv._[1] == 'switches') {
-		let f           = commands[argv._[2]][argv._[3]],
-		    paramsNames = getParamsNames(f);
-		if (paramsNames.hasFormat) {
-			paramsNames.push('format');
-		}
-		let switches = paramsNames.map(function (p) {
-			return "--" + p;
-		}).join(' ');
-		console.log(switches);
-		process.exit(0);
-	}
-	if (argv._[1] == 'switch-value') {
-		let sw = argv._[2];
-		if (sw == 'fqdn') {
-			let store   = new BeameStore();
-			let results = store.list();
-			console.log(_.map(results, r => r.fqdn).join(' '));
-			process.exit(0);
-		}
-		if (parametersSchema[sw].options) {
-			console.log(parametersSchema[sw].options.join(' '));
-			process.exit(0);
-		}
-		process.exit(0);
-	}
+	console.log(getHelpMessage('no-command.txt'));
 	process.exit(1);
 }
 

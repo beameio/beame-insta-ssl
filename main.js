@@ -29,9 +29,6 @@ const properties2fnames = {
 	PWD:         '@FQDN@.pkcs12.pwd'
 };
 
-const fs   = require('fs');
-const path = require('path');
-
 const args     = require('minimist')(process.argv.slice(2));
 const beameSDK = require('beame-sdk');
 const CommonUtils = beameSDK.CommonUtils;
@@ -39,10 +36,6 @@ const BeameStore = new beameSDK.BeameStore();
 const Credential = beameSDK.Credential;
 
 let commandHandled = false;
-
-function getHelpMessage(fileName) {
-	return fs.readFileSync(path.join(__dirname, 'help-messages', fileName), {'encoding': 'utf-8'});
-}
 
 // There will be automatically imported certificates in the store.
 // Filtering them out.
@@ -82,17 +75,7 @@ if (args._[0] == 'create') {
 
 } else {
 
-	let credsCount = list().length;
-
-	if (!credsCount) {
-		console.log(getHelpMessage('no-certificates.txt'));
-		process.exit(1);
-	}
-
-	if (args._.length == 0) {
-		console.log(getHelpMessage('no-command.txt'));
-		process.exit(1);
-	}
+	// MOVED
 }
 
 function expandFileName(fname, fqdn) {
