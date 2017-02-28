@@ -154,7 +154,6 @@ function main() {
 			argv.dst = argv._[1];
 			argv.proto = argv._[2];
 			argv._ = ['tunnel', 'make'];
-			defaultTheOnlyFqdn(argv);
 		}
 	}
 	if(do_warn) {
@@ -184,6 +183,9 @@ function main() {
 		process.exit(1);
 	}
 
+	if (`${cmdName} ${subCmdName}` == 'tunnel make') {
+		defaultTheOnlyFqdn(argv);
+	}
 	/*
 	if (argv._[0] == 'complete') {
 		if (argv._[1] == 'commands') {

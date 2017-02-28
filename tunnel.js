@@ -58,7 +58,7 @@ function tunnel(fqdn, creds, targetHost, targetPort, targetProto, targetHostName
 	const edge_fqdn = creds.getMetadataKey('edge_fqdn');
 
 	if (!edge_fqdn) {
-		throw new Error(`FQDN ${fqdn} can not be used for tunnel - edge server address missing`);
+		throw new Error(`FQDN ${fqdn} can not be used for tunnel - edge server address missing. Try running "beame-insta-ssl creds syncmeta" command.`);
 	}
 
 	/** @type {Object} **/

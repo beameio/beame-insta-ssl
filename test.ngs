@@ -95,7 +95,7 @@ F https_target_tunnel(cmd:Command) {
 	$(sleep 10)
 	out = try `curl --silent --max-time 30 "https://$fqdn/"`
 	$(pkill -f 'testHttpsServer.js')
-	$(pkill -f 'tunnel 65500')
+	$(pkill -f ${cmd.argv.join(' ')})
 	threads.join()
 	out != t throws TestFail("Result from server is missing or incorrect: '$out' vs '$t'")
 	TestMessage('Result from server is OK')
@@ -111,7 +111,7 @@ F http_target_tunnel(cmd:Command, expected_hostname:Str, proto='https') {
 	$(sleep 10)
 	out = try `curl --silent --max-time 30 "$proto://$fqdn/"`
 	$(pkill -f 'testHttpServer.js')
-	$(pkill -f 'tunnel 65500')
+	$(pkill -f ${cmd.argv.join(' ')})
 	threads.join()
 	out != "$t-$expected_hostname" throws TestFail("Result from server is missing or incorrect: '$out' vs '$t-$expected_hostname'")
 	TestMessage('Result from server is OK')
@@ -236,8 +236,6 @@ each({
 	})
 })
 
-xxx
-
 # ---------- 2 or more certificates test ----------
 
 old_fqdn = fqdn
@@ -246,22 +244,39 @@ test("Create token for additional test L0 entity", create_token)
 test("Create additional test L0 entity", create_L0)
 test("Remove $BEAME_DEV_AUTH_FQDN from store", remove_from_store)
 
-test("Corrupt metadata JSON", corrupt_metadata_json)
-
-test("Update metadata", {
+test("Fix metadata (old CLI)", {
+	corrupt_metadata_json()
 	$($BEAME_INSTA_SSL_BIN syncmeta --fqdn $fqdn)
+	metadata_json_ok(fqdn).not() throws TestFail("Metadata JSON is not OK")
 })
 
-test("Metadata OK", {
+test("Fix metadata (new CLI)", {
+	corrupt_metadata_json()
+	$($BEAME_INSTA_SSL_BIN creds syncmeta --fqdn $fqdn)
 	metadata_json_ok(fqdn).not() throws TestFail("Metadata JSON is not OK")
 })
 
 
-test("List certificates - two certificates", {
+test("List certificates - two certificates (old CLI)", {
 	certs = `$BEAME_INSTA_SSL_BIN list`.lines()
 	assert(certs.sort() == [old_fqdn, fqdn].sort())
 })
 
+test("List certificates - two certificates (new CLI, text)", {
+	# TODO: factor out textual output check
+	out = `$BEAME_INSTA_SSL_BIN creds list`.lines()
+	assert(out.len() == 7)
+	assert(out[1] ~ /name.*fqdn.*parent.*valid.*priv/)
+	assert(out.any(fqdn in X))
+	assert(out.any(old_fqdn in X))
+	TestMessage('List is OK')
+})
+
+test("List certificates - two certificates (new CLI, json)", {
+	certs = ``$BEAME_INSTA_SSL_BIN creds list --format json``
+	assert(certs.metadata.fqdn.sort() == [old_fqdn, fqdn].sort())
+	TestMessage('List is OK')
+})
 
 test("Run tunnel not specifying fqdn", {
 	should_fail_with_text(%($BEAME_INSTA_SSL_BIN tunnel 65500 https), 'more than one')
@@ -269,14 +284,19 @@ test("Run tunnel not specifying fqdn", {
 
 wait_resolvable(fqdn)
 
-test("Non-terminating tunnel with fqdn", {
-	https_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 https --fqdn $fqdn))
-})
+each({
+	"old": %[65500]
+	"new": %[make --dst 65500 --proto]
+}, F (cli_type:Str, argv:Arr) {
+	test("eehttp tunnel with fqdn ($cli_type CLI)", {
+		http_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel $*argv eehttp --fqdn $fqdn), fqdn, 'http')
+	})
 
-test("Terminating tunnel with fqdn", {
-	http_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 http --fqdn $fqdn), 'localhost')
-})
+	test("Non-terminating tunnel with fqdn ($cli_type CLI)", {
+		https_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel $*argv https --fqdn $fqdn))
+	})
 
-test("Terminating tunnel with fqdn and hostname", {
-	http_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 http --fqdn $fqdn --hostname test1.example.com), 'test1.example.com')
+	test("Terminating tunnel with fqdn ($cli_type CLI)", {
+		http_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel $*argv http --fqdn $fqdn --hostname test1.example.com), 'test1.example.com')
+	})
 })
