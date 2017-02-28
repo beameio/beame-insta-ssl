@@ -64,7 +64,7 @@ const parametersSchema = {
 	'hostname':           {required: false},
 	'dst':                {required: true},
 	'proto':              {required: true},
-	'token':              {required: true, base64: true},
+	'token':              {required: true, base64: true, json: true},
 	'value':              {required: false},
 	'useBestProxy':       {required: false},
 };
@@ -78,6 +78,25 @@ InvalidArgv.prototype = Error.prototype;
 
 function getHelpMessage(fileName) {
 	return fs.readFileSync(path.join(__dirname, '..', 'help-messages', fileName), {'encoding': 'utf-8'});
+}
+
+function defaultTheOnlyFqdn(args) {
+	let cert, fqdn;
+
+	if (args.fqdn) {
+		return args.fqdn;
+	}
+
+	let allCerts = require('./creds').list();
+	if (allCerts.length > 1) {
+		console.log("--fqdn parameter is required because you have more than one certificate");
+		console.log("Possible FQDNs are:");
+		allCerts.forEach(cred => {
+			console.log(`  ${cred.fqdn}`);
+		});
+		process.exit(2);
+	}
+	args.fqdn = allCerts[0].fqdn;
 }
 
 function getParamsNames(fun) {
@@ -103,11 +122,48 @@ function getParamsNames(fun) {
 function main() {
 	let cmdName, subCmdName, cmd;
 
+	// getHelpMessage() is only defined in this file.
+	commands.creds.create.toText = (metadata) => `Certificate created! Certificate FQDN is ${metadata.fqdn}\n\n` + getHelpMessage('certificate-created.txt');
+
 	// Old CLI compatibility - start
+	let do_warn = false, orig_command = argv._[0];
 	if (argv._[0] == 'create') {
+		do_warn = true;
 		argv.token = argv._[1];
 		argv._ = ['creds', 'create'];
 	}
+	if (argv._[0] == 'list') {
+		do_warn = true;
+		argv._ = ['creds', 'list'];
+		commands.creds.list.toText = (list) => list.map(cred => cred.fqdn).join('\n');
+	}
+	if (argv._[0] == 'syncmeta') {
+		do_warn = true;
+		argv._ = ['creds', 'syncmeta'];
+		defaultTheOnlyFqdn(argv);
+	}
+	if (argv._[0] == 'export') {
+		do_warn = true;
+		argv.fqdn = argv._[1];
+		argv.dir = argv._[2];
+		argv._ = ['creds', 'exportCred'];
+	}
+	if (argv._[0] == 'tunnel') {
+		if (argv._[1] && ((typeof argv._[1] == 'number') || argv._[1].indexOf(':') > -1)) {
+			do_warn = true;
+			argv.dst = argv._[1];
+			argv.proto = argv._[2];
+			argv._ = ['tunnel', 'make'];
+			defaultTheOnlyFqdn(argv);
+		}
+	}
+	if(do_warn) {
+		console.warn(`+---------------------------------------------------------------------`)
+		console.warn(`| Warning: you are using deprecated command "${orig_command}". Use "${argv._.join(' ')}" instead.`)
+		console.warn(`| Run beame-insta-ssl without any arguments to see all the commands and swithces.`);
+		console.warn(`+---------------------------------------------------------------------`)
+	}
+
 	// Old CLI compatibility - end
 
 	cmdName    = argv._[0];

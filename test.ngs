@@ -164,60 +164,79 @@ test("Create test L0 entity", create_L0);
 test("Remove $BEAME_DEV_AUTH_FQDN from store", remove_from_store)
 
 test("List certificates - one certificate (old CLI)", {
-	certs = ``$BEAME_INSTA_SSL_BIN list --format json``
+	fqdns = `$BEAME_INSTA_SSL_BIN list`.lines()
+	assert(fqdns == [fqdn])
+	TestMessage('List is OK')
+})
+
+test("List certificates - one certificate (new CLI, text)", {
+	out = `$BEAME_INSTA_SSL_BIN creds list`.lines()
+	assert(out.len() == 5)
+	assert(out[1] ~ /name.*fqdn.*parent.*valid.*priv/)
+	assert(fqdn in out[3])
+	TestMessage('List is OK')
+})
+
+test("List certificates - one certificate (new CLI, json)", {
+	certs = ``$BEAME_INSTA_SSL_BIN creds list --format json``
 	assert(certs.metadata.fqdn == [fqdn])
 	TestMessage('List is OK')
 })
 
-test("List certificates - one certificate (new CLI)", {
-	certs = ``$BEAME_INSTA_SSL_BIN list --format json``
-	assert(certs.metadata.fqdn == [fqdn])
-	TestMessage('List is OK')
-})
-
-xxx
-
-test("Corrupt metadata JSON", corrupt_metadata_json)
-
-test("Update metadata", {
+test("Fix metadata (old CLI)", {
+	corrupt_metadata_json()
 	$($BEAME_INSTA_SSL_BIN syncmeta)
-})
-
-test("Metadata OK", {
 	metadata_json_ok(fqdn).not() throws TestFail("Metadata JSON is not OK")
 })
 
-test("Export certificate", {
-	dir = `mktemp --tmpdir -d test-beame-insta-ssl.XXXXXXXXXX` - MaybeSfx('\n')
-	err = null
-	ret = null
-	try {
-		$($BEAME_INSTA_SSL_BIN export $fqdn $dir)
-		EXPECTED_EXPORTED_FILE_EXTENSIONS.each(F(ext) {
-			f = "$dir/$fqdn.$ext"
-			not($(test -s $f)) throws TestFail("File $f not found")
-		})
-	} catch(e) {
-		err = e
-	}
-	$(rm -r $dir)
-	err throws err
-	TestMessage('All expected files are present')
+test("Fix metadata (new CLI)", {
+	corrupt_metadata_json()
+	$($BEAME_INSTA_SSL_BIN creds syncmeta --fqdn $fqdn)
+	metadata_json_ok(fqdn).not() throws TestFail("Metadata JSON is not OK")
+})
+
+each({
+	"old": %($BEAME_INSTA_SSL_BIN export $fqdn DIR)
+	"new": %($BEAME_INSTA_SSL_BIN creds exportCred --fqdn $fqdn --dir DIR)
+}, F(cli_type:Str, c:Command) {
+	test("Export certificate ($cli_type CLI)", {
+		dir = `mktemp --tmpdir -d test-beame-insta-ssl.XXXXXXXXXX` - MaybeSfx('\n')
+		c.argv .= replace('DIR', dir)
+		finally()
+			body => {
+				$($c)
+				EXPECTED_EXPORTED_FILE_EXTENSIONS.each(F(ext) {
+					f = "$dir/$fqdn.$ext"
+					not($(test -s $f)) throws TestFail("File $f not found")
+				})
+			}
+			cleanup => {
+				$(rm -r $dir)
+			}
+		TestMessage('All expected files are present')
+	})
 })
 
 wait_resolvable(fqdn)
 
-test("eehttp tunnel without fqdn", {
-	http_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 eehttp), fqdn, 'http')
+each({
+	"old": %[65500]
+	"new": %[make --dst 65500 --proto]
+}, F (cli_type:Str, argv:Arr) {
+	test("eehttp tunnel without fqdn ($cli_type CLI)", {
+		http_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel $*argv eehttp), fqdn, 'http')
+	})
+
+	test("Non-terminating tunnel without fqdn ($cli_type CLI)", {
+		https_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel $*argv https))
+	})
+
+	test("Terminating tunnel without fqdn ($cli_type CLI)", {
+		http_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel $*argv http), 'localhost')
+	})
 })
 
-test("Non-terminating tunnel without fqdn", {
-	https_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 https))
-})
-
-test("Terminating tunnel without fqdn", {
-	http_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel 65500 http), 'localhost')
-})
+xxx
 
 # ---------- 2 or more certificates test ----------
 

@@ -6,13 +6,13 @@ const beameSDK   = require('beame-sdk');
 const BeameStore = beameSDK.BeameStore;
 const CommonUtils = beameSDK.CommonUtils;
 
-function tunnel(fqdn, hostname, dst, proto, callback) {
-	let cred, dstHost, dstPort, dstHostname;
+function make(fqdn, dst, hostname, proto, callback) {
+	let cert, dstHost, dstPort, dstHostname;
 
 	const _doTunnel = () => {
 		return new Promise((resolve, reject) => {
-				cred = BeameStore.getCredential(fqdn);
-				if (!cred) {
+				cert = (new BeameStore).getCredential(fqdn);
+				if (!cert) {
 					reject(`Certificate for FQDN ${fqdn} not found`);
 					return;
 				}
@@ -37,10 +37,10 @@ function tunnel(fqdn, hostname, dst, proto, callback) {
 		);
 	};
 
-	CommonUtils.promise2callback(_doTunnel, callback);
+	CommonUtils.promise2callback(_doTunnel(), callback);
 
 }
 
 module.exports = {
-	tunnel
+	make
 };

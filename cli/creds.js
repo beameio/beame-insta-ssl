@@ -38,14 +38,12 @@ function _list() {
 }
 
 
-function create(token) {
+function create(token, callback) {
 
-	console.error('TOKEN', token);
-	let cred = new Credential(BeameStore);
+	let cred = new Credential(new BeameStore());
 
-	return cred.createEntityWithRegistrationToken(token);
+	CommonUtils.promise2callback(cred.createEntityWithRegistrationToken(token), callback);
 }
-create.toText = _lineToText;
 
 /**
  *
@@ -160,7 +158,7 @@ function exportCred(fqdn, dir) {
 				reject(`DESTINATION_FOLDER not provided`);
 				return;
 			}
-			let cred = BeameStore.getCredential(fqdn);
+			let cred = (new BeameStore()).getCredential(fqdn);
 			if (!cred) {
 				reject(`Certificate for FQDN ${fqdn} not found. Use "beame-insta-ssl list" command to list available certificates.`);
 				return;
