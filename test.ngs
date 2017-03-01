@@ -345,13 +345,15 @@ F create_entity_under_fqdn(fqdn, idx) {
 	entity_name_pfx = "insta-ssl-test-${time()}-${pid()}"
 	entity = ``$BEAME_INSTA_SSL_BIN creds getCreds --name "${entity_name_pfx}-${idx}" --email "${entity_name_pfx}-${idx}@example.com" --fqdn $fqdn --format json``
 	entity.assert_hash_keys(%[parent_fqdn level email name], "Entity hash keys")
-	TestMessage("New entity: $entity")
+	entity.fqdn
 }
 
 for(i;2) {
 	# These tests must be towards the end as they update fqdn variable
 	test("Iteration [${i+1}/2] [fqdn $fqdn]") with {
+		global fqdn
 		fqdn = create_entity_under_fqdn(fqdn, i)
+		TestMessage("New entity: $fqdn")
 	}
 }
 

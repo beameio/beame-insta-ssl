@@ -114,7 +114,7 @@ The certificate will be ready in moments and you can start using your tunnel rig
 
 Sample command for bringing up a tunnel:
 
-	beame-insta-ssl tunnel 8008 http
+	beame-insta-ssl tunnel make --dst 8008 --proto http
 
 Use the command above if you want to have a secure connection, but don't want to install certificates into your own server. You will receive the following output:
 
@@ -124,12 +124,12 @@ Just run your server on desired port (_8008_ in the above example) and point any
 
 You can also specify particular Beame hostname to run a tunnel to, in case, for example, when you have more than one set of Beame credentials:
 
-	beame-insta-ssl tunnel 8008 http --fqdn qwertyuio.asdfghjkl.v1.d.beameio.net
+	beame-insta-ssl tunnel make --dst 8008 --proto http --fqdn qwertyuio.asdfghjkl.v1.d.beameio.net
 
 ## Where is my Beame data stored?
 Credentials created by you are stored on your machine in `$HOME/.beame` folder. You can easily export them to the desired location, by using the `export` command that looks like this:
 
-	beame-insta-ssl export qwertyuio.asdfghjkl.v1.d.beameio.net ./destination_folder_path
+	beame-insta-ssl creds exportCred --fqdn qwertyuio.asdfghjkl.v1.d.beameio.net ./destination_folder_path
 
 ## Advanced: TCP over TLS tunnel using beame-insta-ssl
 
