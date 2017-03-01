@@ -316,13 +316,13 @@ test("Renewing cert for $fqdn") with {
 
 test("Change DNS to A record") with {
 	ip = '10.' + (rand.partial(256) * 3).map(Str).join(".")
-	$($BEAME_INSTA_SSL_BIN creds saveDns --fqdn $fqdn --value $ip --format json)
+	$($BEAME_INSTA_SSL_BIN creds setDns --fqdn $fqdn --value $ip --format json)
 	assert_resolvable(fqdn, check={A == [ip]})
 }
 
 test("Change DNS to CNAME record") with {
 	cname = CHARS::ascii_lowercase.rand(16) + '.example.com'
-	$($BEAME_INSTA_SSL_BIN creds saveDns --fqdn $fqdn --value $cname --format json)
+	$($BEAME_INSTA_SSL_BIN creds setDns --fqdn $fqdn --value $cname --format json)
 	assert_resolvable(fqdn, check={"${cname}." in A})
 }
 

@@ -253,13 +253,13 @@ function renewCert(signerAuthToken, fqdn, callback) {
 }
 renewCert.toText = _lineToText;
 
-function saveDns(fqdn, value, useBestProxy,callback){
+function setDns(fqdn, value, useBestProxy,callback){
 	let cred = new Credential(new BeameStore());
 
-	CommonUtils.promise2callback(cred.saveDns(fqdn,value,useBestProxy), callback);
+	CommonUtils.promise2callback(cred.setDns(fqdn,value,useBestProxy), callback);
 
 }
-saveDns.toText = x=> x;
+setDns.toText = x=> x;
 
 module.exports = {
 	create,
@@ -270,5 +270,5 @@ module.exports = {
 	exportCred,
 	revokeCert,
 	renewCert,
-	saveDns
+	setDns
 };
