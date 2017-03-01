@@ -11,6 +11,7 @@ const beameSDK    = require('beame-sdk');
 const BeameStore  = beameSDK.BeameStore;
 const BeameLogger = beameSDK.Logger;
 const logger      = new BeameLogger("BeameInstaSSL");
+const pem         = require('pem');
 
 let commands = {};
 ['creds', 'tunnel'].forEach(cmdName => {
@@ -121,6 +122,20 @@ function getParamsNames(fun) {
 
 function main() {
 	let cmdName, subCmdName, cmd;
+
+	if(pem.version) {
+		pem.config({sync: true});
+		pem.version((err, data) => {
+			if(err) {
+				throw Error("Could not run openssl. beame-insta-ssl requires openssl. Please make sure openssl is installed and is in PATH");
+			}
+		});
+		pem.config({sync: false});
+	} else {
+		if(!process.env.BEAME_NO_PEM_WARNING) {
+			logger.info("WARNING: Using 'pem' module without 'config' function. Not checking for openssl availability.");
+		}
+	}
 
 	// getHelpMessage() is only defined in this file.
 	commands.creds.create.toText = (metadata) => `Certificate created! Certificate FQDN is ${metadata.fqdn}\n\n` + getHelpMessage('certificate-created.txt');
