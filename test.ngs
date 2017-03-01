@@ -54,7 +54,8 @@ F create_token() {
 }
 
 doc Creates level 0 entity
-F create_L0() {
+F create_entity(use_creds_cli:Bool) {
+	global fqdn
 	t = time()
 	beame_insta_ssl_token = {
 		'authToken': token.base64decode().parse()
@@ -62,9 +63,15 @@ F create_L0() {
 		'name': "insta-ssl-test-L0-$t"
 		'email': "insta-ssl-L0-${t}@example.com"
 	}
-	txt = `$BEAME_INSTA_SSL_BIN create ${beame_insta_ssl_token.encode_json().base64encode()}`
-	cert_created_line = txt.lines().filter(X ~ Pfx('Certificate created'))[0]
-	global fqdn = cert_created_line.split(' ')[-1]
+	if use_creds_cli {
+		entity = ``$BEAME_INSTA_SSL_BIN creds getCreds --regToken ${beame_insta_ssl_token.encode_json()} --format json``
+		assert_hash(entity, "Entity must be hash")
+		fqdn = entity.fqdn
+	} else {
+		txt = `$BEAME_INSTA_SSL_BIN create ${beame_insta_ssl_token.encode_json().base64encode()}`
+		cert_created_line = txt.lines().filter(X ~ Pfx('Certificate created'))[0]
+		fqdn = cert_created_line.split(' ')[-1]
+	}
 	TestMessage("Entity $fqdn created")
 }
 
@@ -160,7 +167,7 @@ test("Run without certificates (new CLI, json)") with {
 
 test("Copy $BEAME_DEV_AUTH_FQDN into store", copy_to_store)
 test("Create token for test L0 entity", create_token)
-test("Create test L0 entity", create_L0);
+test("Create test L0 entity", create_entity.partial(false));
 test("Remove $BEAME_DEV_AUTH_FQDN from store", remove_from_store)
 
 test("List certificates - one certificate (old CLI)", {
@@ -241,7 +248,7 @@ each({
 old_fqdn = fqdn
 test("Copy $BEAME_DEV_AUTH_FQDN into store", copy_to_store)
 test("Create token for additional test L0 entity", create_token)
-test("Create additional test L0 entity", create_L0)
+test("Create additional test L0 entity", create_entity.partial(true))
 test("Remove $BEAME_DEV_AUTH_FQDN from store", remove_from_store)
 
 test("Fix metadata (old CLI)", {
@@ -300,3 +307,57 @@ each({
 		http_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel $*argv http --fqdn $fqdn --hostname test1.example.com), 'test1.example.com')
 	})
 })
+
+test("Renewing cert for $fqdn") with {
+	# TODO: check with other args
+	s = ``$BEAME_INSTA_SSL_BIN creds renewCert --fqdn $fqdn --format json``
+	assert_hash_keys_values(s, {'status': 'ok'}, "Status OK")
+}
+
+test("Change DNS to A record") with {
+	ip = '10.' + (rand.partial(256) * 3).map(Str).join(".")
+	$($BEAME_INSTA_SSL_BIN creds saveDns --fqdn $fqdn --value $ip --format json)
+	assert_resolvable(fqdn, check={A == [ip]})
+}
+
+test("Change DNS to CNAME record") with {
+	cname = CHARS::ascii_lowercase.rand(16) + '.example.com'
+	$($BEAME_INSTA_SSL_BIN creds saveDns --fqdn $fqdn --value $cname --format json)
+	assert_resolvable(fqdn, check={"${cname}." in A})
+}
+
+# TESTS FROM SDK
+
+test("[Registration token] Generate") with {
+	global reg_token
+	t = time()
+	reg_token = `$BEAME_INSTA_SSL_BIN creds getRegToken --fqdn $fqdn --name "insta-ssl-test-L1-$t" --email "insta-ssl-L1-${t}@example.com"`
+}
+
+test("[Registration token] Use") with {
+	# TODO: check content
+	child_entity = ``$BEAME_INSTA_SSL_BIN creds getCreds --regToken $reg_token --format json``
+}
+
+
+entity_name_pfx = "sdk-test-${time()}-${pid()}"
+F create_entity_under_fqdn(fqdn, idx) {
+	entity_name_pfx = "insta-ssl-test-${time()}-${pid()}"
+	entity = ``$BEAME_INSTA_SSL_BIN creds getCreds --name "${entity_name_pfx}-${idx}" --email "${entity_name_pfx}-${idx}@example.com" --fqdn $fqdn --format json``
+	entity.assert_hash_keys(%[parent_fqdn level email name], "Entity hash keys")
+	TestMessage("New entity: $entity")
+}
+
+for(i;2) {
+	# These tests must be towards the end as they update fqdn variable
+	test("Iteration [${i+1}/2] [fqdn $fqdn]") with {
+		fqdn = create_entity_under_fqdn(fqdn, i)
+	}
+}
+
+test("Revoke cert") with {
+	# TODO: real test
+	# TODO: test with children - should get "can't be revoked, because children exists"
+	s = ``$BEAME_INSTA_SSL_BIN creds revokeCert --signerFqdn $fqdn --fqdn $fqdn --format json``
+	assert_hash_keys_values(s, {'status': 'ok'}, "Status OK")
+}
