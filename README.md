@@ -155,5 +155,5 @@ Connect using tunnel, traffic between Beame.io infrastructure and ssh server flo
 ### Server side (where beame-insta-ssl is installed)
 
     FQDN=something.beameio.net
-    ./main.js tunnel 50000 https --fqdn $FQDN &
+    ./main.js tunnel make --dst 50000 --proto https --fqdn $FQDN &
     while true;do date;socat openssl-listen:50000,reuseaddr,cert=$HOME/.beame/v2/$FQDN/p7b.cer,key=$HOME/.beame/v2/$FQDN/private_key.pem,method=TLS1.2,verify=0 TCP4:127.0.0.1:22;done
