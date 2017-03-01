@@ -55,7 +55,7 @@ Usage information and examples:
 		Set your DNS entry to custom value, whatever you want.
 		Note: you will not be able to use Beame.io infrastructure for tunneling.
 
-	beame-insta-ssl creds setDns --fqdn fqdn --useBestProxy true
+	beame-insta-ssl creds setDns --fqdn <FQDN> --useBestProxy true
 
 		Set your DNS entry to Beame.io infrastructure.
 		Do this if you intend to use Beame.io infrastructure for tunneling.
