@@ -95,15 +95,14 @@ F should_fail_with_text(cmd:Command, text:Str) {
 doc Tests non-terminating tunnel
 F https_target_tunnel(cmd:Command) {
 	t = time().Str()
-	threads = [
-		Thread({ $(node testHttpsServer.js $fqdn $t) })
-		Thread({ $($cmd) })
+	cmd.options['&'] = true
+	processes = [
+		$(node testHttpsServer.js $fqdn $t &)
+		$($cmd)
 	]
 	$(sleep 10)
 	out = try `curl --silent --max-time 30 "https://$fqdn/"`
-	$(pkill -f 'testHttpsServer.js')
-	$(pkill -f ${cmd.argv.join(' ')})
-	threads.join()
+	processes % kill
 	out != t throws TestFail("Result from server is missing or incorrect: '$out' vs '$t'")
 	TestMessage('Result from server is OK')
 }
@@ -111,15 +110,14 @@ F https_target_tunnel(cmd:Command) {
 doc Tests terminating tunnel
 F http_target_tunnel(cmd:Command, expected_hostname:Str, proto='https') {
 	t = time().Str()
-	threads = [
-		Thread({ $(node testHttpServer.js $t) })
-		Thread({ $($cmd) })
+	cmd.options['&'] = true
+	processes = [
+		$(node testHttpServer.js $t &)
+		$($cmd)
 	]
 	$(sleep 10)
 	out = try `curl --silent --max-time 30 "$proto://$fqdn/"`
-	$(pkill -f 'testHttpServer.js')
-	$(pkill -f ${cmd.argv.join(' ')})
-	threads.join()
+	processes % kill
 	out != "$t-$expected_hostname" throws TestFail("Result from server is missing or incorrect: '$out' vs '$t-$expected_hostname'")
 	TestMessage('Result from server is OK')
 }
