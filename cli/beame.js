@@ -328,7 +328,7 @@ function main() {
 
 function usage() {
 	const path   = require('path');
-	const myname = 'beame.js';
+	const myname = 'beame-insta-ssl';
 	console.log("Usage:");
 	_.each(commands, function (subCommands, cmdName) {
 		_.each(subCommands, function (subCmdFunc, subCmdName) {
