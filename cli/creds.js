@@ -255,7 +255,6 @@ function setDns(fqdn, value, useBestProxy,callback){
 setDns.toText = x=> x;
 
 module.exports = {
-	create,
 	list,
 	getCreds,
 	getRegToken,
