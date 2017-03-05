@@ -138,7 +138,7 @@ function main() {
 	}
 
 	// getHelpMessage() is only defined in this file.
-	commands.creds.create.toText = (metadata) => `Certificate created! Certificate FQDN is ${metadata.fqdn}\n\n` + getHelpMessage('certificate-created.txt');
+	commands.creds.getCreds.toText = (metadata) => `Certificate created! Certificate FQDN is ${metadata.fqdn}\n\n` + getHelpMessage('certificate-created.txt');
 
 	// Old CLI compatibility - start
 	let do_warn = false, orig_command = argv._[0];
