@@ -142,11 +142,6 @@ function main() {
 
 	// Old CLI compatibility - start
 	let do_warn = false, orig_command = argv._[0];
-	if (argv._[0] == 'create') {
-		do_warn = true;
-		argv.token = argv._[1];
-		argv._ = ['creds', 'create'];
-	}
 	if (argv._[0] == 'list') {
 		do_warn = true;
 		argv._ = ['creds', 'list'];
@@ -184,7 +179,7 @@ function main() {
 	subCmdName = argv._[1];
 	cmd        = commands[cmdName];
 
-	if (`${cmdName} ${subCmdName}` != 'creds create') {
+	if (`${cmdName} ${subCmdName}` != 'creds getCreds') {
 		let credsCount = require('./creds').list().length;
 
 		if (!credsCount) {

@@ -54,7 +54,7 @@ F create_token() {
 }
 
 doc Creates level 0 entity
-F create_entity(use_creds_cli:Bool) {
+F create_entity() {
 	global fqdn
 	t = time()
 	beame_insta_ssl_token = {
@@ -63,15 +63,11 @@ F create_entity(use_creds_cli:Bool) {
 		'name': "insta-ssl-test-L0-$t"
 		'email': "insta-ssl-L0-${t}@example.com"
 	}
-	if use_creds_cli {
-		entity = ``$BEAME_INSTA_SSL_BIN creds getCreds --regToken ${beame_insta_ssl_token.encode_json()} --format json``
-		assert_hash(entity, "Entity must be hash")
-		fqdn = entity.fqdn
-	} else {
-		txt = `$BEAME_INSTA_SSL_BIN create ${beame_insta_ssl_token.encode_json().base64encode()}`
-		cert_created_line = txt.lines().filter(X ~ Pfx('Certificate created'))[0]
-		fqdn = cert_created_line.split(' ')[-1]
-	}
+
+	entity = ``$BEAME_INSTA_SSL_BIN creds getCreds --regToken ${beame_insta_ssl_token.encode_json()} --format json``
+    assert_hash(entity, "Entity must be hash")
+    fqdn = entity.fqdn
+
 	TestMessage("Entity $fqdn created")
 }
 
@@ -165,7 +161,7 @@ test("Run without certificates (new CLI, json)") with {
 
 test("Copy $BEAME_DEV_AUTH_FQDN into store", copy_to_store)
 test("Create token for test L0 entity", create_token)
-test("Create test L0 entity", create_entity.partial(false));
+test("Create test L0 entity", create_entity);
 test("Remove $BEAME_DEV_AUTH_FQDN from store", remove_from_store)
 
 test("List certificates - one certificate (old CLI)", {
@@ -246,7 +242,7 @@ each({
 old_fqdn = fqdn
 test("Copy $BEAME_DEV_AUTH_FQDN into store", copy_to_store)
 test("Create token for additional test L0 entity", create_token)
-test("Create additional test L0 entity", create_entity.partial(true))
+test("Create additional test L0 entity", create_entity)
 test("Remove $BEAME_DEV_AUTH_FQDN from store", remove_from_store)
 
 test("Fix metadata (old CLI)", {

@@ -38,13 +38,6 @@ function _list() {
 }
 
 
-function create(token, callback) {
-
-	let cred = new Credential(new BeameStore());
-
-	CommonUtils.promise2callback(cred.createEntityWithRegistrationToken(token), callback);
-}
-
 /**
  *
  * @param {String|null|undefined} [regToken]
