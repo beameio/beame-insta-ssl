@@ -68,6 +68,7 @@ const parametersSchema = {
 	'token':              {required: true, base64: true, json: true},
 	'value':              {required: false},
 	'useBestProxy':       {required: false},
+	'validityPeriod':     {required: false}
 };
 
 function InvalidArgv(message) {

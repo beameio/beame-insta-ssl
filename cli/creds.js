@@ -215,13 +215,14 @@ revokeCert.toText = _lineToText;
 /**
  * @public
  * @method Creds.revokeCert
- * @param {String} signerAuthToken
+ * @param {String|null} [signerAuthToken]
  * @param {String} fqdn
+ * @param {Number|null|undefined} [validityPeriod] => in seconds
  * @param {Function} callback
  */
-function renewCert(signerAuthToken, fqdn, callback) {
+function renewCert(signerAuthToken, fqdn, validityPeriod, callback) {
 
-	if (!signerAuthToken && !fqdn) {
+	if (!fqdn) {
 		throw new Error(`signerAuthToken or fqdn required`);
 	}
 
@@ -242,7 +243,7 @@ function renewCert(signerAuthToken, fqdn, callback) {
 
 
 
-	CommonUtils.promise2callback(cred.renewCert(authToken, fqdn).then(returnOK), callback);
+	CommonUtils.promise2callback(cred.renewCert(authToken, fqdn, validityPeriod).then(returnOK), callback);
 }
 renewCert.toText = _lineToText;
 
