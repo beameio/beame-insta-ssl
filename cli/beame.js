@@ -68,6 +68,7 @@ const parametersSchema = {
 	'token':              {required: true, base64: true, json: true},
 	'value':              {required: false},
 	'useBestProxy':       {required: false},
+	'validityPeriod':     {required: false}
 };
 
 function InvalidArgv(message) {
@@ -328,7 +329,7 @@ function main() {
 
 function usage() {
 	const path   = require('path');
-	const myname = 'beame.js';
+	const myname = 'beame-insta-ssl';
 	console.log("Usage:");
 	_.each(commands, function (subCommands, cmdName) {
 		_.each(subCommands, function (subCmdFunc, subCmdName) {
