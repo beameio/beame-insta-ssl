@@ -1,15 +1,27 @@
 beame-insta-ssl 1.1.5 is a very important release of beame-insta-ssl and it adds real important new capbabilites to the package.
-, one you want to generate another cert to be used on the same machine as you are on. You can just use 
+The main fature is ability to generate multiple certs using your beame credentials. With the new commands you can easily create 
+SSL certificates, create authorization tokens. We have also changed and broke the previous CLI command structure. 
 
-With the new commands you can easily create SSL certificates, create authorization tokens. We have also changed and broke the previous CLI command structure, (sorry*), but we want our cli to be consistent across all beame products. This goign to be a long Changelog, as I want to really, provide real life example on how to operate this system.  Understand how this all works: When you register with beame, we provide you with an auth token in the email, you can generate tokens just like this on or own, and act as your own CA.  
+(sorry*), but we want our cli to be consistent across all beame products. 
 
-In the beame-sdk, the known certificates, and other metadata are stored .beame/v2/ folder. 
+BUG FIXES
+_________
 
+We fixed a bug in handing of websocket, wich impoves preformance of interactive applications like terminal about *10; 
+
+
+This goign to be a long Changelog. With some examples on how to use the beame system. 
+
+To understand how this all works: 
+When you first register with beame, we provide you with an auth token in the email. 
+You can generate tokens just like this on or own, and act as your own CA.  
+
+The known certificates, and other metadata are stored .beame/v2/ folder. 
 To discover the content of that folder, beame-insta-ssl creds list [--format {text|json}]
 
-We also fixed a bug in handing of websocket, wich impoves preformance of interactive applications like terminal about *10; 
+getCreds & getRegToken
+______________________
 
-One of the most important additon is the getCreds and getCreds with token functionality.
 
 Using the getCreds function you can generate a new credential, i.e. get a public signature for a new private key with a new FQDN. I am not going to go into alof details about how this can be used, 
 and for further deeper exaplanation please read understand the beaem credentialing tree document. Whats important to understand is this:
