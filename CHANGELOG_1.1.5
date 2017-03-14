@@ -1,43 +1,43 @@
-beame-insta-ssl 1.1.5 is a very important release of beame-insta-ssl and it adds real important new capbabilites to the package.
-The main fature is ability to generate multiple certs using your beame credentials. With the new commands you can easily create 
-SSL certificates, create authorization tokens. We have also changed and broke the previous CLI command structure. 
+beame-insta-ssl 1.1.5 is a very important release of beame-insta-ssl as it adds real important new capbabilites to the package.
+The main fature is ability to generate multiple certificates using your Beame credentials. With the new commands you can easily create 
+SSL certificates and create authorization tokens. We have also changed and broken the previous CLI command structure. 
 
-(sorry*), but we want our cli to be consistent across all beame products. 
+(sorry*), but we want our CLI to be consistent across all Beame products. 
 
 BUG FIXES
 _________
 
-We fixed a bug in handing of websocket, wich impoves preformance of interactive applications like terminal about *10; 
+We fixed a bug in the handling of websockets, wich impoves preformance of interactive applications like terminal about *10; 
 
 
-This goign to be a long Changelog. With some examples on how to use the beame system. 
+This going to be a long Changelog. It includes some examples on how to use the Beame system. 
 
 To understand how this all works: 
-When you first register with beame, we provide you with an auth token in the email. 
-You can generate tokens just like this on or own, and act as your own CA.  
+When you first register with Beame, we provide you with an authorization token by email. 
+You can generate tokens just like this one or own, and act as your own CA.  
 
-The known certificates, and other metadata are stored .beame/v2/ folder. 
+The known certificates and other metadata are stored in the .beame/v2/ folder. 
 To discover the content of that folder, beame-insta-ssl creds list [--format {text|json}]
 
 getCreds & getRegToken
 ______________________
 
 
-Using the getCreds function you can generate a new credential, i.e. get a public signature for a new private key with a new FQDN. I am not going to go into alof details about how this can be used, 
-and for further deeper exaplanation please read understand the beaem credentialing tree document. Whats important to understand is this:
+Using the getCreds function you can generate a new credential, i.e. get a public signature for a new private key with a new FQDN. We are not going to go into a lot of detail about how this can be used, 
+and for further deeper exaplanation please read our document, Understanding the Beame Credentialing Hierarchy. Whats important to understand is this:
 
-There are two prime usecases for this funtion:
+There are two primary usecases for this function:
 Usecase 1
 ---------
 
-If you want to generate another cert to be used on the same machine as your authorizing credential is on (the one where you have the private key for the fqdn you will be using). You can just use 
+If you want to generate another cert to be used on the same machine as the one that your authorizing credential is on (the one where you have the private key for the FQDN you will be using). You can just use 
 beame-insta-ssl creds getCreds --fqdn YOUR-FQDN --name somename 
 
-This one call will generate a CSR, allocate a new hostname under itself, and go to Beame CA to get the request signed using the fqdn specified as a client certificate, when accessing the Beame CA.
+This one call will generate a CSR, allocate a new hostname under itself, and go to Beame CA to get the request signed using the FQDN specified as a client certificate when accessing the Beame CA.
 
 Usecase 2
 ----------
-This is useful when you when the new crypto-id (tls cert) to be on a differnet device. So you are on on central machine such as you linux or whatever, and now you want to deploy credentials to another device.
+This is useful when you want the new Crypto-ID (tls cert) to be on a differnet device. You are on on central machine such as your Linux, for example, and now you want to deploy credentials to another device.
 
 
 here is the easiet way to try it:
@@ -53,11 +53,11 @@ here is the easiet way to try it:
 
 and in a few seconds that there will be a fresh cert on your target device. 
 
-Some 0ther Notewothy Thigns
+Some Other Notewothy Things
 ___________________________
 
 beame-insta-ssl creds syncmeta [--fqdn fqdn] [--format {text|json}]
-This is a recovery function that will allow you to resync content of metadata json for example if something in the proccess failed, or to get status update on a child. You should never really have to use it.
+This is a recovery function that will allow you to resync content of metadata json for example if something in the proccess failed, or to get status update on a 'child credential'. You should never really have to use it.
 
 
 beame-insta-ssl creds exportCred [--fqdn fqdn] --dir dir
@@ -80,7 +80,7 @@ beame-insta-ssl creds exportCred [--fqdn fqdn] --dir dir
 
 		If DESTINATION_PROTO is "http", the tunnel will terminate TLS
 		traffic and transform the requests to HTTP. This way you can
-		run existing HTTP server unmodified.
+		run an existing HTTP server unmodified.
 
 		Examples:
 			beame-insta-ssl tunnel make --dst 8080 http
@@ -95,12 +95,12 @@ beame-insta-ssl creds exportCred [--fqdn fqdn] --dir dir
 
 
 beame-insta-ssl creds revokeCert --signerFqdn signerFqdn [--fqdn fqdn] [--format {text|json}]
-	Revokes an SSL certificate.
+	Revokes a certificate.
 
 beame-insta-ssl creds renewCert --fqdn fqdn
 beame-insta-ssl creds renewCert [--signerAuthToken signerAuthToken] [--fqdn fqdn] [--validityPeriod validityPeriod] [--format {text|json}]
-	a. Renews an SSL certificate, signedAuthToken is a proof from a parent, for continus authorization. We will provide more detials on this logic soon
-	b. Calling it just with the fqdn assumes that the private key is locatable, and request will just be signed with the private key of the credential wishing to be extended. 
+	a. Renews a certificate, signedAuthToken is a proof from a parent, for continus authorization. We will provide more detials on this logic soon
+	b. Calling it just with the FQDN assumes that the private key can be found, and request will just be signed with the private key of the credential wishing to be extended. 
 
 	
 beame-insta-ssl creds exportCred --fqdn <FQDN> --dir <DESTINATION_FOLDER
