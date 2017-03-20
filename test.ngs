@@ -308,18 +308,6 @@ test("Renewing cert for $fqdn") with {
 	assert_hash_keys_values(s, {'status': 'ok'}, "Status OK")
 }
 
-test("Change DNS to A record") with {
-	ip = '10.' + (rand.partial(256) * 3).map(Str).join(".")
-	$($BEAME_INSTA_SSL_BIN creds setDns --fqdn $fqdn --value $ip --format json)
-	assert_resolvable(fqdn, check={A == [ip]})
-}
-
-test("Change DNS to CNAME record") with {
-	cname = CHARS::ascii_lowercase.rand(16) + '.example.com'
-	$($BEAME_INSTA_SSL_BIN creds setDns --fqdn $fqdn --value $cname --format json)
-	assert_resolvable(fqdn, check={"${cname}." in A})
-}
-
 # TESTS FROM SDK
 
 test("[Registration token] Generate") with {

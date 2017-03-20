@@ -1,0 +1,108 @@
+beame-insta-ssl 1.1.5 is a very important release of beame-insta-ssl as it adds real important new capbabilites to the package.
+The main fature is ability to generate multiple certificates using your Beame credentials. With the new commands you can easily create 
+SSL certificates and create authorization tokens. We have also changed and broken the previous CLI command structure. 
+
+(sorry*), but we want our CLI to be consistent across all Beame products. 
+
+BUG FIXES
+_________
+
+We fixed a bug in the handling of websockets, wich impoves preformance of interactive applications like terminal about *10; 
+
+
+This going to be a long Changelog. It includes some examples on how to use the Beame system. 
+
+To understand how this all works: 
+When you first register with Beame, we provide you with an authorization token by email. 
+You can generate tokens just like this one or own, and act as your own CA.  
+
+The known certificates and other metadata are stored in the .beame/v2/ folder. 
+To discover the content of that folder, beame-insta-ssl creds list [--format {text|json}]
+
+getCreds & getRegToken
+______________________
+
+
+Using the getCreds function you can generate a new credential, i.e. get a public signature for a new private key with a new FQDN. We are not going to go into a lot of detail about how this can be used, 
+and for further deeper exaplanation please read our document, Understanding the Beame Credentialing Hierarchy. Whats important to understand is this:
+
+There are two primary usecases for this function:
+Usecase 1
+---------
+
+If you want to generate another cert to be used on the same machine as the one that your authorizing credential is on (the one where you have the private key for the FQDN you will be using). You can just use 
+beame-insta-ssl creds getCreds --fqdn YOUR-FQDN --name somename 
+
+This one call will generate a CSR, allocate a new hostname under itself, and go to Beame CA to get the request signed using the FQDN specified as a client certificate when accessing the Beame CA.
+
+Usecase 2
+----------
+This is useful when you want the new Crypto-ID (tls cert) to be on a differnet device. You are on on central machine such as your Linux, for example, and now you want to deploy credentials to another device.
+
+
+here is the easiet way to try it:
+	token=$(beame-insta-ssl creds getRegToken --fqdn YOUR_FQDN  --name optinalName --email optionalEmail  --ttl optionalTTLinSeconds)
+	echo $token 
+	' you should see a base 64 encoded string 
+	
+	you can investigate the token by:
+		echo $token | base64 -d 
+	
+	now you can
+		ssh pi@192.168.1.2 "beame-insta-ssl creds getCreds --regToken " $token	
+
+and in a few seconds that there will be a fresh cert on your target device. 
+
+Some Other Notewothy Things
+___________________________
+
+beame-insta-ssl creds syncmeta [--fqdn fqdn] [--format {text|json}]
+This is a recovery function that will allow you to resync content of metadata json for example if something in the proccess failed, or to get status update on a 'child credential'. You should never really have to use it.
+
+
+beame-insta-ssl creds exportCred [--fqdn fqdn] --dir dir
+		Example:
+			beame-insta-ssl creds exportCred --fqdn lvqba57mf13sitz7.xxxxxxxxxxxxxxxx.v1.d.beameio.net --dir my_cert_dir
+
+
+ beame-insta-ssl tunnel make --dst [DESTINATION_HOST:]DESTINATION_PORT --proto DESTINATION_PROTO [--hostname <HOSTNAME>] [--fqdn FQDN]
+
+		FQDN               - the FQDN of the certificate to export
+		DESTINATION_FOLDER - the folder to export the certificate to. The folder must exist.
+		                     The export operation will place 'FQDN.*' files in the folder.
+		                     No files will be overwritten. Please make sure you have restrictive
+		                     permissions for that folder. Current version of beame-insta-ssl
+		                     does not handle resulting files' permissions.
+
+
+		Creates tunnel from https://SOMETHING.beameio.net to the
+		specified destination.
+
+		If DESTINATION_PROTO is "http", the tunnel will terminate TLS
+		traffic and transform the requests to HTTP. This way you can
+		run an existing HTTP server unmodified.
+
+		Examples:
+			beame-insta-ssl tunnel make --dst 8080 --proto http
+			beame-insta-ssl tunnel make --dst 192.168.0.200:8443 --proto https --hostname web200.localdomain
+
+		DESTINATION_HOST   - your end of the tunnel, defaults to localhost
+		DESTINATION_PORT   - your end of the tunnel
+		DESTINATION_PROTO  - protocol to use on your end of the tunnel ("http" or "https")
+		HOSTNAME           - The "Host:" header to set in incoming requests (terminating tunnel only)
+		FQDN               - The FQDN to use for the remote end of the tunnel. If you only have one,
+		                     which should be the usual case, you don't need to specify the FQDN.
+
+
+beame-insta-ssl creds revokeCert --signerFqdn signerFqdn [--fqdn fqdn] [--format {text|json}]
+	Revokes a certificate.
+
+beame-insta-ssl creds renewCert --fqdn fqdn
+beame-insta-ssl creds renewCert [--signerAuthToken signerAuthToken] [--fqdn fqdn] [--validityPeriod validityPeriod] [--format {text|json}]
+	a. Renews a certificate, signedAuthToken is a proof from a parent, for continus authorization. We will provide more detials on this logic soon
+	b. Calling it just with the FQDN assumes that the private key can be found, and request will just be signed with the private key of the credential wishing to be extended. 
+
+	
+beame-insta-ssl creds exportCred --fqdn <FQDN> --dir <DESTINATION_FOLDER
+	
+
