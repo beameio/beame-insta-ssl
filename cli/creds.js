@@ -247,13 +247,22 @@ function renewCert(signerAuthToken, fqdn, validityPeriod, callback) {
 }
 renewCert.toText = _lineToText;
 
-function setDns(fqdn, value, useBestProxy,callback){
+/**
+ * @public
+ * @method Creds.setDns
+ * @param {String} fqdn
+ * @param {String|null|undefined} [value] => dns record value
+ * @param {Boolean|null} [useBestProxy]
+ * @param {String|null|undefined} [dnsFqdn] => using for any alt-names which is not CN
+ * @param callback
+ */
+function setDns(fqdn, value, useBestProxy, dnsFqdn, callback) {
 	let cred = new Credential(new BeameStore());
 
-	CommonUtils.promise2callback(cred.setDns(fqdn,value,useBestProxy), callback);
+	CommonUtils.promise2callback(cred.setDns(fqdn, value, useBestProxy || !value, dnsFqdn), callback);
 
 }
-setDns.toText = x=> x;
+setDns.toText = x => `DNS set to ${x}`;
 
 module.exports = {
 	list,

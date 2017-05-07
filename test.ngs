@@ -119,15 +119,20 @@ F http_target_tunnel(cmd:Command, expected_hostname:Str, proto='https') {
 }
 
 doc Waits till hostname becomes resolvable (has DNS record)
-F wait_resolvable(h:Str) {
-	test("Waiting for hostname $h to be resolvable", {
-		for(i;45) {
-			resolve = `dig "+short" $h`
-			resolve returns "Resolves to ${resolve.lines()[-1]}"
-			$(sleep 2)
-		}
-		throw TestFail("No resolve for $h")
-	})
+F test_dns(fqdn:Str) {
+
+    test("Change DNS to A record") with {
+    	ip = '10.' + (rand.partial(256) * 3).map(Str).join(".")
+    	$($BEAME_INSTA_SSL_BIN creds setDns --fqdn $fqdn --value $ip --format json)
+    	assert_resolvable(fqdn, check={A == [ip]})
+    }
+
+    test("Change DNS to CNAME record") with {
+    	cname = CHARS::ascii_lowercase.rand(16) + '.example.com'
+    	$($BEAME_INSTA_SSL_BIN creds setDns --fqdn $fqdn --value $cname --format json)
+    	assert_resolvable(fqdn, check={"${cname}." in A})
+    }
+
 }
 
 F corrupt_metadata_json() {
@@ -218,7 +223,7 @@ each({
 	})
 })
 
-wait_resolvable(fqdn)
+test_dns(fqdn)
 
 each({
 	"old": %[65500]
@@ -283,7 +288,7 @@ test("Run tunnel not specifying fqdn", {
 	should_fail_with_text(%($BEAME_INSTA_SSL_BIN tunnel 65500 https), 'more than one')
 })
 
-wait_resolvable(fqdn)
+test_dns(fqdn)
 
 each({
 	"old": %[65500]
