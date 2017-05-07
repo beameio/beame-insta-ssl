@@ -229,9 +229,7 @@ each({
 	"old": %[65500]
 	"new": %[make --dst 65500 --proto]
 }, F (cli_type:Str, argv:Arr) {
-	test("eehttp tunnel without fqdn ($cli_type CLI)", {
-		http_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel $*argv eehttp), fqdn, 'http')
-	})
+
 
 	test("Non-terminating tunnel without fqdn ($cli_type CLI)", {
 		https_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel $*argv https))
