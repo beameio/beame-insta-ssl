@@ -43,20 +43,20 @@ function startHttpsTerminatingProxy(certs, targetHost, targetPort, targetHostNam
 }
 
 /**
- * @param {Credential} creds
+ * @param {Credential} cred
  * @param {String} targetHost
  * @param {Number} targetPort
  * @param {String} targetProto
  * @param {String} targetHostName
  */
-function tunnel(creds, targetHost, targetPort, targetProto, targetHostName) {
+function tunnel(cred, targetHost, targetPort, targetProto, targetHostName) {
 
 	if (targetProto !== 'http' && targetProto !== 'https' && targetProto !== 'eehttp') {
 		throw new Error("httpsTunnel: targetProto must be either http or https");
 	}
 
 		/** @type {Object} **/
-		let serverCerts = creds.getHttpsServerOptions();
+		let serverCerts = cred.getHttpsServerOptions();
 
 		let proxyClient;
 
@@ -64,20 +64,28 @@ function tunnel(creds, targetHost, targetPort, targetProto, targetHostName) {
 			case 'http':
 				startHttpsTerminatingProxy(serverCerts, targetHost, targetPort, targetHostName || targetHost)
 					.then(terminatingProxyPort => {
-					    proxyClient =	new ProxyClient("HTTPS",creds, 'localhost', terminatingProxyPort, {}, null, serverCerts);
-						proxyClient.start();
+					    proxyClient =	new ProxyClient("HTTPS",cred, 'localhost', terminatingProxyPort, {}, null, serverCerts);
+						proxyClient.start().then(()=>{
+							console.error(`Proxy client started on ${cred.fqdn}`);
+						}).catch(e => {
+							throw new Error(`Error starting HTTPS terminating proxy: ${e}`);
+						});
 					})
 					.catch(e => {
 						throw new Error(`Error starting HTTPS terminating proxy: ${e}`);
 					});
 				break;
 			case 'https':
-				proxyClient = new ProxyClient("HTTPS", creds, targetHost, targetPort, {}, null, serverCerts);
-				proxyClient.start();
+				proxyClient = new ProxyClient("HTTPS", cred, targetHost, targetPort, {}, null, serverCerts);
+				proxyClient.start().then(()=>{
+					console.error(`Proxy client started on ${cred.fqdn}`);
+				}).catch(e => {
+					throw new Error(`Error starting HTTPS terminating proxy: ${e}`);
+				});
 				break;
 			case 'eehttp':
 				console.error("WARNING: You are using unsupported protocol 'eehttp'. This feature will be broken in future.");
-				proxyClient = new ProxyClient("HTTP", creds, targetHost, targetPort, {});
+				proxyClient = new ProxyClient("HTTP", cred, targetHost, targetPort, {});
 				proxyClient.start();
 				break;
 			default: return;

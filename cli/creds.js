@@ -201,14 +201,38 @@ function returnOK() {
 /**
  * @public
  * @method Creds.revokeCert
+ * @param {String|null} signerAuthToken
  * @param {String} signerFqdn
  * @param {String} fqdn
  * @param {Function} callback
  */
-function revokeCert(signerFqdn, fqdn, callback) {
+function revokeCert(signerAuthToken, signerFqdn, fqdn, callback) {
+
+	if (!signerAuthToken && !signerFqdn) {
+		throw new Error(`SignerAuthToken or SignerFqdn required`);
+	}
+
+	if (!fqdn) {
+		throw new Error(`Fqdn required`);
+	}
+
+	let authToken;
+
+	if (signerAuthToken) {
+		let parsed = CommonUtils.parse(signerAuthToken, false);
+
+		if (typeof parsed === "object") {
+			authToken = parsed;
+		}
+		else {
+			authToken = CommonUtils.parse(parsed, false);
+		}
+	}
+
 	let cred = new Credential(new BeameStore());
 
-	CommonUtils.promise2callback(cred.revokeCert(signerFqdn, fqdn).then(returnOK), callback);
+	CommonUtils.promise2callback(cred.revokeCert(authToken, signerFqdn, fqdn), callback);
+	//CommonUtils.promise2callback(cred.revokeCert(signerAuthToken,signerFqdn, fqdn).then(returnOK), callback);
 }
 revokeCert.toText = _lineToText;
 
@@ -241,11 +265,34 @@ function renewCert(signerAuthToken, fqdn, validityPeriod, callback) {
 
 	let cred = new Credential(new BeameStore());
 
-
-
 	CommonUtils.promise2callback(cred.renewCert(authToken, fqdn, validityPeriod).then(returnOK), callback);
 }
 renewCert.toText = _lineToText;
+
+
+/**
+ * @public
+ * @method Creds.checkOcsp
+ * @param {String} fqdn
+ * @param {Function} callback
+ */
+function checkOcsp(fqdn,callback){
+	if (!fqdn) {
+		throw new Error(`Fqdn required`);
+	}
+
+	let cred = (new BeameStore()).getCredential(fqdn);
+
+	if(!cred){
+		throw new Error(`Credential for ${fqdn} not found`);
+	}
+
+
+	CommonUtils.promise2callback(cred.checkOcspStatus(cred), callback);
+}
+checkOcsp.toText = x => {
+	return x.status === true ? `Certificate ${x.fqdn} is valid` : x.message;
+};
 
 /**
  * @public
@@ -264,6 +311,21 @@ function setDns(fqdn, value, useBestProxy, dnsFqdn, callback) {
 }
 setDns.toText = x => `DNS set to ${x}`;
 
+/**
+ * @public
+ * @method Creds.deleteDns
+ * @param {String} fqdn
+ * @param {String|null|undefined} [dnsFqdn] => using for any alt-names which is not CN
+ * @param callback
+ */
+function deleteDns(fqdn, dnsFqdn, callback) {
+	let cred = new Credential(new BeameStore());
+
+	CommonUtils.promise2callback(cred.deleteDns(fqdn, dnsFqdn), callback);
+
+}
+deleteDns.toText = x => `DNS record for ${x} has been deleted`;
+
 module.exports = {
 	list,
 	getCreds,
@@ -272,5 +334,7 @@ module.exports = {
 	exportCred,
 	revokeCert,
 	renewCert,
-	setDns
+	checkOcsp,
+	setDns,
+	deleteDns
 };
