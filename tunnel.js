@@ -43,49 +43,46 @@ function startHttpsTerminatingProxy(certs, targetHost, targetPort, targetHostNam
 }
 
 /**
- * @param {String} fqdn
  * @param {Credential} creds
  * @param {String} targetHost
  * @param {Number} targetPort
  * @param {String} targetProto
  * @param {String} targetHostName
  */
-function tunnel(fqdn, creds, targetHost, targetPort, targetProto, targetHostName) {
+function tunnel(creds, targetHost, targetPort, targetProto, targetHostName) {
 
 	if (targetProto !== 'http' && targetProto !== 'https' && targetProto !== 'eehttp') {
 		throw new Error("httpsTunnel: targetProto must be either http or https");
 	}
 
-	const _startTunnel = (edge_fqdn) =>{
 		/** @type {Object} **/
-		let serverCerts = {
-			key:  creds.getKey("PRIVATE_KEY"),
-			cert: creds.getKey("P7B"),
-			ca:   creds.getKey("CA")
-		};
+		let serverCerts = creds.getHttpsServerOptions();
+
+		let proxyClient;
 
 		switch(targetProto) {
 			case 'http':
 				startHttpsTerminatingProxy(serverCerts, targetHost, targetPort, targetHostName || targetHost)
 					.then(terminatingProxyPort => {
-						new ProxyClient("HTTPS", fqdn, edge_fqdn, 'localhost', terminatingProxyPort, {}, null, serverCerts);
+					    proxyClient =	new ProxyClient("HTTPS",creds, 'localhost', terminatingProxyPort, {}, null, serverCerts);
+						proxyClient.start();
 					})
 					.catch(e => {
 						throw new Error(`Error starting HTTPS terminating proxy: ${e}`);
 					});
 				break;
 			case 'https':
-				new ProxyClient("HTTPS", fqdn, edge_fqdn, targetHost, targetPort, {}, null, serverCerts);
+				proxyClient = new ProxyClient("HTTPS", creds, targetHost, targetPort, {}, null, serverCerts);
+				proxyClient.start();
 				break;
 			case 'eehttp':
 				console.error("WARNING: You are using unsupported protocol 'eehttp'. This feature will be broken in future.");
-				new ProxyClient("HTTP", fqdn, edge_fqdn, targetHost, targetPort, {});
+				proxyClient = new ProxyClient("HTTP", creds, targetHost, targetPort, {});
+				proxyClient.start();
+				break;
+			default: return;
 		}
-	};
 
-	creds.getDnsValue().then(_startTunnel).catch(e => {
-		logger.fatal(`Get dns error for ${creds.fqdn} ${BeameLogger.formatError(e)}. TUNNEL NOT STARTED`);
-	})
 
 }
 

@@ -17,7 +17,7 @@ function make(fqdn, dst, hostname, proto, callback) {
 					return;
 				}
 
-				if (typeof dst == 'number') {
+				if (typeof dst === 'number') {
 					dstHost = 'localhost';
 					dstPort = dst;
 				} else {
@@ -32,7 +32,7 @@ function make(fqdn, dst, hostname, proto, callback) {
 
 				console.log(`Starting tunnel https://${fqdn} -> ${proto}://${dstHost}:${dstPort}`);
 
-				tunnelObj(fqdn, cert, dstHost, dstPort, proto, dstHostname);
+				tunnelObj(cert, dstHost, dstPort, proto, dstHostname);
 			}
 		);
 	};
