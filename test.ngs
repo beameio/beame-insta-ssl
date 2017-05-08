@@ -347,8 +347,8 @@ test_dns(fqdn)
 
 test("OCSP test") with {
 	s = ``$BEAME_INSTA_SSL_BIN creds checkOcsp --fqdn $fqdn --format json``
-	s.assert_hash_keys(%[status])
-    assert(s.status, true)
+
+	assert_hash_keys_values(s, {'status': true}, "Ocsp status $fqdn is OK")
 }
 
 test("Revoke cert") with {
@@ -361,7 +361,7 @@ test("Revoke cert") with {
 }
 
 test("OCSP test after revocation") with {
-	s = ``$BEAME_INSTA_SSL_BIN creds checkOcsp --fqdn $fqdn --format json``
+	s = retry(body={``$BEAME_INSTA_SSL_BIN creds checkOcsp --fqdn $fqdn --format json``},success_predicate={A.status==false},fail_cb={throw TestFail("Check OCSP for $fqdn failed")})
 	s.assert_hash_keys(%[status])
-    assert(s.status, false)
+    assert_hash_keys_values(s, {'status': false}, "Ocsp status $fqdn revoked")
 }
