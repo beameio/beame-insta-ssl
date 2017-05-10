@@ -1,6 +1,11 @@
 <img align="right" src="img/beame.png">
 # beame-insta-ssl
 
+## How to renew your credentials 
+sudo npm update -g beame-insta-ssl
+beame-insta-ssl creds renewCert --fqdn 'urfqdn'
+
+
 ## What is beame-insta-ssl?
 
 This is a free, open-source tool that allows you to expose securely a machine with HTTP or HTTPS server via a random hostname without needing to have a public IP address.
