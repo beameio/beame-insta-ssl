@@ -5,8 +5,8 @@
 const fs   = require('fs');
 const path = require('path');
 
-const argv = require('minimist')(process.argv.slice(2));
-const _    = require('underscore');
+const argv        = require('minimist')(process.argv.slice(2));
+const _           = require('underscore');
 const beameSDK    = require('beame-sdk');
 const BeameStore  = beameSDK.BeameStore;
 const BeameLogger = beameSDK.Logger;
@@ -14,7 +14,7 @@ const logger      = new BeameLogger("BeameInstaSSL");
 const pem         = require('pem');
 
 let commands = {};
-['creds', 'tunnel'].forEach(cmdName => {
+['creds', 'tunnel', 'system'].forEach(cmdName => {
 	commands[cmdName] = require('./' + cmdName + '.js');
 });
 
@@ -125,16 +125,16 @@ function getParamsNames(fun) {
 function main() {
 	let cmdName, subCmdName, cmd;
 
-	if(pem.version) {
+	if (pem.version) {
 		pem.config({sync: true});
 		pem.version((err, data) => {
-			if(err) {
+			if (err) {
 				throw Error("Could not run openssl. beame-insta-ssl requires openssl. Please make sure openssl is installed and is in PATH");
 			}
 		});
 		pem.config({sync: false});
 	} else {
-		if(!process.env.BEAME_NO_PEM_WARNING) {
+		if (!process.env.BEAME_NO_PEM_WARNING) {
 			logger.info("WARNING: Using 'pem' module without 'config' function. Not checking for openssl availability.");
 		}
 	}
@@ -145,30 +145,30 @@ function main() {
 	// Old CLI compatibility - start
 	let do_warn = false, orig_command = argv._[0];
 	if (argv._[0] == 'list') {
-		do_warn = true;
-		argv._ = ['creds', 'list'];
+		do_warn                    = true;
+		argv._                     = ['creds', 'list'];
 		commands.creds.list.toText = (list) => list.map(cred => cred.fqdn).join('\n');
 	}
 	if (argv._[0] == 'syncmeta') {
 		do_warn = true;
-		argv._ = ['creds', 'syncmeta'];
+		argv._  = ['creds', 'syncmeta'];
 		defaultTheOnlyFqdn(argv);
 	}
 	if (argv._[0] == 'export') {
-		do_warn = true;
+		do_warn   = true;
 		argv.fqdn = argv._[1];
-		argv.dir = argv._[2];
-		argv._ = ['creds', 'exportCred'];
+		argv.dir  = argv._[2];
+		argv._    = ['creds', 'exportCred'];
 	}
 	if (argv._[0] == 'tunnel') {
 		if (argv._[1] && ((typeof argv._[1] == 'number') || argv._[1].indexOf(':') > -1)) {
-			do_warn = true;
-			argv.dst = argv._[1];
+			do_warn    = true;
+			argv.dst   = argv._[1];
 			argv.proto = argv._[2];
-			argv._ = ['tunnel', 'make'];
+			argv._     = ['tunnel', 'make'];
 		}
 	}
-	if(do_warn) {
+	if (do_warn) {
 		console.warn(`+---------------------------------------------------------------------`)
 		console.warn(`| Warning: you are using deprecated command "${orig_command}". Use "${argv._.join(' ')}" instead.`)
 		console.warn(`| Run beame-insta-ssl without any arguments to see all the commands and swithces.`);
@@ -199,44 +199,44 @@ function main() {
 		defaultTheOnlyFqdn(argv);
 	}
 	/*
-	if (argv._[0] == 'complete') {
-		if (argv._[1] == 'commands') {
-			console.log(_.keys(commands).join(' '));
-			process.exit(0);
-		}
-		if (argv._[1] == 'sub-commands') {
-			console.log(_.keys(commands[argv._[2]]).join(' '));
-			process.exit(0);
-		}
-		if (argv._[1] == 'switches') {
-			let f           = commands[argv._[2]][argv._[3]],
-				paramsNames = getParamsNames(f);
-			if (paramsNames.hasFormat) {
-				paramsNames.push('format');
-			}
-			let switches = paramsNames.map(function (p) {
-				return "--" + p;
-			}).join(' ');
-			console.log(switches);
-			process.exit(0);
-		}
-		if (argv._[1] == 'switch-value') {
-			let sw = argv._[2];
-			if (sw == 'fqdn') {
-				let store   = new BeameStore();
-				let results = store.list();
-				console.log(_.map(results, r => r.fqdn).join(' '));
-				process.exit(0);
-			}
-			if (parametersSchema[sw].options) {
-				console.log(parametersSchema[sw].options.join(' '));
-				process.exit(0);
-			}
-			process.exit(0);
-		}
-		process.exit(1);
-	}
-	*/
+	 if (argv._[0] == 'complete') {
+	 if (argv._[1] == 'commands') {
+	 console.log(_.keys(commands).join(' '));
+	 process.exit(0);
+	 }
+	 if (argv._[1] == 'sub-commands') {
+	 console.log(_.keys(commands[argv._[2]]).join(' '));
+	 process.exit(0);
+	 }
+	 if (argv._[1] == 'switches') {
+	 let f           = commands[argv._[2]][argv._[3]],
+	 paramsNames = getParamsNames(f);
+	 if (paramsNames.hasFormat) {
+	 paramsNames.push('format');
+	 }
+	 let switches = paramsNames.map(function (p) {
+	 return "--" + p;
+	 }).join(' ');
+	 console.log(switches);
+	 process.exit(0);
+	 }
+	 if (argv._[1] == 'switch-value') {
+	 let sw = argv._[2];
+	 if (sw == 'fqdn') {
+	 let store   = new BeameStore();
+	 let results = store.list();
+	 console.log(_.map(results, r => r.fqdn).join(' '));
+	 process.exit(0);
+	 }
+	 if (parametersSchema[sw].options) {
+	 console.log(parametersSchema[sw].options.join(' '));
+	 process.exit(0);
+	 }
+	 process.exit(0);
+	 }
+	 process.exit(1);
+	 }
+	 */
 
 	if (!cmd) {
 		logger.fatal("Command '" + cmdName + "' not found. Valid top-level commands are: " + Object.keys(commands));
@@ -295,10 +295,10 @@ function main() {
 	function commandResultsReady(error, output) {
 
 		if (error) {
-			if(typeof error == 'string') {
+			if (typeof error == 'string') {
 				logger.fatal(error);
 			}
-			if(error instanceof Error) {
+			if (error instanceof Error) {
 				logger.error(error.stack);
 			}
 			logger.fatal(error.message, error.data, error.module);
