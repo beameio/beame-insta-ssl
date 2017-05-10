@@ -10,9 +10,9 @@ if Path(BEAME_DIR) {
 	throw Error("Beame directory exists ($BEAME_DIR). Will not run tests.")
 }
 
-BEAME_INSTA_SSL_BIN = HOME / 'beame-insta-ssl/main.js'
-BEAME_SDK_BIN = HOME / 'beame-sdk/src/cli/beame.js'
-BEAME_DEV_AUTH_FQDN = 'n6ge8i9q4b4b5vb6.h40d7vrwir2oxlnn.v1.d.beameio.net'
+BEAME_INSTA_SSL_BIN = './main.js'
+BEAME_SDK_BIN =  './node_modules/beame-sdk/src/cli/beame.js'
+BEAME_DEV_AUTH_FQDN = ENV.get('BEAME_DEV_AUTH_FQDN', 'n6ge8i9q4b4b5vb6.h40d7vrwir2oxlnn.v1.d.beameio.net')
 EXPECTED_EXPORTED_FILE_EXTENSIONS = %[pem key chain.p7b pkcs12 pkcs12.pwd]
 
 # ---------- Utilities ----------
@@ -96,8 +96,9 @@ F https_target_tunnel(cmd:Command) {
 		$(node testHttpsServer.js $fqdn $t &)
 		$($cmd)
 	]
-	$(sleep 10)
-	out = try `curl --silent --max-time 30 "https://$fqdn/"`
+	echo("waiting for fqdn $fqdn $t")
+	assert_resolvable(fqdn)
+	out = retry(body={`curl --silent --max-time 30 "https://$fqdn/"`})
 	processes % kill
 	out != t throws TestFail("Result from server is missing or incorrect: '$out' vs '$t'")
 	TestMessage('Result from server is OK')
@@ -111,28 +112,40 @@ F http_target_tunnel(cmd:Command, expected_hostname:Str, proto='https') {
 		$(node testHttpServer.js $t &)
 		$($cmd)
 	]
-	$(sleep 10)
-	out = try `curl --silent --max-time 30 "$proto://$fqdn/"`
+	echo("waiting for fqdn $fqdn")
+	assert_resolvable(fqdn)
+	out = retry(body={`curl --silent --max-time 30 "$proto://$fqdn/"`})
 	processes % kill
 	out != "$t-$expected_hostname" throws TestFail("Result from server is missing or incorrect: '$out' vs '$t-$expected_hostname'")
 	TestMessage('Result from server is OK')
 }
 
 doc Waits till hostname becomes resolvable (has DNS record)
-F wait_resolvable(h:Str) {
-	test("Waiting for hostname $h to be resolvable", {
-		for(i;45) {
-			resolve = `dig "+short" $h`
-			resolve returns "Resolves to ${resolve.lines()[-1]}"
-			$(sleep 2)
-		}
-		throw TestFail("No resolve for $h")
-	})
+F test_dns(fqdn:Str) {
+
+    test("Change DNS to A record") with {
+    	ip = '10.' + (rand.partial(256) * 3).map(Str).join(".")
+    	$($BEAME_INSTA_SSL_BIN creds setDns --fqdn $fqdn --value $ip --format json)
+    	assert_resolvable(fqdn, check={A == [ip]})
+    }
+
+    test("Change DNS to CNAME record") with {
+    	cname = CHARS::ascii_lowercase.rand(16) + '.example.com'
+    	$($BEAME_INSTA_SSL_BIN creds setDns --fqdn $fqdn --value $cname --format json)
+    	assert_resolvable(fqdn, check={"${cname}." in A})
+    }
+
+    test("Delete DNS record") with {
+    	deleted_fqdn = ``$BEAME_INSTA_SSL_BIN creds deleteDns --fqdn $fqdn --format json``
+    	# -- TODO assert unresolvable
+    	assert_eq(deleted_fqdn,fqdn,"Deleted fqdn matched to requested")
+    }
+
 }
 
 F corrupt_metadata_json() {
 	metadata = ``cat "${fqdn_dir(fqdn)}/metadata.json"``
-	metadata.edge_fqdn = 'corrupted'
+	metadata.name = 'corrupted'
 	$(echo ${metadata.encode_json()} >"${fqdn_dir(fqdn)}/metadata.json")
 	metadata_json_ok(fqdn) throws TestFail("Metadata JSON is OK while should be corrupted")
 	TestMessage("Metadata file corrupted")
@@ -140,7 +153,7 @@ F corrupt_metadata_json() {
 
 F metadata_json_ok(fqdn) {
 	metadata = ``cat "${fqdn_dir(fqdn)}/metadata.json"``
-	metadata.edge_fqdn != 'corrupted'
+	metadata.name != 'corrupted'
 }
 
 # ---------- No certificates test ----------
@@ -218,19 +231,11 @@ each({
 	})
 })
 
-wait_resolvable(fqdn)
+# ---------------------------test_dns(fqdn)
 
 each({
-	"old": %[65500]
 	"new": %[make --dst 65500 --proto]
 }, F (cli_type:Str, argv:Arr) {
-	test("eehttp tunnel without fqdn ($cli_type CLI)", {
-		http_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel $*argv eehttp), fqdn, 'http')
-	})
-
-	test("Non-terminating tunnel without fqdn ($cli_type CLI)", {
-		https_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel $*argv https))
-	})
 
 	test("Terminating tunnel without fqdn ($cli_type CLI)", {
 		http_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel $*argv http), 'localhost')
@@ -283,8 +288,6 @@ test("Run tunnel not specifying fqdn", {
 	should_fail_with_text(%($BEAME_INSTA_SSL_BIN tunnel 65500 https), 'more than one')
 })
 
-wait_resolvable(fqdn)
-
 each({
 	"old": %[65500]
 	"new": %[make --dst 65500 --proto]
@@ -307,6 +310,7 @@ test("Renewing cert for $fqdn") with {
 	s = ``$BEAME_INSTA_SSL_BIN creds renewCert --fqdn $fqdn --format json``
 	assert_hash_keys_values(s, {'status': 'ok'}, "Status OK")
 }
+
 
 # TESTS FROM SDK
 
@@ -339,9 +343,23 @@ for(i;2) {
 	}
 }
 
+test_dns(fqdn)
+
+test("OCSP test") with {
+	s = ``$BEAME_INSTA_SSL_BIN creds checkOcsp --fqdn $fqdn --format json``
+	assert_hash_keys_values(s, {'status': true}, "Ocsp status $fqdn is OK")
+}
+
 test("Revoke cert") with {
 	# TODO: real test
 	# TODO: test with children - should get "can't be revoked, because children exists"
 	s = ``$BEAME_INSTA_SSL_BIN creds revokeCert --signerFqdn $fqdn --fqdn $fqdn --format json``
-	assert_hash_keys_values(s, {'status': 'ok'}, "Status OK")
+	echo("revoke message ${s.message}")
+	s.assert_hash_keys(%[message])
+    assert_has(s.message, "$fqdn Certificate has been revoked successfully")
+}
+
+test("OCSP test after revocation") with {
+	s = retry(body={``$BEAME_INSTA_SSL_BIN creds checkOcsp --fqdn $fqdn --format json``},success_predicate={A.status==false},fail_cb={throw TestFail("Check OCSP for $fqdn failed")})
+    assert_hash_keys_values(s, {'status': false}, "Ocsp status $fqdn revoked")
 }

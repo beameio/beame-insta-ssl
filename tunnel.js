@@ -1,7 +1,8 @@
 "use strict";
 const beame       = require('beame-sdk');
 const ProxyClient = beame.ProxyClient;
-
+const BeameLogger = beame.Logger;
+const logger      = new BeameLogger("BIS-Tunnel");
 /**
  * @param {Object} certs
  * @param {String} targetHost
@@ -42,49 +43,55 @@ function startHttpsTerminatingProxy(certs, targetHost, targetPort, targetHostNam
 }
 
 /**
- * @param {String} fqdn
- * @param {Credential} creds
+ * @param {Credential} cred
  * @param {String} targetHost
  * @param {Number} targetPort
  * @param {String} targetProto
  * @param {String} targetHostName
  */
-function tunnel(fqdn, creds, targetHost, targetPort, targetProto, targetHostName) {
+function tunnel(cred, targetHost, targetPort, targetProto, targetHostName) {
 
-	if (targetProto != 'http' && targetProto != 'https' && targetProto != 'eehttp') {
+	if (targetProto !== 'http' && targetProto !== 'https' && targetProto !== 'eehttp') {
 		throw new Error("httpsTunnel: targetProto must be either http or https");
 	}
 
-	const edge_fqdn = creds.getMetadataKey('edge_fqdn');
+		/** @type {Object} **/
+		let serverCerts = cred.getHttpsServerOptions();
 
-	if (!edge_fqdn) {
-		throw new Error(`FQDN ${fqdn} can not be used for tunnel - edge server address missing. Try running "beame-insta-ssl creds syncmeta" command.`);
-	}
+		let proxyClient;
 
-	/** @type {Object} **/
-	let serverCerts = {
-		key:  creds.getKey("PRIVATE_KEY"),
-		cert: creds.getKey("P7B"),
-		ca:   creds.getKey("CA")
-	};
+		switch(targetProto) {
+			case 'http':
+				startHttpsTerminatingProxy(serverCerts, targetHost, targetPort, targetHostName || targetHost)
+					.then(terminatingProxyPort => {
+					    proxyClient =	new ProxyClient("HTTPS",cred, 'localhost', terminatingProxyPort, {}, null, serverCerts);
+						proxyClient.start().then(()=>{
+							console.error(`Proxy client started on ${cred.fqdn}`);
+						}).catch(e => {
+							throw new Error(`Error starting HTTPS terminating proxy: ${e}`);
+						});
+					})
+					.catch(e => {
+						throw new Error(`Error starting HTTPS terminating proxy: ${e}`);
+					});
+				break;
+			case 'https':
+				proxyClient = new ProxyClient("HTTPS", cred, targetHost, targetPort, {}, null, serverCerts);
+				proxyClient.start().then(()=>{
+					console.error(`Proxy client started on ${cred.fqdn}`);
+				}).catch(e => {
+					throw new Error(`Error starting HTTPS terminating proxy: ${e}`);
+				});
+				break;
+			case 'eehttp':
+				console.error("WARNING: You are using unsupported protocol 'eehttp'. This feature will be broken in future.");
+				proxyClient = new ProxyClient("HTTP", cred, targetHost, targetPort, {});
+				proxyClient.start();
+				break;
+			default: return;
+		}
 
-	switch(targetProto) {
-	case 'http':
-		startHttpsTerminatingProxy(serverCerts, targetHost, targetPort, targetHostName || targetHost)
-			.then(terminatingProxyPort => {
-				new ProxyClient("HTTPS", fqdn, edge_fqdn, 'localhost', terminatingProxyPort, {}, null, serverCerts);
-			})
-			.catch(e => {
-				throw new Error(`Error starting HTTPS terminating proxy: ${e}`);
-			});
-		break;
-	case 'https':
-		new ProxyClient("HTTPS", fqdn, edge_fqdn, targetHost, targetPort, {}, null, serverCerts);
-		break;
-	case 'eehttp':
-		console.error("WARNING: You are using unsupported protocol 'eehttp'. This feature will be broken in future.");
-		new ProxyClient("HTTP", fqdn, edge_fqdn, targetHost, targetPort, {});
-	}
+
 }
 
 module.exports = tunnel;
