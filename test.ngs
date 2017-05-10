@@ -10,8 +10,8 @@ if Path(BEAME_DIR) {
 	throw Error("Beame directory exists ($BEAME_DIR). Will not run tests.")
 }
 
-BEAME_INSTA_SSL_BIN = HOME / 'beame-insta-ssl/main.js'
-BEAME_SDK_BIN = HOME / 'beame-sdk/src/cli/beame.js'
+BEAME_INSTA_SSL_BIN = 'main.js'
+BEAME_SDK_BIN =  'node_modules/beame-sdk/src/cli/beame.js'
 BEAME_DEV_AUTH_FQDN = ENV.get('BEAME_DEV_AUTH_FQDN', 'n6ge8i9q4b4b5vb6.h40d7vrwir2oxlnn.v1.d.beameio.net')
 EXPECTED_EXPORTED_FILE_EXTENSIONS = %[pem key chain.p7b pkcs12 pkcs12.pwd]
 
