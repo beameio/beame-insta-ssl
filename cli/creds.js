@@ -274,9 +274,10 @@ renewCert.toText = _lineToText;
  * @public
  * @method Creds.checkOcsp
  * @param {String} fqdn
+ * @param {Boolean|string|null} [forceCheck] => ignoring cache, when set to true
  * @param {Function} callback
  */
-function checkOcsp(fqdn,callback){
+function checkOcsp(fqdn, forceCheck, callback){
 	if (!fqdn) {
 		throw new Error(`Fqdn required`);
 	}
@@ -287,8 +288,9 @@ function checkOcsp(fqdn,callback){
 		throw new Error(`Credential for ${fqdn} not found`);
 	}
 
+	let check = !!(forceCheck && forceCheck === "true");
 
-	CommonUtils.promise2callback(cred.checkOcspStatus(cred), callback);
+	CommonUtils.promise2callback(cred.checkOcspStatus(cred,check), callback);
 }
 checkOcsp.toText = x => {
 	return x.status === true ? `Certificate ${x.fqdn} is valid` : x.message;
