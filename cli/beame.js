@@ -69,7 +69,8 @@ const parametersSchema = {
 	'value':              {required: false},
 	'useBestProxy':       {required: false},
 	'validityPeriod':     {required: false},
-	'dnsFqdn':            {required: false}
+	'dnsFqdn':            {required: false},
+	'forceCheck':         {required: false}
 };
 
 function InvalidArgv(message) {
