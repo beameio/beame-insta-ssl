@@ -11,17 +11,19 @@ const BeameStore = beameSDK.BeameStore;
 const CommonUtils = beameSDK.CommonUtils;
 
 function make(fqdn, dst, src, file, callback) {
-	let cert, dstHost, dstPort, srcHost, srcPort, dstFile;
+	let cert;
 
-	const _parseNetNode = (data, host, port) => {
+	const _parseNetNode = (data) => {
+		let host, port;
 		if (typeof data === 'number') {
 			host = 'localhost';
 			port = data;
 		} else {
-			src     = data.split(':');
+			data     = data.split(':');
 			host = data[0];
 			port = parseInt(data[1]);
 		}
+		return {host: host, port: port};
 	};
 
 	const _doClient = () => {
@@ -32,8 +34,8 @@ function make(fqdn, dst, src, file, callback) {
 					reject(`Certificate for FQDN ${fqdn} not found`);
 					return;
 				}
-				_parseNetNode(dst);
-				_parseNetNode(src);
+				dst = _parseNetNode(dst);
+				src = _parseNetNode(src);
 				// if (typeof dst === 'number') {
 				// 	dstHost = 'localhost';
 				// 	dstPort = dst;
@@ -52,7 +54,7 @@ function make(fqdn, dst, src, file, callback) {
 				// 	srcPort = parseInt(src[1]);
 				// }
 
-				_startProxyClient({pfx: cert.PKCS12, passphrase: cert.PWD}, {host: dstHost, port: dstPort}, {addr: srcHost, port: srcPort}, file, () => {
+				_startProxyClient({pfx: cert.PKCS12, passphrase: cert.PWD}, dst, src, file, () => {
 					resolve('client OK');
 				});
 			}
@@ -67,35 +69,47 @@ function make(fqdn, dst, src, file, callback) {
 }
 
 function _startProxyClient(secureOptions, dstNode, srcNode, toFile, cb) {
-	let srcClient, dstClient;
+	let srcClient, dstClient, srcClientConnected;
 
 	const _startSrcClient = () => {
 		let secureContext = tls.createSecureContext(secureOptions);
 		let serverName = srcNode.host === 'localhost'?null:srcNode.host;
+		let options = {host:srcNode.host, port: srcNode.port, secureContext:secureContext, servername:serverName};
+		try{
+			srcClient = tls.connect(options, function () {
+				srcClientConnected = true;
+				console.log('crs client connected ', srcClient.authorized ? 'authorized' : 'not authorized');
+			});
 
-		srcClient = tls.connect({srcNode, secureContext:secureContext, servername:serverName}, function () {
-			console.log('crs client connected ', srcClient.authorized ? 'authorized' : 'not authorized');
-		});
-
-		srcClient.on('data', function (data) {
-			console.log('received(Bytes):', data.byteLength);
-			try{
+			srcClient.on('data', function (data) {
+				console.log('received(Bytes):', data.byteLength);
 				dstClient && dstClient.write(data);
-			}
-			catch(e){
-				dstClient = null;
-			}
-			// srcClient.end();
-		});
+				// srcClient.end();
+			});
+
+			srcClient.on('error', (e)=>{
+				console.error(e);
+			})
+		}
+		catch(e){
+			srcClientConnected?dstClient=null:console.error(e);
+		}
+
 	};
 
 	const _startDstClient = () => {
 		if(dstNode){
 			let net = require('net');
 			dstClient = new net.Socket;
-			dstClient.connect(dstNode.port, dstNode.host, () => {
-				console.log('destination client connected');
-			})
+			try{
+				dstClient.connect(dstNode.port, dstNode.host, () => {
+					console.log('destination client connected');
+				});
+			}
+			catch (e){
+				console.error(e);
+			}
+
 		}
 		_startSrcClient();
 	};

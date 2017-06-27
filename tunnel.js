@@ -114,7 +114,7 @@ function startTCPproxy(localPort, certs, targetPort, cb) {
 	// var writable = require('fs').createWriteStream('test.txt');
 
 	startTerminatingTcpServer(certs, targetPort).then(()=>{
-		net.createServer(function (socket) {
+		net.createServer( (socket)=> {
 			console.log('socket connected');
 			socket.on('data', function(data) {
 				var line = data.toString();
@@ -150,7 +150,7 @@ function startTerminatingTcpServer(certs, targetPort) {
 	return new Promise((resolve, reject) => {
 		const tls = require('tls');
 		try {
-			const srv = tls.createServer(certs, (socket) =>{
+			const srv = tls.createServer({certs, requestCert: true}, (socket) =>{
 				terminatingSocket = socket;
 			});
 			srv.listen(targetPort, ()=>{
