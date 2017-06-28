@@ -72,27 +72,35 @@ function _startProxyClient(secureOptions, dstNode, srcNode, toFile, cb) {
 	let srcClient, dstClient, srcClientConnected;
 
 	const _startSrcClient = () => {
-		let secureContext = tls.createSecureContext(secureOptions);
+		let secureContext = tls.createSecureContext({pfx:secureOptions.pfx, passphrase:secureOptions.passphrase});
 		let serverName = srcNode.host === 'localhost'?null:srcNode.host;
 		let options = {host:srcNode.host, port: srcNode.port, secureContext:secureContext, servername:serverName};
 		try{
 			srcClient = tls.connect(options, function () {
 				srcClientConnected = true;
 				console.log('crs client connected ', srcClient.authorized ? 'authorized' : 'not authorized');
+				//dstClient && dstClient.pipe(srcClient);
 			});
 
 			srcClient.on('data', function (data) {
 				console.log('received(Bytes):', data.byteLength);
-				dstClient && dstClient.write(data);
-				// srcClient.end();
+				process.nextTick(function () {
+					dstClient && dstClient.write(data);
+				});
+
+				//dstClient.end();
 			});
 
+			srcClient.on('disconnect', function (data) {
+				console.log('srcClient disconnect');
+			});
 			srcClient.on('error', (e)=>{
-				console.error(e);
+				console.error('srcClient: ',e);
 			})
 		}
 		catch(e){
-			srcClientConnected?dstClient=null:console.error(e);
+			console.error(e);
+			//srcClientConnected?dstClient=null:console.error(e);
 		}
 
 	};
@@ -104,14 +112,30 @@ function _startProxyClient(secureOptions, dstNode, srcNode, toFile, cb) {
 			try{
 				dstClient.connect(dstNode.port, dstNode.host, () => {
 					console.log('destination client connected');
+
 				});
+				_startSrcClient();
+				dstClient.on('data', (data)=>{
+					try{
+						console.log('dstClient got(Bytes):',data.byteLength);
+						srcClient && srcClient.write(data);
+					}
+					catch(e){
+						console.warn('dstClient/data:',e);
+					}
+				});
+
+				dstClient.on('error', (e)=>{
+					console.error('dstClient: ',e);
+				});
+
 			}
 			catch (e){
 				console.error(e);
 			}
 
 		}
-		_startSrcClient();
+
 	};
 	_startDstClient();
 }

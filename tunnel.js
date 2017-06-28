@@ -65,7 +65,7 @@ function tunnel(cred, targetHost, targetPort, targetProto, targetHostName, isTCP
 
 		let proxyClient;
 		if(isTCPproxy && (isTCPproxy == true || isTCPproxy === 'true')) {
-			startTCPproxy(targetPort, serverCerts, 55333, function () {
+			startTCPproxy(targetPort, cred, 55333, function () {
 				proxyClient = new ProxyClient("HTTPS", cred, 'localhost', 55333, {}, null, serverCerts);
 				proxyClient.start().then(() => {
 					console.error(`Proxy client started on ${cred.fqdn}`);
@@ -109,20 +109,23 @@ function tunnel(cred, targetHost, targetPort, targetProto, targetHostName, isTCP
 
 }
 
-function startTCPproxy(localPort, certs, targetPort, cb) {
+function startTCPproxy(localPort, cred, targetPort, cb) {
 
 	// var writable = require('fs').createWriteStream('test.txt');
-
-	startTerminatingTcpServer(certs, targetPort).then(()=>{
+	let localSocket;
+	startTerminatingTcpServer(cred, targetPort, localSocket).then(()=>{
 		net.createServer( (socket)=> {
+			localSocket = socket;
 			console.log('socket connected');
 			socket.on('data', function(data) {
-				var line = data.toString();
-				console.log('got:', line);
+
+				console.log('got (Bytes):', data.byteLength);
 				try{
-					terminatingSocket && terminatingSocket.write(data);
+					terminatingSocket && terminatingSocket.write(data);//terminatingSocket.write(data);
+					console.log('sent');
 				}
 				catch (e){// client disconnected, here to manage data integrity
+					console.log('terminatingSocket: ',e);
 					terminatingSocket = null;
 				}
 			});
@@ -146,12 +149,26 @@ function startTCPproxy(localPort, certs, targetPort, cb) {
 }
 
 let terminatingSocket = null;
-function startTerminatingTcpServer(certs, targetPort) {
+function startTerminatingTcpServer(cred, targetPort, localSocket) {
 	return new Promise((resolve, reject) => {
 		const tls = require('tls');
 		try {
-			const srv = tls.createServer({certs, requestCert: true}, (socket) =>{
+			const opts = {
+				pfx: cred.PKCS12,
+				passphrase: cred.PWD,
+				requestCert: true
+			};
+			const srv = tls.createServer(opts, (socket) =>{//{certs, requestCert: false}, (socket) =>{
+				if(terminatingSocket)
+					terminatingSocket.removeAllListeners();
 				terminatingSocket = socket;
+				terminatingSocket.on('error',(e)=>{
+					console.error(e);
+				})
+				terminatingSocket.on('data', (data)=>{
+					console.log('terminatingSocket got (Bytes): ', data.byteLength);
+					localSocket && localSocket.write(data);
+				})
 			});
 			srv.listen(targetPort, ()=>{
 				console.log('Terminating TCP server listening on:',targetPort);
