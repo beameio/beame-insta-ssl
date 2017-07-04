@@ -5,7 +5,7 @@ const BeameLogger = beame.Logger;
 const logger      = new BeameLogger("BIS-Tunnel");
 
 const net = require('net');
-
+const tls = require('tls');
 /**
  * @param {Object} certs
  * @param {String} targetHost
@@ -108,57 +108,84 @@ function tunnel(cred, targetHost, targetPort, targetProto, targetHostName, isTCP
 
 
 }
-
+let localSocket;
 function startTCPproxy(localPort, cred, targetPort, cb) {
 
 	// var writable = require('fs').createWriteStream('test.txt');
-	let localSocket;
-	startTerminatingTcpServer(cred, targetPort, localSocket).then(()=>{
-		net.createServer( (socket)=> {
-			localSocket = socket;
-			console.log('socket connected');
-			socket.on('data', function(data) {
 
-				console.log('got (Bytes):', data.byteLength);
+	startTerminatingTcpServer(cred, targetPort).then(()=>{
+		console.log('creating local TCP server on:', localPort);
+		const opts = {
+			pfx: cred.PKCS12,
+			passphrase: cred.PWD,
+			allowHalfOpen: true
+		};
+		// let localServer = tls.createServer(opts, (socket)=> {
+		let localServer = net.createServer({ allowHalfOpen: true }, (socket)=> {
+
+			console.log('local TCP socket connected');
+			if(localSocket){
+				console.log('localSocket removing listeners');
+				localSocket.removeAllListeners();
+			}
+
+			localSocket = socket;
+			socket.on('data', (data) => {
+
+				console.log('got ', typeof data,' (Bytes):', data.byteLength);
 				try{
-					terminatingSocket && terminatingSocket.write(data);//terminatingSocket.write(data);
-					console.log('sent');
+					//terminatingSocket.write(data);
+					let written = terminatingSocket && terminatingSocket.write(data);
+					console.log('sent:',written);
+					if(!written)terminatingSocket.pause();
 				}
 				catch (e){// client disconnected, here to manage data integrity
 					console.log('terminatingSocket: ',e);
 					terminatingSocket = null;
 				}
 			});
-			socket.on('end', function() {
-				// console.log('end');
+			socket.on('end', () => {
+				console.log('localSocket end');
 			});
-			socket.on('close', function() {
-				// console.log('close');
+			socket.on('drain', () => {
+				console.log('localSocket drain');
+				socket.resume();
 			});
-			socket.on('error', function(e) {
-				console.log('error ', e);
+			socket.on('close', () => {
+				console.log('localSocket close');
+			});
+			socket.on('error', (e) => {
+				console.log('localSocket error ', e);
 			});
 
-		}).listen(localPort, function() {
+		}).listen(localPort, () => {
 			console.log(`TCP Server is listening on port ${localPort}`);
 			cb();
 		});
+		localServer.on('error', (e)=>{
+			console.error('localServer: ',e);
+		})
 	}).catch(e=>{
 		console.error(e);
 	});
+
+
 }
 
 let terminatingSocket = null;
-function startTerminatingTcpServer(cred, targetPort, localSocket) {
+function startTerminatingTcpServer(cred, targetPort) {
+	console.log('starting TerminatingTcpServer on:', targetPort);
 	return new Promise((resolve, reject) => {
-		const tls = require('tls');
+
 		try {
 			const opts = {
 				pfx: cred.PKCS12,
 				passphrase: cred.PWD,
-				requestCert: true
+				requestCert: true,
+				allowHalfOpen: true
 			};
 			const srv = tls.createServer(opts, (socket) =>{//{certs, requestCert: false}, (socket) =>{
+				console.log('Connected: ', socket.getPeerCertificate(true));
 				if(terminatingSocket)
 					terminatingSocket.removeAllListeners();
 				terminatingSocket = socket;
@@ -166,13 +193,27 @@ function startTerminatingTcpServer(cred, targetPort, localSocket) {
 					console.error(e);
 				})
 				terminatingSocket.on('data', (data)=>{
-					console.log('terminatingSocket got (Bytes): ', data.byteLength);
-					localSocket && localSocket.write(data);
+					let written = localSocket && localSocket.write(data);
+					console.log('terminatingSocket got (Bytes): ', data.byteLength, ' ', data, ' written:', written);
+					if(!written)localSocket.pause();
+				})
+				terminatingSocket.on('end',()=>{
+					console.log('terminatingSocket end');
+				})
+				terminatingSocket.on('drain',()=>{
+					console.log('terminatingSocket drain');
+					terminatingSocket.resume();
+				})
+				terminatingSocket.on('close',(had_error)=>{
+					console.log('terminatingSocket close:', had_error);
 				})
 			});
 			srv.listen(targetPort, ()=>{
 				console.log('Terminating TCP server listening on:',targetPort);
 			});
+			srv.on('resumeSession',(a,b)=>{
+				console.log('resumeSession:',a,' b:',b);
+			})
 			resolve();
 		}
 		catch (error) {
