@@ -6,7 +6,7 @@ const beameSDK   = require('beame-sdk');
 const BeameStore = beameSDK.BeameStore;
 const CommonUtils = beameSDK.CommonUtils;
 
-function make(fqdn, dst, hostname, proto, listen, callback) {
+function make(fqdn, dst, hostname, proto, callback) {
 	let cert, dstHost, dstPort, dstHostname;
 
 	const _doTunnel = () => {
@@ -32,7 +32,7 @@ function make(fqdn, dst, hostname, proto, listen, callback) {
 
 				console.log(`Starting tunnel https://${fqdn} -> ${proto}://${dstHost}:${dstPort}`);
 
-				tunnelObj(cert, dstHost, dstPort, proto, dstHostname, listen);
+				tunnelObj(cert, dstHost, dstPort, proto, dstHostname);
 			}
 		);
 	};

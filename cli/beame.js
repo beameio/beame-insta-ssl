@@ -70,8 +70,7 @@ const parametersSchema = {
 	'useBestProxy':       {required: false},
 	'validityPeriod':     {required: false},
 	'dnsFqdn':            {required: false},
-	'forceCheck':         {required: false},
-	'listen':             {required: false}
+	'forceCheck':         {required: false}
 };
 
 function InvalidArgv(message) {
@@ -167,7 +166,7 @@ function main() {
 			do_warn    = true;
 			argv.dst   = argv._[1];
 			argv.proto = argv._[2];
-			argv.listen= argv._[3];
+			// argv.listen= argv._[3];
 			argv._     = ['tunnel', 'make'];
 		}
 	}
