@@ -5,11 +5,11 @@
 const fs = require('fs');
 const tls = require('tls');
 const net = require('net');
-
+const uuid = require('node-uuid');
 const beameSDK   = require('beame-sdk');
 const BeameStore = beameSDK.BeameStore;
 const CommonUtils = beameSDK.CommonUtils;
-
+const uuidLength = uuid.v4().length;
 function make(fqdn, dst, src, file, callback) {
 	let cert;
 
@@ -67,10 +67,10 @@ function make(fqdn, dst, src, file, callback) {
 
 	CommonUtils.promise2callback(_doClient(), callback);
 }
-let localBuffer = [], localServer;
+let dstSockets = [], localServer;
 
 function _startTunnelClient(secureOptions, dstNode, srcNode, toFile, cb) {
-	let srcClient, dstSocket, srcClientConnected;
+	let srcClient;
 
 	const _startSrcClient = () => {
 		let secureContext = tls.createSecureContext({pfx:secureOptions.pfx, passphrase:secureOptions.passphrase});
@@ -78,28 +78,29 @@ function _startTunnelClient(secureOptions, dstNode, srcNode, toFile, cb) {
 		let options = {host:srcNode.host, port: srcNode.port, secureContext:secureContext, servername:serverName};
 		try{
 			srcClient = tls.connect(options, () => {
-				srcClientConnected = true;
+
 				console.log('src client connected ', srcClient.authorized ? 'authorized' : 'not authorized');
-				if(!dstSocket){
-					startLocalServer(111, dstNode, ()=>{
-					// _startDstClient(()=>{
-						// dstSocket.pipe(srcClient);
-						// srcClient.pipe(dstSocket);
-					});
-				}
+
+				startLocalServer(dstNode, ()=>{
+					// dstSocket.pipe(srcClient);
+					// srcClient.pipe(dstSocket);
+				});
 			});
 			console.log('src <-> dst');
 			// dstSocket && srcClient.pipe(dstSocket).pipe(srcClient);
 
 			srcClient.on('data',  (data) => {
-				console.log('srcClient received', typeof data,'(Bytes):', data.byteLength);
-				if(!dstSocket){
-					localBuffer = localBuffer.push.apply(localBuffer, data);
-				}
+				let id = arr2str(data.slice(0, uuidLength));
+
+				let rawData = data.slice(uuidLength, data.byteLength);
+				console.log('srcClient received (Bytes): ', data.byteLength, ' from: ',id, '=>', rawData.length);
+				// if(!dstSockets[id]){
+				// 	localBuffer = localBuffer.push.apply(localBuffer, rawData);
+				// }
 				// process.nextTick( () => {
-				let written = dstSocket && dstSocket.write(data);
-					console.log('srcClient written:', written);
-					if(!written)srcClient.pause();
+				let written = dstSockets[id] && dstSockets[id].write(rawData);
+				console.log('srcClient written:', written);
+				if(!written)srcClient.pause();
 				// });
 
 				//dstSocket.end();
@@ -108,13 +109,16 @@ function _startTunnelClient(secureOptions, dstNode, srcNode, toFile, cb) {
 			srcClient.on('error', (e)=>{
 				console.error('srcClient: ',e);
 			});
+
 			srcClient.on('close', had_error => {
 				console.log('srcClient close: ', had_error);
-				localBuffer = [];
+				srcClient.removeAllListeners();
+				if(had_error)_startSrcClient();
+				// localBuffer = [];
 			});
 
-			srcClient.on('connect', had_error => {
-				console.log('srcClient connect: ', had_error);
+			srcClient.on('connect', () => {
+				console.log('srcClient connect');
 			});
 			srcClient.on('lookup', () => {
 				console.log('srcClient lookup');
@@ -124,7 +128,7 @@ function _startTunnelClient(secureOptions, dstNode, srcNode, toFile, cb) {
 			});
 			srcClient.on('end', had_error => {
 				console.log('srcClient end: ', had_error);
-				localBuffer = [];
+				// localBuffer = [];
 			});
 			srcClient.on('drain', () => {
 				console.log('srcClient drain');
@@ -133,89 +137,24 @@ function _startTunnelClient(secureOptions, dstNode, srcNode, toFile, cb) {
 		}
 		catch(e){
 			console.error(e);
-			//srcClientConnected?dstSocket=null:console.error(e);
 		}
 
 	};
 
-	const _startDstClient = (cb) => {
-		if(dstNode){
-
-			dstSocket = new net.Socket({readable: true, writable:true, allowHalfOpen: true});
-
-			try{
-				// if(!srcClient)_startSrcClient();
-				dstSocket.connect(dstNode.port, dstNode.host, (something) => {
-					console.log('destination client connected:',something);
-					cb();
-				});
-
-				dstSocket.on('data', (data)=>{
-
-					let written = srcClient && srcClient.write(data);
-					console.log('dstSocket got(Bytes):',data.byteLength, ' written:',written);
-					if(!written)dstSocket && dstSocket.pause();
-					console.log('dstSocket got(Bytes):',data.byteLength);
-
-				});
-
-				dstSocket.on('close', had_error => {
-					console.log('dstSocket close: ', had_error);
-				});
-
-				dstSocket.on('connect', had_error => {
-					console.log('dstSocket connect: ', localBuffer && localBuffer.length);
-
-					if (localBuffer.length > 0) {
-						if(dstSocket.write(new Buffer(localBuffer))){
-							localBuffer = [];
-						}
-
-					}
-				});
-				dstSocket.on('lookup', had_error => {
-					console.log('dstSocket lookup: ', had_error);
-				});
-				dstSocket.on('timeout', had_error => {
-					console.log('dstSocket timeout: ', had_error);
-				});
-				dstSocket.on('end', had_error => {
-					console.log('dstSocket end: ', had_error);
-				});
-				dstSocket.on('drain', had_error => {
-					console.log('dstSocket drain: ', had_error);
-					dstSocket.resume();
-				});
-				dstSocket.on('error', (e)=>{
-					console.error('dstSocket: ',e);
-					dstSocket.removeAllListeners();
-					dstSocket.end();
-					dstSocket = null;
-					// _startDstClient();
-					// _startSrcClient();
-				});
-
-			}
-			catch (e){
-				console.error(e);
-			}
-
-		}
-
-	};
-
-	function startLocalServer(id, dst, cb) {
-		if(!localServer && id){
+	function startLocalServer(dst, cb) {
+		if(!localServer){
 
 			localServer = net.createServer({ allowHalfOpen: true }, (socket)=> {
-				srcClient && srcClient.write(new Buffer('dstAppClientConnected'));
-				let initialData = new Buffer(localBuffer);
-				console.log('local TCP socket connected:',initialData.length);
-				if(dstSocket){
-					console.log('dstSocket removing listeners');
-					dstSocket.removeAllListeners();
+				let id = uuid.v4();//String("ZZZZZZZZZZZZZZZ" + socket.localAddress + ":" + socket.localPort).slice(-23);
+				socket.id = id;
+				srcClient && srcClient.write(new Buffer(id+'dstAppClientConnected'));
+
+
+				if(dstSockets[id]){
+					dstSockets[id].removeAllListeners();
+					dstSockets[id].end();
 				}
-				dstSocket = socket;
+				dstSockets[id] = socket;
 				// dstSocket.pipe(srcClient);
 				// srcClient.pipe(dstSocket);
 				// socket.setTimeout(3000);
@@ -223,21 +162,28 @@ function _startTunnelClient(secureOptions, dstNode, srcNode, toFile, cb) {
 				// 	console.log('LocalServer timeout');
 				// 	socket.end();
 				// });
-				console.log('localServer connect: ', initialData.length);
-				if (initialData.length > 1) {
-					localBuffer = [];
-					console.log('written:',socket.write(initialData));
-				}
+				console.log('localServer connect:',id);
+				// if (initialData.length > 1) {
+				// 	// localBuffer = [];
+				// 	console.log('written:',socket.write(initialData));
+				// }
 
 				socket.on('data', (data) => {
-					let written = srcClient && srcClient.write(data);
+					let aaa = str2arr(socket.id);
+					let bbb = arr2str(aaa);
+
+					let rawData = appendBuffer(str2arr(socket.id), data);
+
+					aaa = rawData.slice(0, uuidLength);
+					bbb = arr2str(aaa);
+					let written = srcClient && srcClient.write(new Buffer(rawData));
 					if(!written)srcClient && srcClient.pause();
-					console.log('dstSocket got(Bytes):', data.byteLength, ' written:',written);
+					console.log('dstSocket <',socket.id,'> got(Bytes):', data.byteLength, ' written:',rawData.length,':',written);
 					// console.log('dstSocket got(Bytes):', data.byteLength);
 				});
 				socket.on('end', () => {
 					console.log('dstSocket end');
-					localBuffer = [];
+					// localBuffer = [];
 				});
 				socket.on('drain', () => {
 					console.log('dstSocket drain');
@@ -245,8 +191,9 @@ function _startTunnelClient(secureOptions, dstNode, srcNode, toFile, cb) {
 				});
 				socket.on('close', () => {
 					console.log('dstSocket close');
-					localBuffer = [];
-					dstSocket = null;
+					// localBuffer = [];
+					dstSockets[socket.id].removeAllListeners();
+					dstSockets[socket.id] = null;
 				});
 				socket.on('error', (e) => {
 					console.log('dstSocket error ', e);
@@ -263,10 +210,29 @@ function _startTunnelClient(secureOptions, dstNode, srcNode, toFile, cb) {
 		else cb();
 	}
 	_startSrcClient();
-	// _startDstClient();
 }
 
+function str2arr(str) {
+	let arr = new Uint8Array(str.length);
+	for (let i = 0, strLen = str.length; i < strLen; i++) {
+		arr[i] = str.charCodeAt(i);
+	}
+	return arr;
+}
+function arr2str(buffer) {
+	let str = '',bytes  = new Uint8Array(buffer),len = bytes.byteLength;
+	for (let i = 0; i < len; i++) {
+		str += String.fromCharCode(bytes[i]);
+	}
+	return str;
+}
 
+function appendBuffer (buffer1, buffer2) {
+	let tmp = new Uint8Array(buffer1.byteLength + buffer2.byteLength);
+	tmp.set(new Uint8Array(buffer1), 0);
+	tmp.set(new Uint8Array(buffer2), buffer1.byteLength);
+	return tmp;
+}
 
 module.exports = {
 	make

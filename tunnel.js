@@ -3,12 +3,13 @@ const beame       = require('beame-sdk');
 const ProxyClient = beame.ProxyClient;
 const BeameLogger = beame.Logger;
 const logger      = new BeameLogger("BIS-Tunnel");
-
+const uuid = require('node-uuid');
+const uuidLength = uuid.v4().length;
 const net = require('net');
 const tls = require('tls');
-const uuid = require('node-uuid');
+
 const connectedStr = 'dstAppClientConnected';
-let localSocket, localServer, terminatingSocketId, localPort;
+let localSockets = [], localServer, terminatingSockets = [], localPort;
 
 /**
  * @param {Object} certs
@@ -63,30 +64,32 @@ function tunnel(cred, targetHost, targetPort, targetProto, targetHostName, isTCP
 		throw new Error("httpsTunnel: targetProto must be either http or https");
 	}
 
-		/** @type {Object} **/
-		let serverCerts = cred.getHttpsServerOptions();
+	/** @type {Object} **/
+	let serverCerts = cred.getHttpsServerOptions();
 
 
-		let proxyClient;
-		if(isTCPproxy && (isTCPproxy == true || isTCPproxy === 'true')) {
-			localPort = targetPort;
-			startTCPproxy(cred, 55333, function () {
-				if(!proxyClient){
-					proxyClient = new ProxyClient("HTTPS", cred, 'localhost', 55333, {}, null, serverCerts);
-					proxyClient.start().then(() => {
-						console.error(`Proxy client started on ${cred.fqdn}`);
-					}).catch(e => {
-						throw new Error(`Error starting HTTPS terminating proxy: ${e}`);
-					});
-				}
-			})
-		}
-		else
+	let proxyClient;
+	if(isTCPproxy && (isTCPproxy == true || isTCPproxy === 'true')) {
+		localPort = targetPort;
+		startTCPproxy(cred, 55333, (flag) => {
+			if(!proxyClient && flag){
+				proxyClient = new ProxyClient("HTTPS", cred, 'localhost', 55333, {}, null, serverCerts);
+				proxyClient.start().then(() => {
+					console.error(`Proxy client started on ${cred.fqdn}`);
+				}).catch(e => {
+					throw new Error(`Error starting HTTPS terminating proxy: ${e}`);
+				});
+			}
+			else
+				console.warn('Not started');
+		})
+	}
+	else
 		switch(targetProto) {
 			case 'http':
 				startHttpsTerminatingProxy(serverCerts, targetHost, targetPort, targetHostName || targetHost)
 					.then(terminatingProxyPort => {
-					    proxyClient =	new ProxyClient("HTTPS",cred, 'localhost', terminatingProxyPort, {}, null, serverCerts);
+						proxyClient =	new ProxyClient("HTTPS",cred, 'localhost', terminatingProxyPort, {}, null, serverCerts);
 						proxyClient.start().then(()=>{
 							console.error(`Proxy client started on ${cred.fqdn}`);
 						}).catch(e => {
@@ -113,75 +116,71 @@ function tunnel(cred, targetHost, targetPort, targetProto, targetHostName, isTCP
 			default: return;
 		}
 
-
 }
 
-let terminatingSockets = [];
 
 function startTCPproxy(cred, targetPort, cb) {
 
-	// var writable = require('fs').createWriteStream('test.txt');
-
 	startTerminatingTcpServer(cred, targetPort).then(()=>{
-		cb();
+		cb(true);
 	}).catch(e=>{
 		console.error(e);
+		cb(false);
 	});
 
 }
 
 const _startDstClient = (id) => {
-	if(!localSocket && id){
-		localSocket = new net.Socket({readable: true, writable:true, allowHalfOpen: true});
+	if(id){
+		localSockets[id] = new net.Socket({readable: true, writable:true, allowHalfOpen: true});
 
 		try{
-			// if(!srcClient)_startSrcClient();
-			localSocket.connect(localPort, '127.0.0.1', (something) => {
-				console.log('destination client connected:',something);
+
+			localSockets[id].connect(localPort, '127.0.0.1', () => {
+				console.log('destination client connected:',id);
 			});
 
-			localSocket.on('data', (data)=>{
-
-					let written = terminatingSockets[id] && terminatingSockets[id].write(data);
-					console.log('localSocket got(Bytes):',data.byteLength, ' written:',written);
-					if(!written)localSocket && localSocket.pause();
+			localSockets[id].on('data', (data)=>{
+				let rawData = appendBuffer(str2arr(id), data);
+				let written = terminatingSockets[id] && terminatingSockets[id].write(new Buffer(rawData));
+				console.log('localSockets[id] got(Bytes):',data.byteLength, ' written:',written);
+				if(!written)localSockets[id] && localSockets[id].pause();
 
 			});
 
-			localSocket.on('close', had_error => {
-				console.log('localSocket close: ', had_error);
+			localSockets[id].on('close', had_error => {
+				console.log('localSockets[id] close: ', had_error);
 			});
 
-			localSocket.on('connect', () => {
-				console.log('localSocket connect: ', localBuffer && localBuffer.length);
+			localSockets[id].on('connect', () => {
+				console.log('localSockets[id] connect: ', localBuffer && localBuffer.length);
 
 				if (localBuffer.length > 0) {
-					if(localSocket.write(new Buffer(localBuffer))){
+					if(localSockets[id].write(new Buffer(localBuffer))){
 						localBuffer = [];
 					}
-
 				}
 			});
-			localSocket.on('lookup', () => {
-				console.log('localSocket lookup');
+			localSockets[id].on('lookup', () => {
+				console.log('localSockets[id] lookup');
 			});
-			localSocket.on('timeout', had_error => {
-				console.log('localSocket timeout: ', had_error);
+			localSockets[id].on('timeout', had_error => {
+				console.log('localSockets[id] timeout: ', had_error);
 			});
-			localSocket.on('end', had_error => {
-				console.log('localSocket end: ', had_error);
+			localSockets[id].on('end', had_error => {
+				console.log('localSockets[id] end: ', had_error);
+				localSockets[id].removeAllListeners();
+				localSockets[id] = null;
 			});
-			localSocket.on('drain', () => {
-				console.log('localSocket drain');
-				localSocket.resume();
+			localSockets[id].on('drain', () => {
+				console.log('localSockets[id] drain');
+				localSockets[id].resume();
 			});
-			localSocket.on('error', (e)=>{
-				console.error('localSocket: ',e);
-				localSocket.removeAllListeners();
-				localSocket.end();
-				localSocket = null;
-				// _startDstClient();
-				// _startSrcClient();
+			localSockets[id].on('error', (e)=>{
+				console.error('localSockets[id]: ',e);
+				localSockets[id].removeAllListeners();
+				localSockets[id].end();
+				localSockets[id] = null;
 			});
 
 		}
@@ -191,65 +190,6 @@ const _startDstClient = (id) => {
 	}
 };
 
-function startLocalServer(id, cb) {
-	if(!localServer && id){
-		terminatingSocketId = id;
-		localServer = net.createServer({ allowHalfOpen: true }, (socket)=> {
-
-			let initialData = new Buffer(localBuffer);
-			console.log('local TCP socket connected:',initialData.length);
-			if(localSocket){
-				console.log('localSocket removing listeners');
-				localSocket.removeAllListeners();
-			}
-			localSocket = socket;
-			// localSocket.pipe(terminatingSockets[id]);
-			// terminatingSockets[id].pipe(localSocket);
-			socket.setTimeout(3000);
-			socket.on('timeout', ()=>{
-				console.log('LocalServer timeout');
-				socket.end();
-			})
-			console.log('localServer connect: ', initialData.length);
-			if (initialData.length > 1) {
-				localBuffer = [];
-				console.log('written:',socket.write(initialData));
-			}
-
-			socket.on('data', (data) => {
-				let written = terminatingSockets[id] && terminatingSockets[id].write(data);
-				if(!written)terminatingSockets[id] && terminatingSockets[id].pause();
-				console.log('localSocket got(Bytes):', data.byteLength, ' written:',written);
-				console.log('localSocket got(Bytes):', data.byteLength);
-			});
-			socket.on('end', () => {
-				console.log('localSocket end');
-				localBuffer = [];
-			});
-			socket.on('drain', () => {
-				console.log('localSocket drain');
-				socket.resume();
-			});
-			socket.on('close', () => {
-				console.log('localSocket close');
-				localBuffer = [];
-				localSocket = null;
-			});
-			socket.on('error', (e) => {
-				console.log('localSocket error ', e);
-			});
-
-		}).listen(localPort, () => {
-			console.log(`TCP Server is listening on port ${localPort}`);
-			cb();
-		});
-		localServer.on('error', (e)=>{
-			console.error('localServer: ',e);
-		})
-	}
-	else cb();
-}
-
 // let terminatingSocket = null;
 
 let localBuffer = [];
@@ -258,6 +198,7 @@ function startTerminatingTcpServer(cred, targetPort) {
 	return new Promise((resolve, reject) => {
 
 		try {
+
 			const opts = {
 				pfx: cred.PKCS12,
 				passphrase: cred.PWD,
@@ -266,35 +207,36 @@ function startTerminatingTcpServer(cred, targetPort) {
 			};
 			const srv = tls.createServer(opts, (socket) =>{//{certs, requestCert: false}, (socket) =>{
 				const setId = (cont) => {
-					socket.id = uuid.v4();
-					console.log('Building terminating server connection:', socket.id);
-
-					localBuffer = [];
+					console.log('Building terminating server connection');
 					cont();
-					// startLocalServer(socket.id, cont);
 				}
 				setId(()=>{
-					terminatingSockets[socket.id] = socket;
 
 					socket.on('error',(e)=>{
 						console.error(e);
 					})
 					socket.on('data', (data)=>{
-						console.log('terminatingSocket got (Bytes): ', data.byteLength);
-						if((data.length == connectedStr.length) &&
-							(new Buffer(data).toString('ascii') === connectedStr)){
-							console.log('localSocket got(Bytes):',data.byteLength);
+
+						let id = arr2str(data.slice(0, uuidLength));
+						console.log('terminatingSocket got (Bytes): ', data.byteLength, ' from: ',id);
+						let rawData = data.slice(uuidLength, data.byteLength);
+						if((rawData.length == connectedStr.length) &&
+							(new Buffer(rawData).toString('ascii') === connectedStr)){
+
+							localBuffer = [];
+							socket.id = id;//TODO: check if id (built of padded source ip:port) already exists, to kill the old one
+							terminatingSockets[socket.id] = socket;
+							console.log('localSockets[',socket.id,'] got(Bytes):',data.byteLength);
 							_startDstClient(socket.id);
-							// resolve();
 						}
 						else{
-							if(!localSocket){
-								localBuffer.push.apply(localBuffer,data);
+							if(!localSockets[id]){
+								localBuffer.push.apply(localBuffer,rawData);//seems irrelevant
 							}
 							else {
-								let written = localSocket && localSocket.write(data);
-								console.log('terminatingSocket got (Bytes): ', data.byteLength, ' ', data, ' written:', written);
-								if (!written && localSocket) localSocket.pause();
+								let written = localSockets[id] && localSockets[id].write(rawData);
+								console.log('terminatingSocket got (Bytes): ', data.byteLength, ' written:', written, '=>', rawData.length);
+								if (!written && localSockets[id]) localSockets[id].pause();
 							}
 						}
 					})
@@ -336,4 +278,24 @@ function startTerminatingTcpServer(cred, targetPort) {
 	});
 }
 
+function str2arr(str) {
+	let arr = new Uint8Array(str.length);
+	for (let i = 0, strLen = str.length; i < strLen; i++) {
+		arr[i] = str.charCodeAt(i);
+	}
+	return arr;
+}
+function arr2str(buffer) {
+	let str = '',bytes  = new Uint8Array(buffer),len = bytes.byteLength;
+	for (let i = 0; i < len; i++) {
+		str += String.fromCharCode(bytes[i]);
+	}
+	return str;
+}
+function appendBuffer (buffer1, buffer2) {
+	let tmp = new Uint8Array(buffer1.byteLength + buffer2.byteLength);
+	tmp.set(new Uint8Array(buffer1), 0);
+	tmp.set(new Uint8Array(buffer2), buffer1.byteLength);
+	return tmp;
+}
 module.exports = tunnel;
