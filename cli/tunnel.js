@@ -28,7 +28,7 @@ function make(fqdn, dst, hostname, proto, listen, callback) {
 
 				dstHostname = hostname || dstHost;
 
-				const tunnelObj = require('../tunnel');
+				const tunnelObj = require('../lib/tunnel');
 
 				console.log(`Starting tunnel https://${fqdn} -> ${proto}://${dstHost}:${dstPort}`);
 

@@ -5,11 +5,11 @@
 const fs = require('fs');
 const tls = require('tls');
 const net = require('net');
-const uuid = require('node-uuid');
+const utils = require('../lib/utils');
 const beameSDK   = require('beame-sdk');
 const BeameStore = beameSDK.BeameStore;
 const CommonUtils = beameSDK.CommonUtils;
-const uuidLength = uuid.v4().length;
+
 function make(fqdn, dst, src, file, callback) {
 	let cert;
 
@@ -86,20 +86,20 @@ function _startTunnelClient(secureOptions, dstNode, srcNode, toFile, cb) {
 					// srcClient.pipe(dstSocket);
 				});
 			});
-			console.log('src <-> dst');
+			// console.log('src <-> dst');
 			// dstSocket && srcClient.pipe(dstSocket).pipe(srcClient);
 
 			srcClient.on('data',  (data) => {
-				let id = arr2str(data.slice(0, uuidLength));
+				let id = utils.arr2str(data.slice(0, utils.uuidLength));
 
-				let rawData = data.slice(uuidLength, data.byteLength);
-				console.log('srcClient received (Bytes): ', data.byteLength, ' from: ',id, '=>', rawData.length);
+				let rawData = data.slice(utils.uuidLength, data.byteLength);
+				// con sole.log('srcClient received (Bytes): ', data.byteLength, ' from: ',id, '=>', rawData.length);
 				// if(!dstSockets[id]){
 				// 	localBuffer = localBuffer.push.apply(localBuffer, rawData);
 				// }
 				// process.nextTick( () => {
 				let written = dstSockets[id] && dstSockets[id].write(rawData);
-				console.log('srcClient written:', written);
+				// console.log('srcClient written:', written);
 				if(!written)srcClient.pause();
 				// });
 
@@ -145,7 +145,7 @@ function _startTunnelClient(secureOptions, dstNode, srcNode, toFile, cb) {
 		if(!localServer){
 
 			localServer = net.createServer({ allowHalfOpen: true }, (socket)=> {
-				let id = uuid.v4();//String("ZZZZZZZZZZZZZZZ" + socket.localAddress + ":" + socket.localPort).slice(-23);
+				let id = utils.getID();//String("ZZZZZZZZZZZZZZZ" + socket.localAddress + ":" + socket.localPort).slice(-23);
 				socket.id = id;
 				srcClient && srcClient.write(new Buffer(id+'dstAppClientConnected'));
 
@@ -169,16 +169,12 @@ function _startTunnelClient(secureOptions, dstNode, srcNode, toFile, cb) {
 				// }
 
 				socket.on('data', (data) => {
-					let aaa = str2arr(socket.id);
-					let bbb = arr2str(aaa);
 
-					let rawData = appendBuffer(str2arr(socket.id), data);
+					let rawData = utils.appendBuffer(utils.str2arr(socket.id), data);
 
-					aaa = rawData.slice(0, uuidLength);
-					bbb = arr2str(aaa);
 					let written = srcClient && srcClient.write(new Buffer(rawData));
 					if(!written)srcClient && srcClient.pause();
-					console.log('dstSocket <',socket.id,'> got(Bytes):', data.byteLength, ' written:',rawData.length,':',written);
+					// console.log('dstSocket <',socket.id,'> got(Bytes):', data.byteLength, ' written:',rawData.length,':',written);
 					// console.log('dstSocket got(Bytes):', data.byteLength);
 				});
 				socket.on('end', () => {
@@ -212,27 +208,6 @@ function _startTunnelClient(secureOptions, dstNode, srcNode, toFile, cb) {
 	_startSrcClient();
 }
 
-function str2arr(str) {
-	let arr = new Uint8Array(str.length);
-	for (let i = 0, strLen = str.length; i < strLen; i++) {
-		arr[i] = str.charCodeAt(i);
-	}
-	return arr;
-}
-function arr2str(buffer) {
-	let str = '',bytes  = new Uint8Array(buffer),len = bytes.byteLength;
-	for (let i = 0; i < len; i++) {
-		str += String.fromCharCode(bytes[i]);
-	}
-	return str;
-}
-
-function appendBuffer (buffer1, buffer2) {
-	let tmp = new Uint8Array(buffer1.byteLength + buffer2.byteLength);
-	tmp.set(new Uint8Array(buffer1), 0);
-	tmp.set(new Uint8Array(buffer2), buffer1.byteLength);
-	return tmp;
-}
 
 module.exports = {
 	make
