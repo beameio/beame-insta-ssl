@@ -114,7 +114,6 @@ function _startTunnelClient(secureOptions, dstNode, srcNode, toFile, cb) {
 				console.log('srcClient close: ', had_error);
 				srcClient.removeAllListeners();
 				if(had_error)_startSrcClient();
-				// localBuffer = [];
 			});
 
 			srcClient.on('connect', () => {
@@ -126,8 +125,10 @@ function _startTunnelClient(secureOptions, dstNode, srcNode, toFile, cb) {
 			srcClient.on('timeout', had_error => {
 				console.log('srcClient timeout: ', had_error);
 			});
-			srcClient.on('end', had_error => {
-				console.log('srcClient end: ', had_error);
+			srcClient.on('end', () => {
+				console.log('srcClient end');
+				srcClient.removeAllListeners();
+				process.exit();
 				// localBuffer = [];
 			});
 			srcClient.on('drain', () => {
@@ -142,13 +143,23 @@ function _startTunnelClient(secureOptions, dstNode, srcNode, toFile, cb) {
 	};
 
 	function startLocalServer(dst, cb) {
+		let onAppExit = (id, msg) => {
+			console.log(msg);
+			dstSockets[id].removeAllListeners();
+			dstSockets[id] = null;
+			let cmd = id+utils.disconnectedStr;
+			console.log('Command: ',cmd);
+			srcClient.write(new Buffer(cmd));
+		};
+
 		if(!localServer){
 
 			localServer = net.createServer({ allowHalfOpen: true }, (socket)=> {
-				let id = utils.getID();//String("ZZZZZZZZZZZZZZZ" + socket.localAddress + ":" + socket.localPort).slice(-23);
+				let id = utils.getID();
 				socket.id = id;
-				srcClient && srcClient.write(new Buffer(id+'dstAppClientConnected'));
-
+				let cmd = id+utils.connectedStr;
+				console.log('Command: ',cmd);
+				srcClient.write(new Buffer(cmd));
 
 				if(dstSockets[id]){
 					dstSockets[id].removeAllListeners();
@@ -158,27 +169,24 @@ function _startTunnelClient(secureOptions, dstNode, srcNode, toFile, cb) {
 				// dstSocket.pipe(srcClient);
 				// srcClient.pipe(dstSocket);
 				// socket.setTimeout(3000);
-				// socket.on('timeout', ()=>{
-				// 	console.log('LocalServer timeout');
-				// 	socket.end();
-				// });
+
 				console.log('localServer connect:',id);
-				// if (initialData.length > 1) {
-				// 	// localBuffer = [];
-				// 	console.log('written:',socket.write(initialData));
-				// }
+
 
 				socket.on('data', (data) => {
 
 					let rawData = utils.appendBuffer(utils.str2arr(socket.id), data);
 
 					let written = srcClient && srcClient.write(new Buffer(rawData));
-					if(!written)srcClient && srcClient.pause();
+					if(!written){
+						console.log('srcClient pause');
+						srcClient && srcClient.pause();
+					}
 					// console.log('dstSocket <',socket.id,'> got(Bytes):', data.byteLength, ' written:',rawData.length,':',written);
 					// console.log('dstSocket got(Bytes):', data.byteLength);
 				});
 				socket.on('end', () => {
-					console.log('dstSocket end');
+					onAppExit(socket.id, 'dstSocket end');
 					// localBuffer = [];
 				});
 				socket.on('drain', () => {
@@ -186,10 +194,7 @@ function _startTunnelClient(secureOptions, dstNode, srcNode, toFile, cb) {
 					socket.resume();
 				});
 				socket.on('close', () => {
-					console.log('dstSocket close');
-					// localBuffer = [];
-					dstSockets[socket.id].removeAllListeners();
-					dstSockets[socket.id] = null;
+					onAppExit(socket.id, 'dstSocket close');
 				});
 				socket.on('error', (e) => {
 					console.log('dstSocket error ', e);
