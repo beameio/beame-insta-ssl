@@ -173,6 +173,29 @@ list.toText = function (creds) {
 	return table;
 };
 
+function signers(callback){
+	const store = new BeameStore();
+
+	CommonUtils.promise2callback(store.getActiveLocalCreds(), callback);
+}
+signers.toText =  function (creds) {
+	let table = new Table({
+		head:      ['name', 'fqdn'],
+		colWidths: [120, 120]
+	});
+
+	const _setStyle = (value, cred) => {
+		let val = value || '';
+		return cred.expired === true ? colors.red(val) : val;
+	};
+
+	creds.forEach(item => {
+
+		table.push([_setStyle(item.name, item), _setStyle(item.fqdn, item)]);
+	});
+	return table;
+};
+
 function _getCertEnd(item){
 
 	try {
@@ -445,6 +468,7 @@ listCredChain.toText = function (list) {
 
 module.exports = {
 	list,
+	signers,
 	getCreds,
 	getRegToken,
 	invite,
