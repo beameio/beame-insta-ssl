@@ -37,23 +37,7 @@ function make(fqdn, dst, src, file, callback) {
 				}
 				dst = _parseNetNode(dst);
 				src = _parseNetNode(src);
-				// if (typeof dst === 'number') {
-				// 	dstHost = 'localhost';
-				// 	dstPort = dst;
-				// } else {
-				// 	dst     = dst.split(':');
-				// 	dstHost = dst[0];
-				// 	dstPort = parseInt(dst[1]);
-				// }
-				//
-				// if (typeof src === 'number') {
-				// 	srcHost = 'localhost';
-				// 	srcPort = src;
-				// } else {
-				// 	src     = src.split(':');
-				// 	srcHost = src[0];
-				// 	srcPort = parseInt(src[1]);
-				// }
+
 
 				_startTunnelClient({pfx: cert.PKCS12, passphrase: cert.PWD, cert: cert.X509, key: cert.PRIVATE_KEY},
 					dst, src, file, () => {
@@ -74,113 +58,99 @@ let dstSockets = [], localServer;
 function _startTunnelClient(secureOptions, dstNode, srcNode, toFile, cb) {
 	let srcClient;
 
-	const _startSrcClient = () => {
-		let secureContext = tls.createSecureContext({pfx:secureOptions.pfx, passphrase:secureOptions.passphrase});
-		let serverName = srcNode.host === 'localhost'?null:srcNode.host;
-		let options = {host:srcNode.host, port: srcNode.port, secureContext:secureContext, servername:serverName};
-		let host = srcNode.host.includes('https://')?srcNode.host:'https://'+srcNode.host;
-		let sio_options = {multiplex:false, cert: secureOptions.cert, key:secureOptions.key};
-		try{
-			srcClient = io.connect(host, sio_options, () => {
-
-				console.log('src client connected ', srcClient.authorized ? 'authorized' : 'not authorized');
-
-				startLocalServer(dstNode, ()=>{
-					// dstSocket.pipe(srcClient);
-					// srcClient.pipe(dstSocket);
-				});
-			});
-			// console.log('src <-> dst');
-			// dstSocket && srcClient.pipe(dstSocket).pipe(srcClient);
-
-			srcClient.on('data',  (data) => {
-				let id = utils.arr2str(data.slice(0, utils.uuidLength));
-
-				let rawData = data.slice(utils.uuidLength, data.byteLength);
-				// con sole.log('srcClient received (Bytes): ', data.byteLength, ' from: ',id, '=>', rawData.length);
-				// if(!dstSockets[id]){
-				// 	localBuffer = localBuffer.push.apply(localBuffer, rawData);
-				// }
-				// process.nextTick( () => {
-				let written = dstSockets[id] && dstSockets[id].write(rawData);
-				// console.log('srcClient written:', written);
-				if(!written)srcClient.pause();
-				// });
-
-				//dstSocket.end();
-			});
-
-			srcClient.on('error', (e)=>{
-				console.error('srcClient: ',e);
-			});
-
-			srcClient.on('close', had_error => {
-				console.log('srcClient close: ', had_error);
-				srcClient.removeAllListeners();
-				if(had_error)_startSrcClient();
-			});
-
-			srcClient.on('connect', () => {
-				console.log('srcClient connected');
-				startLocalServer(dstNode, ()=>{
-					// dstSocket.pipe(srcClient);
-					// srcClient.pipe(dstSocket);
-				});
-			});
-
-			srcClient.on('lookup', () => {
-				console.log('srcClient lookup');
-			});
-			srcClient.on('timeout', had_error => {
-				console.log('srcClient timeout: ', had_error);
-			});
-			srcClient.on('end', () => {
-				console.log('srcClient end');
-				srcClient.removeAllListeners();
-				process.exit();
-				// localBuffer = [];
-			});
-			srcClient.on('drain', () => {
-				console.log('srcClient drain');
-				srcClient.resume();
-			});
-		}
-		catch(e){
-			console.error(e);
-		}
-
-	};
+	// const _startSrcClient = () => {
+	// 	let secureContext = tls.createSecureContext({pfx:secureOptions.pfx, passphrase:secureOptions.passphrase});
+	// 	let serverName = srcNode.host === 'localhost'?null:srcNode.host;
+	// 	let options = {host:srcNode.host, port: srcNode.port, secureContext:secureContext, servername:serverName};
+	// 	let host = srcNode.host.includes('https://')?srcNode.host:'https://'+srcNode.host;
+	// 	let sio_options = {multiplex:false, cert: secureOptions.cert, key:secureOptions.key};
+	// 	try{
+	// 		srcClient = io.connect(host, sio_options, () => {
+	//
+	// 			console.log('src client connected ', srcClient.authorized ? 'authorized' : 'not authorized');
+	//
+	// 			startLocalServer(dstNode, ()=>{
+	// 				// dstSocket.pipe(srcClient);
+	// 				// srcClient.pipe(dstSocket);
+	// 			});
+	// 		});
+	//
+	//
+	// 		srcClient.on('data',  (data) => {
+	// 			let id = utils.arr2str(data.slice(0, utils.uuidLength));
+	//
+	// 			let rawData = data.slice(utils.uuidLength, data.byteLength);
+	//
+	// 			let written = dstSockets[id] && dstSockets[id].write(rawData);
+	// 			if(!written){
+	// 				console.log(id,' => failed to write:', rawData.byteLength);
+	// 			}
+	//
+	// 		});
+	//
+	// 		srcClient.on('error', (e)=>{
+	// 			console.error('srcClient: ',e);
+	// 		});
+	//
+	// 		srcClient.on('close', had_error => {
+	// 			console.log('srcClient close: ', had_error);
+	// 			srcClient.removeAllListeners();
+	// 			if(had_error)_startSrcClient();
+	// 		});
+	//
+	// 		srcClient.on('connect', () => {
+	// 			console.log('srcClient connected');
+	// 			startLocalServer(dstNode, ()=>{
+	// 				// dstSocket.pipe(srcClient);
+	// 				// srcClient.pipe(dstSocket);
+	// 			});
+	// 		});
+	//
+	// 		srcClient.on('lookup', () => {
+	// 			console.log('srcClient lookup');
+	// 		});
+	// 		srcClient.on('timeout', had_error => {
+	// 			console.log('srcClient timeout: ', had_error);
+	// 		});
+	// 		srcClient.on('end', () => {
+	// 			console.log('srcClient end');
+	// 			srcClient.removeAllListeners();
+	// 			process.exit();
+	// 			// localBuffer = [];
+	// 		});
+	// 		srcClient.on('drain', () => {
+	// 			console.log('srcClient drain');
+	// 			srcClient.resume();
+	// 		});
+	// 	}
+	// 	catch(e){
+	// 		console.error(e);
+	// 	}
+	//
+	// };
 
 	const _startSioClient = () => {
-		let serverName = srcNode.host === 'localhost'?null:srcNode.host;
+
 		let host = srcNode.host.includes('https://')?srcNode.host:'https://'+srcNode.host;
 		let sio_options = {multiplex:false, cert: secureOptions.cert, key:secureOptions.key};
 		try{
 			srcClient = io.connect(host, sio_options);
-			// console.log('src <-> dst');
-			// dstSocket && srcClient.pipe(dstSocket).pipe(srcClient);
+
 			srcClient.on('startSession', ()=>{
 				console.log('srcClient connected startSession');
 				startLocalServer(dstNode, ()=>{
-					// dstSocket.pipe(srcClient);
-					// srcClient.pipe(dstSocket);
+
 				});
 			});
 			srcClient.on('data',  (data) => {
 				let id = utils.arr2str(data.slice(0, utils.uuidLength));
 
 				let rawData = data.slice(utils.uuidLength, data.byteLength);
-				// con sole.log('srcClient received (Bytes): ', data.byteLength, ' from: ',id, '=>', rawData.length);
-				// if(!dstSockets[id]){
-				// 	localBuffer = localBuffer.push.apply(localBuffer, rawData);
-				// }
-				// process.nextTick( () => {
-				let written = dstSockets[id] && dstSockets[id].write(rawData);
-				// console.log('srcClient written:', written);
-				if(!written)srcClient.pause();
-				// });
 
-				//dstSocket.end();
+				let written = dstSockets[id] && dstSockets[id].write(rawData);
+				if(!written){
+					console.warn(id, '=> failed to write:', rawData.byteLength);
+				}
 			});
 
 			srcClient.on('error', (e)=>{
@@ -200,23 +170,13 @@ function _startTunnelClient(secureOptions, dstNode, srcNode, toFile, cb) {
 					// srcClient.pipe(dstSocket);
 				});
 			});
-
-			srcClient.on('lookup', () => {
-				console.log('srcClient lookup');
-			});
-			srcClient.on('timeout', had_error => {
-				console.log('srcClient timeout: ', had_error);
-			});
 			srcClient.on('end', () => {
 				console.log('srcClient end');
 				srcClient.removeAllListeners();
 				process.exit();
 				// localBuffer = [];
 			});
-			srcClient.on('drain', () => {
-				console.log('srcClient drain');
-				srcClient.resume();
-			});
+
 		}
 		catch(e){
 			console.error(e);
@@ -260,12 +220,7 @@ function _startTunnelClient(secureOptions, dstNode, srcNode, toFile, cb) {
 					let rawData = utils.appendBuffer(utils.str2arr(socket.id), data);
 
 					srcClient && srcClient.emit('data', new Buffer(rawData));
-					// if(!written){
-					// 	console.log('srcClient pause');
-					// 	srcClient && srcClient.pause();
-					// }
-					// console.log('dstSocket <',socket.id,'> got(Bytes):', data.byteLength, ' written:',rawData.length,':',written);
-					// console.log('dstSocket got(Bytes):', data.byteLength);
+
 				});
 				socket.on('end', () => {
 					onAppExit(socket.id, 'dstSocket end');
