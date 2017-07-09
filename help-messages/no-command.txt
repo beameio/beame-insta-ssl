@@ -9,10 +9,13 @@ Usage information and examples:
 
 		Lists certificates
 
-	beame-insta-ssl tunnel make --dst [DESTINATION_HOST:]DESTINATION_PORT --proto DESTINATION_PROTO [--hostname <HOSTNAME>] [--fqdn FQDN]
+	beame-insta-ssl tunnel make --dst [DESTINATION_HOST:]DESTINATION_PORT --proto DESTINATION_PROTO [--hostname <HOSTNAME>] [--fqdn FQDN] [--group GROUP]
 
 		Creates tunnel from https://SOMETHING.beameio.net to the
 		specified destination.
+
+        DESTINATION_PROTO "tcp" will create a native tcp tunnel with termination on your machine and option to
+        control access by setting GROUP to a segment of valid certificate under '.beameio.net' subdomain. This
 
 		If DESTINATION_PROTO is "http", the tunnel will terminate TLS
 		traffic and transform the requests to HTTP. This way you can
