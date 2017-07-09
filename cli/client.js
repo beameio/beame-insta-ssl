@@ -157,6 +157,18 @@ function _startTunnelClient(secureOptions, dstNode, srcNode, toFile, cb) {
 				console.error('srcClient: ',e);
 			});
 
+			srcClient.on('command', (data)=>{
+				let id = data.slice(0, utils.uuidLength);
+				let cmd = data.slice(utils.uuidLength);
+				if(cmd === utils.hostAppFailedStr){
+					console.warn('Host application not started (fix on far end of the tunnel)');
+					// if(dstSockets[id]){
+					// 	dstSockets[id].removeAllListeners();
+					// 	delete dstSockets[id];
+					// }
+				}
+			});
+
 			srcClient.on('close', had_error => {
 				console.log('srcClient close: ', had_error);
 				srcClient.removeAllListeners();
