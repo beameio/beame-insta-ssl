@@ -258,7 +258,10 @@ function _startTunnelClient(secureOptions, dstNode, srcNode, toFile, cb) {
 				cb();
 			});
 			localServer.on('error', (e)=>{
-				console.error('localServer: ',e);
+				if(e.message.includes('EADDRINUSE')){
+					console.error('Cannot start local tunnel => ',e.message);
+				}
+				else console.error('localServer: ',e);
 			})
 		}
 		else cb();
