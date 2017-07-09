@@ -9,6 +9,7 @@ const utils = require('../lib/utils');
 const beameSDK   = require('beame-sdk');
 const BeameStore = beameSDK.BeameStore;
 const CommonUtils = beameSDK.CommonUtils;
+let bufferedWriter = {}, bufferedReader = {};
 
 function make(fqdn, dst, src, file, callback) {
 	let cert;
@@ -71,7 +72,13 @@ let dstSockets = [], localServer;
 
 function _startTunnelClient(secureOptions, dstNode, srcNode, toFile, cb) {
 	let srcClient;
-
+	const onData = (rawData, id) => {
+		let written = dstSockets[id] && dstSockets[id].write(rawData);
+		// console.log('srcClient written:', written);
+		if(!written){
+			srcClient.pause();
+		}
+	};
 	const _startSrcClient = () => {
 		let secureContext = tls.createSecureContext({pfx:secureOptions.pfx, passphrase:secureOptions.passphrase});
 		let serverName = srcNode.host === 'localhost'?null:srcNode.host;
@@ -87,23 +94,25 @@ function _startTunnelClient(secureOptions, dstNode, srcNode, toFile, cb) {
 				});
 			});
 			// console.log('src <-> dst');
-			// dstSocket && srcClient.pipe(dstSocket).pipe(srcClient);
+
 
 			srcClient.on('data',  (data) => {
 				let id = utils.arr2str(data.slice(0, utils.uuidLength));
-
-				let rawData = data.slice(utils.uuidLength, data.byteLength);
-				// con sole.log('srcClient received (Bytes): ', data.byteLength, ' from: ',id, '=>', rawData.length);
-				// if(!dstSockets[id]){
-				// 	localBuffer = localBuffer.push.apply(localBuffer, rawData);
-				// }
-				// process.nextTick( () => {
-				let written = dstSockets[id] && dstSockets[id].write(rawData);
-				// console.log('srcClient written:', written);
-				if(!written)srcClient.pause();
-				// });
-
-				//dstSocket.end();
+				if(bufferedReader[id]){
+					let frame = bufferedReader[id].buildFrame(data);
+					console.log('frame:', frame.finished);
+					if(frame.finished){
+						if(frame.data)
+							onData(frame.data, id);
+						else
+							console.log('Got command:',frame.data.toString());
+						bufferedReader[id].resetReader();
+					}
+				}
+				else{
+					let rawData = data.slice(utils.uuidLength, data.byteLength);
+					onData(rawData, id);
+				}
 			});
 
 			srcClient.on('error', (e)=>{
@@ -149,7 +158,10 @@ function _startTunnelClient(secureOptions, dstNode, srcNode, toFile, cb) {
 			dstSockets[id] = null;
 			let cmd = id+utils.disconnectedStr;
 			console.log('Command: ',cmd);
-			srcClient.write(new Buffer(cmd));
+			if(bufferedWriter[id])
+				bufferedWriter[id].writeData(new Buffer(cmd), srcClient);
+			else
+				srcClient.write(new Buffer(cmd));
 		};
 
 		if(!localServer){
@@ -157,9 +169,20 @@ function _startTunnelClient(secureOptions, dstNode, srcNode, toFile, cb) {
 			localServer = net.createServer({ allowHalfOpen: true }, (socket)=> {
 				let id = utils.getID();
 				socket.id = id;
-				let cmd = id+utils.connectedStr;
+				if(srcClient) srcClient.id = id;
+				let cmd = utils.connectedStr;
+				if(!bufferedWriter[id]){
+					bufferedWriter[id] = new utils.bufferedWriter();
+					console.log('Creating buffered writer for <', id, '>');
+				}
+				if(!bufferedReader[id])
+					bufferedReader[id] = new utils.bufferedReader(id);
 				console.log('Command: ',cmd);
-				srcClient.write(new Buffer(cmd));
+				if(bufferedWriter[id]){
+					bufferedWriter[id].writeData(new Buffer(cmd), srcClient);
+				}
+				else
+					srcClient.write(new Buffer(id+cmd));
 
 				if(dstSockets[id]){
 					dstSockets[id].removeAllListeners();
@@ -174,14 +197,20 @@ function _startTunnelClient(secureOptions, dstNode, srcNode, toFile, cb) {
 
 
 				socket.on('data', (data) => {
-
-					let rawData = utils.appendBuffer(utils.str2arr(socket.id), data);
-
-					let written = srcClient && srcClient.write(new Buffer(rawData));
-					if(!written){
-						console.log('srcClient pause');
-						srcClient && srcClient.pause();
+					if(bufferedWriter[id]){
+						bufferedWriter[id].writeData(new Buffer(data), srcClient);
 					}
+					else{
+						let rawData = utils.appendBuffer(utils.str2arr(socket.id), data);
+
+						let written = srcClient && srcClient.write(new Buffer(rawData));
+						if(!written){
+							console.log('srcClient pause');
+							srcClient && srcClient.pause();
+							dstSockets[socket.id] && dstSockets[socket.id].pause();
+						}
+					}
+
 					// console.log('dstSocket <',socket.id,'> got(Bytes):', data.byteLength, ' written:',rawData.length,':',written);
 					// console.log('dstSocket got(Bytes):', data.byteLength);
 				});
