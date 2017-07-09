@@ -149,7 +149,7 @@ function _startTunnelClient(secureOptions, dstNode, srcNode, toFile, cb) {
 
 				let written = dstSockets[id] && dstSockets[id].write(rawData);
 				if(!written){
-					console.warn(id, '=> failed to write:', rawData.byteLength);
+					//console.warn(id, '=> failed to write:', rawData.byteLength);
 				}
 			});
 
@@ -161,6 +161,10 @@ function _startTunnelClient(secureOptions, dstNode, srcNode, toFile, cb) {
 				console.log('srcClient close: ', had_error);
 				srcClient.removeAllListeners();
 				if(had_error)_startSrcClient();
+			});
+
+			srcClient.on('disconnect', () => {
+				console.log('srcClient disconnected');
 			});
 
 			srcClient.on('connect', () => {
@@ -237,7 +241,7 @@ function _startTunnelClient(secureOptions, dstNode, srcNode, toFile, cb) {
 					console.log('dstSocket error ', e);
 				});
 
-			}).listen(dst.port, () => {
+			}).listen(dst.port, '127.0.0.1', () => {
 				console.log(`TCP Server is listening on port ${dst.port}`);
 				cb();
 			});
