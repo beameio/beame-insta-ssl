@@ -6,9 +6,14 @@ const beameSDK   = require('beame-sdk');
 const BeameStore = beameSDK.BeameStore;
 const CommonUtils = beameSDK.CommonUtils;
 
-function make(fqdn, dst, hostname, proto, callback) {
+function make(fqdn, dst, hostname, proto, highestFqdn, trustDepth, callback) {
 	let cert, dstHost, dstPort, dstHostname;
-
+	if(typeof trustDepth !== 'undefined' && trustDepth!= null){
+		if(!Number.isInteger(trustDepth) || trustDepth<=0){
+			console.error('trustDepth should be >= 1 (omit it to allow infinite depth)');
+			process.exit(1);
+		}
+	}
 	const _doTunnel = () => {
 		return new Promise((resolve, reject) => {
 				cert = (new BeameStore).getCredential(fqdn);
@@ -28,11 +33,11 @@ function make(fqdn, dst, hostname, proto, callback) {
 
 				dstHostname = hostname || dstHost;
 
-				const tunnelObj = require('../tunnel');
+				const tunnelObj = require('../lib/tunnel');
 
 				console.log(`Starting tunnel https://${fqdn} -> ${proto}://${dstHost}:${dstPort}`);
 
-				tunnelObj(cert, dstHost, dstPort, proto, dstHostname);
+				tunnelObj(cert, dstHost, dstPort, proto, dstHostname, highestFqdn || cert.fqdn, trustDepth);
 			}
 		);
 	};

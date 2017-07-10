@@ -9,10 +9,29 @@ Usage information and examples:
 
 		Lists certificates
 
-	beame-insta-ssl tunnel make --dst [DESTINATION_HOST:]DESTINATION_PORT --proto DESTINATION_PROTO [--hostname <HOSTNAME>] [--fqdn FQDN]
+
+    beame-insta-ssl client make --dst DESTINATION_PORT --fqdn CLIENT_SIDE_CERT --src DESTINATION_HOST:DESTINATION_PORT
+
+        Client side of the TCP tunnel (see below). DESTINATION_PORT points to local Client application (e.g. 3389 for RDP client)
+        This implementation requires valid certificate for connection (CLIENT_SIDE_CERT - fqdn of a credential existing
+        on local machine)
+
+	beame-insta-ssl tunnel make --dst [DESTINATION_HOST:]DESTINATION_PORT --proto DESTINATION_PROTO [--hostname <HOSTNAME>] [--fqdn FQDN] [--group GROUP]
 
 		Creates tunnel from https://SOMETHING.beameio.net to the
 		specified destination.
+
+        Using beame-insta-ssl for RDP / VNC / SSH etc
+        Set DESTINATION_PROTO to "tcp", this will create a native tcp tunnel with termination on your machine and option to
+        control access by setting GROUP to a segment of valid certificate under '.beameio.net' subdomain. This
+        type of tunnel requires "beame-insta-ssl client" to be used on the other side of the tunnel (instead of a Browser)
+
+    Example RDP:
+        Server side (host Windows machine):
+            beame-insta-ssl tunnel make --dst 3389 --proto tcp --fqdn myfqsukadn.v1.p.beameio.net --group beameio
+
+        Client side (connecting client machine):
+            beame-insta-ssl client make --dst 3389 --fqdn myclientcert.v1.d.beameio.net --src myfqsukadn.v1.p.beameio.net:443
 
 		If DESTINATION_PROTO is "http", the tunnel will terminate TLS
 		traffic and transform the requests to HTTP. This way you can

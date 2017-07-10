@@ -351,6 +351,70 @@ function deleteDns(fqdn, dnsFqdn, callback) {
 }
 deleteDns.toText = x => `DNS record for ${x} has been deleted`;
 
+/**
+ * Check if two creds have common relative up to highestFqdn
+ * @public
+ * @method Creds.verifyAncestry
+ * @param {String} fqdn - lowest fqdn to start from
+ * @param {String} targetFqdn
+ * @param {String} highestFqdn
+ * @param {int} trustDepth
+ * @param {Function} callback
+ */
+function verifyAncestry(fqdn, targetFqdn, highestFqdn, trustDepth, callback) {
+	if(typeof trustDepth !== 'undefined' && trustDepth!= null){
+		if(!Number.isInteger(trustDepth) || trustDepth<=0){
+			console.error('trustDepth should be >= 1 (omit it to allow infinite depth)');
+			process.exit(1);
+		}
+	}
+	const store = new BeameStore();
+	store.verifyAncestry(fqdn, targetFqdn, highestFqdn, trustDepth, (error, related) => {
+		if(!error){
+			console.log(fqdn,' & ',targetFqdn,' related => ', related?'YES':'NO');
+		}
+		else{
+			console.error(error);
+		}
+		callback(error, related);
+	});
+}
+
+/**
+ * Fetch creds up to L0
+ * @public
+ * @method Creds.listCredChain
+ * @param {String} fqdn - lowest fqdn in required chain
+ * @param {Function} callback
+ */
+function listCredChain(fqdn, callback) {
+	const store = new BeameStore();
+	store.fetchCredChain(fqdn, null,(error, list) => {
+		if(!error){
+			callback(null, list);
+		}
+		else{
+			callback(error, false);
+		}
+	});
+}
+
+listCredChain.toText = function (list) {
+	let table = new Table({
+		head:      ['level', 'fqdn'],
+		colWidths: [16, 64]
+	});
+
+	const _setStyle = (value, cred) => {
+		let val = value || '';
+		return cred.expired === true ? colors.red(val) : val;
+	};
+	for(let i=0; i<list.length; i++){
+		table.push([_setStyle(list[i].metadata.level, list[i]), _setStyle(list[i].fqdn, list[i])]);
+	}
+	return table;
+};
+
 module.exports = {
 	list,
 	signers,
@@ -362,5 +426,7 @@ module.exports = {
 	renewCert,
 	checkOcsp,
 	setDns,
-	deleteDns
+	deleteDns,
+	listCredChain,
+	verifyAncestry
 };
