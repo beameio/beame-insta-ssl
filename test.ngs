@@ -78,9 +78,9 @@ F remove_from_store() {
 }
 
 doc Checks that process outputs specific text and exists with non-zero code
-F should_fail_with_text(cmd:Command, text:Str) {
+F should_fail_with_text(cp:CommandsPipeline, text:Str) {
 	try {
-		$($cmd)
+		$($cp)
 		throw TestFail('Exited with code 0')
 	} catch(e:ProcessFail) {
 		text not in e.process.stdout throws TestFail("No expected text in output")
@@ -89,12 +89,12 @@ F should_fail_with_text(cmd:Command, text:Str) {
 }
 
 doc Tests non-terminating tunnel
-F https_target_tunnel(cmd:Command) {
+F https_target_tunnel(cp:CommandsPipeline) {
 	t = time().Str()
-	cmd.options['&'] = true
+	cp.options['&'] = true
 	processes = [
 		$(node testHttpsServer.js $fqdn $t &)
-		$($cmd)
+		$($cp)
 	]
 	echo("waiting for fqdn $fqdn $t")
 	assert_resolvable(fqdn)
@@ -105,12 +105,12 @@ F https_target_tunnel(cmd:Command) {
 }
 
 doc Tests terminating tunnel
-F http_target_tunnel(cmd:Command, expected_hostname:Str, proto='https') {
+F http_target_tunnel(cp:CommandsPipeline, expected_hostname:Str, proto='https') {
 	t = time().Str()
-	cmd.options['&'] = true
+	cp.options['&'] = true
 	processes = [
 		$(node testHttpServer.js $t &)
-		$($cmd)
+		$($cp)
 	]
 	echo("waiting for fqdn $fqdn")
 	assert_resolvable(fqdn)
@@ -212,13 +212,13 @@ test("Fix metadata (new CLI)", {
 each({
 	"old": %($BEAME_INSTA_SSL_BIN export $fqdn DIR)
 	"new": %($BEAME_INSTA_SSL_BIN creds exportCred --fqdn $fqdn --dir DIR)
-}, F(cli_type:Str, c:Command) {
+}, F(cli_type:Str, cp:CommandsPipeline) {
 	test("Export certificate ($cli_type CLI)", {
 		dir = `mktemp --tmpdir -d test-beame-insta-ssl.XXXXXXXXXX` - MaybeSfx('\n')
-		c.argv .= replace('DIR', dir)
+		cp.commands[0].argv .= replace('DIR', dir)
 		finally()
 			body => {
-				$($c)
+				$($cp)
 				EXPECTED_EXPORTED_FILE_EXTENSIONS.each(F(ext) {
 					f = "$dir/$fqdn.$ext"
 					not($(test -s $f)) throws TestFail("File $f not found")
