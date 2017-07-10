@@ -2,8 +2,8 @@
  * Created by Alexz on 27/06/2017.
  */
 "use strict";
-const fs = require('fs');
-const tls = require('tls');
+// const fs = require('fs');
+// const tls = require('tls');
 const net = require('net');
 const utils = require('../lib/utils');
 const beameSDK   = require('beame-sdk');
@@ -137,7 +137,7 @@ function _startTunnelClient(secureOptions, dstNode, srcNode, toFile, cb) {
 			srcClient = io.connect(host, sio_options);
 
 			srcClient.on('startSession', ()=>{
-				console.log('srcClient connected startSession');
+				// console.log('srcClient connected startSession');
 				startLocalServer(dstNode, ()=>{
 
 				});
@@ -176,14 +176,13 @@ function _startTunnelClient(secureOptions, dstNode, srcNode, toFile, cb) {
 			});
 
 			srcClient.on('disconnect', () => {
-				console.log('srcClient disconnected');
+				console.log('srcClient disconnected from: ', host);
 			});
 
 			srcClient.on('connect', () => {
-				console.log('srcClient connected');
+				console.log('srcClient connected to: ',host);
 				startLocalServer(dstNode, ()=>{
-					// dstSocket.pipe(srcClient);
-					// srcClient.pipe(dstSocket);
+
 				});
 			});
 			srcClient.on('end', () => {
@@ -206,7 +205,7 @@ function _startTunnelClient(secureOptions, dstNode, srcNode, toFile, cb) {
 			dstSockets[id].removeAllListeners();
 			dstSockets[id] = null;
 			let cmd = id+utils.disconnectedStr;
-			console.log('Command: ',cmd);
+			console.log(id,' => Command: ',utils.disconnectedStr);
 			srcClient.emit('command',cmd);
 		};
 
@@ -216,7 +215,7 @@ function _startTunnelClient(secureOptions, dstNode, srcNode, toFile, cb) {
 				let id = utils.getID();
 				socket.id = id;
 				let cmd = id+utils.connectedStr;
-				console.log('Command: ',cmd);
+				console.log(id,' => Command: ',utils.connectedStr);
 				srcClient.emit('command',cmd);
 
 				if(dstSockets[id]){
@@ -224,9 +223,7 @@ function _startTunnelClient(secureOptions, dstNode, srcNode, toFile, cb) {
 					dstSockets[id].end();
 				}
 				dstSockets[id] = socket;
-				// dstSocket.pipe(srcClient);
-				// srcClient.pipe(dstSocket);
-				// socket.setTimeout(3000);
+
 
 				console.log('localServer connect:',id);
 
