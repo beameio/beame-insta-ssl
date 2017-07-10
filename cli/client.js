@@ -205,7 +205,7 @@ function _startTunnelClient(secureOptions, dstNode, srcNode, toFile, cb) {
 			dstSockets[id].removeAllListeners();
 			dstSockets[id] = null;
 			let cmd = id+utils.disconnectedStr;
-			console.log(id,' => Command: ',utils.disconnectedStr);
+			console.log(id,' => destination app disconnected');
 			srcClient.emit('command',cmd);
 		};
 
@@ -215,7 +215,7 @@ function _startTunnelClient(secureOptions, dstNode, srcNode, toFile, cb) {
 				let id = utils.getID();
 				socket.id = id;
 				let cmd = id+utils.connectedStr;
-				console.log(id,' => Command: ',utils.connectedStr);
+				console.log(id,' => destination app connected');
 				srcClient.emit('command',cmd);
 
 				if(dstSockets[id]){
