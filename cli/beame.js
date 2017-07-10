@@ -14,7 +14,7 @@ const logger      = new BeameLogger("BeameInstaSSL");
 const pem         = require('pem');
 
 let commands = {};
-['creds', 'tunnel', 'system', 'client'].forEach(cmdName => {
+['creds', 'tunnel', 'system', 'tunnelClient'].forEach(cmdName => {
 	commands[cmdName] = require('./' + cmdName + '.js');
 });
 
@@ -71,7 +71,8 @@ const parametersSchema = {
 	'validityPeriod':     {required: false},
 	'dnsFqdn':            {required: false},
 	'forceCheck':         {required: false},
-	'group':              {required: false},
+	'highestFqdn':        {required: false},
+	'trustDepth':         {required: false},
 };
 
 function InvalidArgv(message) {
@@ -167,7 +168,7 @@ function main() {
 			do_warn    = true;
 			argv.dst   = argv._[1];
 			argv.proto = argv._[2];
-			argv.group = argv._[3];
+			argv.highestFqdn = argv._[3];
 			argv._     = ['tunnel', 'make'];
 		}
 	}
