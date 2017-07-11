@@ -135,9 +135,8 @@ function invite(fqdn, name, email, ttl, callback) {
 				let cred = new Credential(new BeameStore()),
 					regToken = {fqdn, name, email, ttl, src:Constants.RegistrationSource.InstaSSL};
 
-
 				//noinspection JSCheckFunctionSignatures
-				cred.createRegistrationToken(regToken).then(_onTokenReceived).catch(reject);
+				cred.createRegistrationToken(regToken).then(_onTokenReceived).then(resolve).catch(reject);
 			}
 		);
 	}
