@@ -116,8 +116,17 @@ function invite(fqdn, name, email, ttl, callback) {
 
 	const emailServices= new (require('../lib/email'))();
 	const Constants = require('../constants');
-	function onTokenReceived(token){
-		return emailServices.sendEmail(fqdn, name, email, token);
+
+	function _onTokenReceived(token){
+
+		return new Promise((resolve, reject) => {
+			logger.info(`Registration token received`);
+			emailServices.sendEmail(fqdn, name, email, token).then(()=>{
+				logger.info(`Registration token sent successfully to ${email}`);
+				resolve(token);
+			}).catch(reject);
+			}
+		);
 	}
 
 	function _get() {
@@ -128,7 +137,7 @@ function invite(fqdn, name, email, ttl, callback) {
 
 
 				//noinspection JSCheckFunctionSignatures
-				cred.createRegistrationToken(regToken).then(onTokenReceived).catch(reject);
+				cred.createRegistrationToken(regToken).then(_onTokenReceived).catch(reject);
 			}
 		);
 	}
