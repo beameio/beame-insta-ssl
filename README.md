@@ -2,6 +2,7 @@
 
 # beame-insta-ssl
 
+
 ## What is beame-insta-ssl?
 
 This is a free, open-source tool that allows you to expose securely a machine with HTTP or HTTPS server via a random hostname without needing to have a public IP address.
@@ -16,6 +17,14 @@ Any users of remote access (RDP, VNC, SSH etc), web developers, web designers, a
  * I have to access my linux machine but company policy restricts exposing port 22 to the global network
  * I am developing for iOS, and I want to test my web application against my backend code, but it is much more convenient for me to test locally. Beame allows me to expose my local development server to the mobile device with TLS terminated at my local workstation.
  * I want to be able to access my home PC from my laptop, I run RDP on it, but I don't have public IP and I don't want to rely on Username/Password either
+
+## Who is beame-insta-ssl for?
+
+Any users of remote access (RDP, VNC, SSH etc), web developers, web designers, anyone whose work product is displayed in a browser.
+
+## What is the most common and valuable use case?
+ * I have to access my linux machine but company policy restricts exposing port 22 to the global network
+ * I am developing for iOS, and I want to test my web application against my backend code, but it is much more convenient for me to test locally. Beame allows me to expose my local development server to the mobile device with TLS terminated at my local workstation.
 
 ## Get started in three quick steps!
 
