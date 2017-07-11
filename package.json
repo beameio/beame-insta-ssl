@@ -36,6 +36,8 @@
     "cli-table2": "^0.2.0",
     "http-proxy": "^1.15.1",
     "minimist": "^1.2.0",
+    "socket.io": "1.7.3",
+    "socket.io-client": "1.7.3",
     "sync-request": "^4.0.3",
     "underscore": "^1.8.3"
   }
