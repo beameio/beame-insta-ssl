@@ -98,6 +98,49 @@ getRegToken.toText = x => x;
 
 /**
  * @param {String} fqdn
+ * @param {String|null|undefined} [name]
+ * @param {String|null|undefined} [email]
+ * @param {Number|null|undefined} [ttl]
+ * @param {Function} callback
+ */
+function invite(fqdn, name, email, ttl, callback) {
+	if (!fqdn) {
+		logger.fatal(`Fqdn required`);
+		return;
+	}
+
+	if (!email) {
+		logger.fatal(`Email required`);
+		return;
+	}
+
+	const emailServices= new (require('../lib/email'))();
+	const Constants = require('../constants');
+	function onTokenReceived(token){
+		return emailServices.sendEmail(fqdn, name, email, token);
+	}
+
+	function _get() {
+		return new Promise((resolve, reject) => {
+
+				let cred = new Credential(new BeameStore()),
+					regToken = {fqdn, name, email, ttl, src:Constants.RegistrationSource.InstaSSL};
+
+
+				//noinspection JSCheckFunctionSignatures
+				cred.createRegistrationToken(regToken).then(onTokenReceived).catch(reject);
+			}
+		);
+	}
+
+	CommonUtils.promise2callback(_get(), callback);
+
+}
+invite.toText = x => x;
+
+/**
+ * @param {String} fqdn
+ * @param {Function} callback
  * @returns {Promise}
  */
 function syncmeta(fqdn,callback) {
@@ -420,6 +463,7 @@ module.exports = {
 	signers,
 	getCreds,
 	getRegToken,
+	invite,
 	syncmeta,
 	exportCred,
 	revokeCert,
