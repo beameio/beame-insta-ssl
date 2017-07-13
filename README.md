@@ -9,8 +9,6 @@ This is a free, open-source tool that allows you to expose securely a machine wi
 
 When using Beame.io, the private key never leaves your computer/server. Beame cannot look into your traffic. While, theoretically, Beame.io could issue a wildcard `*.beameio.net` certificate and terminate your traffic (which we don't do), this is preventable by checking certificate fingerprints.
 
-<img src="img/tcpTunnel.png">
-
 ## Who is beame-insta-ssl for?
 
 Any users of remote access (RDP, VNC, SSH etc), web developers, web designers, anyone whose work product is displayed in a browser.
@@ -18,6 +16,8 @@ Any users of remote access (RDP, VNC, SSH etc), web developers, web designers, a
 ## What is the most common and valuable use case?
  * I have to access my linux machine but company policy restricts exposing port 22 to the global network
  * I am developing for iOS, and I want to test my web application against my backend code, but it is much more convenient for me to test locally. Beame allows me to expose my local development server to the mobile device with TLS terminated at my local workstation.
+
+<img src="img/instaBasic.png">
 
 ## Get started in three quick steps!
 
@@ -116,6 +116,9 @@ You can also specify particular Beame hostname to run a tunnel on, in case, for 
 
 
 ## Insta-ssl for remote access with client-certificate authentication
+
+<img src="img/tcpTunnel.png">
+
 In order to use beame-insta-ssl as a tunnel for remote access (e.g. SSH, VNC, RDP), define "proto" to "tcp" as in the example below:
 
 	beame-insta-ssl tunnel make --dst 3389 --proto tcp --fqdn rdpBeameHostname.v1.p.beameio.net --highestFqdn myhighest.trust.beameio.net --trustDepth 3
