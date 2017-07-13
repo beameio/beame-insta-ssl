@@ -9,6 +9,8 @@ This is a free, open-source tool that allows you to expose securely a machine wi
 
 When using Beame.io, the private key never leaves your computer/server. Beame cannot look into your traffic. While, theoretically, Beame.io could issue a wildcard `*.beameio.net` certificate and terminate your traffic (which we don't do), this is preventable by checking certificate fingerprints.
 
+<img src="img/tcpTunnel.png">
+
 ## Who is beame-insta-ssl for?
 
 Any users of remote access (RDP, VNC, SSH etc), web developers, web designers, anyone whose work product is displayed in a browser.
