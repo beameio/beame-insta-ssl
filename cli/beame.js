@@ -54,7 +54,7 @@ const parametersSchema = {
 	'email':              {required: false},
 	'encryptedData':      {required: true, base64: true, json: true},
 	'signedData':         {required: true, base64: true, json: true},
-	'ttl':                {required: false, default: 300},
+	'ttl':                {required: false, default: 60 * 60 * 24 * 2},
 	'src':                {required: false},
 	'serviceName':        {required: false},
 	'matchingFqdn':       {required: false},
