@@ -6,7 +6,7 @@ const beameSDK   = require('beame-sdk');
 const BeameStore = beameSDK.BeameStore;
 const CommonUtils = beameSDK.CommonUtils;
 
-function make(fqdn, dst, hostname, proto, highestFqdn, trustDepth, callback) {
+function make(fqdn, dst, hostname, proto, highestFqdn, trustDepth, noAuth, callback) {
 	let cert, dstHost, dstPort, dstHostname;
 	if(typeof trustDepth !== 'undefined' && trustDepth!= null){
 		if(!Number.isInteger(trustDepth) || trustDepth<=0){
@@ -37,7 +37,7 @@ function make(fqdn, dst, hostname, proto, highestFqdn, trustDepth, callback) {
 
 				console.log(`Starting tunnel https://${fqdn} -> ${proto}://${dstHost}:${dstPort}`);
 
-				tunnelObj(cert, dstHost, dstPort, proto, dstHostname, highestFqdn || cert.fqdn, trustDepth);
+				tunnelObj(cert, dstHost, dstPort, proto, dstHostname, highestFqdn || cert.fqdn, trustDepth, noAuth);
 			}
 		);
 	};

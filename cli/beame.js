@@ -73,6 +73,7 @@ const parametersSchema = {
 	'forceCheck':         {required: false},
 	'highestFqdn':        {required: false},
 	'trustDepth':         {required: false},
+	'noAuth':             {required: false}
 };
 
 function InvalidArgv(message) {
