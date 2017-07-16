@@ -1,6 +1,6 @@
 {
   "name": "beame-insta-ssl",
-  "version": "1.1.22",
+  "version": "1.1.23",
   "description": "Quick TLS (SSL) security for you server by Beame.io",
   "main": "index.js",
   "engines": {
