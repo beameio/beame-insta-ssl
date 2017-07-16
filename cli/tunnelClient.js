@@ -6,7 +6,7 @@ const beameSDK   = require('beame-sdk');
 const BeameStore = beameSDK.BeameStore;
 const CommonUtils = beameSDK.CommonUtils;
 function make(fqdn, dst, src, file, callback) {
-	let cert;
+	let cert, secData = null;
 
 	const _parseNetNode = (data) => {
 		let host, port;
@@ -24,17 +24,20 @@ function make(fqdn, dst, src, file, callback) {
 	const _doClient = () => {
 		return new Promise((resolve, reject) => {
 			try{
-				cert = (new BeameStore).getCredential(fqdn);
-				if (!cert) {
-					reject(`Certificate for FQDN ${fqdn} not found`);
-					return;
+				if(fqdn){
+					cert = (new BeameStore).getCredential(fqdn);
+					if (!cert) {
+						reject(`Certificate for FQDN ${fqdn} not found`);
+						return;
+					}
+					secData = {pfx: cert.PKCS12, passphrase: cert.PWD, cert: cert.X509, key: cert.PRIVATE_KEY};
 				}
+
 				dst = _parseNetNode(dst);
 				src = _parseNetNode(src);
 				const tc = require('../lib/client');
 
-				tc.startTunnelClient({pfx: cert.PKCS12, passphrase: cert.PWD, cert: cert.X509, key: cert.PRIVATE_KEY},
-					dst, src, file, () => {
+				tc.startTunnelClient(secData, dst, src, file, () => {
 						resolve('client OK');
 					});
 			}
