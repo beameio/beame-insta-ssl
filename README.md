@@ -126,7 +126,8 @@ In order to use beame-insta-ssl as a tunnel for remote access (e.g. SSH, VNC, RD
 
 In the example for RDP above, there's an access criteria defined by use of `highestFqdn` and `trustDepth` - if client certificate has any signing certificate below `highestFqdn` and itself is signed above required `trustDepth`, it will be allowed to access.
 You are allowed to skip `highestFqdn` and `trustDepth`, in such case the access will be granted to any credential that was signed _under_ your own certificate (take it as - to your _children_, their _children_ and so on, so that your credential is a top of the _trust tree_).
-Now run a client to connect to the tunnel above:
+If no authentication required, use `--noAuth true` parameter for `tunnel make`, in such case `--fqdn` on client side can be skipped as well.
+Now run a client to connect to the tunnel from example above:
 
 	beame-insta-ssl tunnelClient make --dst 3389 --fqdn myClientCert.v1.p.beameio.net --src rdpBeameHostname.v1.p.beameio.net
 
@@ -165,6 +166,16 @@ Target device:
 This will print a log, that will end with: `Certificate created! Certificate FQDN is` continued with your new cred's FQDN.
 
 No just copy/paste that FQDN to the tunnelClient command for `--fqdn` parameter.
+
+Just to make the picture whole, here's an example of _ssh_ , similar to previous example but without client auth:
+
+server (sshd)
+
+    beame-insta-ssl tunnel make --dst 22 --proto tcp --fqdn sshBeameHostname.v1.p.beameio.net --noAuth true
+
+client
+
+    beame-insta-ssl tunnelClient make --dst 12345 --src sshBeameHostname.v1.p.beameio.net
 
 ## Where is my Beame data stored?
 Credentials created by you are stored on your machine in `$HOME/.beame` folder. You can easily export them to the desired location, by using the `export` command that looks like this:
