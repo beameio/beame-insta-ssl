@@ -37,7 +37,8 @@ function make(fqdn, dst, hostname, proto, highestFqdn, trustDepth, noAuth, callb
 
 				console.log(`Starting tunnel https://${fqdn} -> ${proto}://${dstHost}:${dstPort}`);
 
-				tunnelObj(cert, dstHost, dstPort, proto, dstHostname, highestFqdn || cert.fqdn, trustDepth, noAuth);
+				tunnelObj(cert, dstHost, dstPort, proto, dstHostname, highestFqdn || cert.fqdn, trustDepth,
+					!!(noAuth && (noAuth === 'true' || noAuth == true)));
 			}
 		);
 	};

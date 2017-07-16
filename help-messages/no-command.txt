@@ -28,8 +28,8 @@ Usage information and examples:
     Using beame-insta-ssl for RDP / VNC / SSH etc
         Set DESTINATION_PROTO to "tcp", this will create a native tcp tunnel with termination on your machine and option to
         control access by setting "highestFqdn" (to allow search up my trust tree) and "trustDepth" (to define how levels below
-        are valid to connect). This type of tunnel requires "beame-insta-ssl client" to be used on the other side of the tunnel
-        with client-certificate that satisfies the trust criteria
+        are valid to connect). If no auth required, "--noAuth" true shall be set. This type of tunnel requires "beame-insta-ssl client" to be used on the other side of the tunnel
+        with client-certificate that satisfies the trust criteria (unless --noAuth is set on server side)
 
     Example RDP:
         Server side (host Windows machine):
