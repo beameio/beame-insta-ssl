@@ -197,6 +197,12 @@ test("List certificates - one certificate (new CLI, json)", {
 	TestMessage('List is OK')
 })
 
+test("List signers certificates - one certificate", {
+	certs = ``$BEAME_INSTA_SSL_BIN creds signers --format json``
+	assert(certs.fqdn == [fqdn])
+	TestMessage('Signers list is OK')
+})
+
 test("Fix metadata (old CLI)", {
 	corrupt_metadata_json()
 	$($BEAME_INSTA_SSL_BIN syncmeta)
@@ -350,6 +356,12 @@ test("OCSP test") with {
 	assert_hash_keys_values(s, {'status': true}, "Ocsp status $fqdn is OK")
 }
 
+test("Certificate before revocation is a signer certificte") with {
+	certs = ``$BEAME_INSTA_SSL_BIN creds signers --format json``
+	assert(fqdn in certs.fqdn)
+	TestMessage("Signers list does contain credentials: $fqdn")
+}
+
 test("Revoke cert") with {
 	# TODO: real test
 	# TODO: test with children - should get "can't be revoked, because children exists"
@@ -359,7 +371,15 @@ test("Revoke cert") with {
     assert_has(s.message, "$fqdn Certificate has been revoked successfully")
 }
 
+test("Revoked certificate is not a signer certificte") with {
+	certs = ``$BEAME_INSTA_SSL_BIN creds signers --format json``
+	assert(fqdn not in certs.fqdn)
+	TestMessage("Signers list does not contain revoked credentials: $fqdn")
+}
+
 test("OCSP test after revocation") with {
 	s = retry(body={``$BEAME_INSTA_SSL_BIN creds checkOcsp --fqdn $fqdn --forceCheck true --format json``},success_predicate={A.status==false},fail_cb={throw TestFail("Check OCSP for $fqdn failed")})
     assert_hash_keys_values(s, {'status': false}, "Ocsp status $fqdn revoked")
 }
+
+echo("All tests passed")
