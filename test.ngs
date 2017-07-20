@@ -17,25 +17,9 @@ EXPECTED_EXPORTED_FILE_EXTENSIONS = %[pem key chain.p7b pkcs12 pkcs12.pwd]
 
 # ---------- Utilities ----------
 
-F base64encode(s:Str) {
-	fname = "/tmp/base64.${c_getpid()}"
-	$(echo $s >$fname)
-	ret = `base64 -w0 <$fname`
-	$(rm $fname)
-	log("base64 done")
-	ret
-}
+F base64decode(s:Str) `echo $s | base64 -d`
 
-F base64decode(s:Str) {
-	fname = "/tmp/base64decode.${c_getpid()}"
-	$(echo $s >$fname)
-	ret = `base64 -d <$fname`
-	$(rm $fname)
-	log("base64 decode done")
-	ret
-}
-
-F fqdn_dir(fqdn) "$HOME/.beame/v2/$fqdn"
+F fqdn_dir(fqdn) BEAME_DIR / 'v2' / fqdn
 
 # ---------- Tests code ----------
 
@@ -239,13 +223,8 @@ each({
 
 # ---------------------------test_dns(fqdn)
 
-each({
-	"new": %[make --dst 65500 --proto]
-}, F (cli_type:Str, argv:Arr) {
-
-	test("Terminating tunnel without fqdn ($cli_type CLI)", {
-		http_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel $*argv http), 'localhost')
-	})
+test("Terminating tunnel without fqdn", {
+	http_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel make --dst 65500 --proto http), fqdn)
 })
 
 # ---------- 2 or more certificates test ----------

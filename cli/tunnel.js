@@ -31,7 +31,7 @@ function make(fqdn, dst, hostname, proto, highestFqdn, trustDepth, noAuth, callb
 					dstPort = parseInt(dst[1]);
 				}
 
-				dstHostname = hostname || dstHost;
+				dstHostname = hostname || fqdn;
 
 				const tunnelObj = require('../lib/tunnel');
 
