@@ -166,8 +166,12 @@ test("Run without certificates (new CLI, text)") with {
 	should_fail_with_text(%($BEAME_INSTA_SSL_BIN creds list), 'you have no certificates')
 }
 
-test("Run without certificates (new CLI, json)") with {
-	should_fail_with_text(%($BEAME_INSTA_SSL_BIN creds list --format json), 'you have no certificates')
+test("Creds list without certificates (new CLI, json)") with {
+	assert_eq(``$BEAME_INSTA_SSL_BIN creds list --format json``, [], 'Empty creds list')
+}
+
+test("Signers list without certificates (new CLI, json)") with {
+	assert_eq(``$BEAME_INSTA_SSL_BIN creds signers --format json``, [], 'Empty signers list')
 }
 
 # ---------- One certificate test ----------
