@@ -12,6 +12,7 @@ const logger      = new BeameLogger("BIS-Credentials");
 const fs          = require('fs');
 const path        = require('path');
 const Table       = require('cli-table2');
+const sdkCreds    = beameSDK.creds;
 
 const properties2fnames = {
 	X509:        '@FQDN@.pem',
@@ -159,19 +160,33 @@ function syncmeta(fqdn,callback) {
 }
 syncmeta.toText = _lineToText;
 
-
-const list = _list;
-
+//
+// const list = _list;
+//
 list.toText = function (creds) {
 	let table = new Table({
 		head:      ['name', 'fqdn', 'parent','valid' ,'priv/k'],
-		colWidths: [40, 65, 55, 25,10]
+		colWidths: [35, 55, 55, 25,10]
 	});
 	creds.forEach(item => {
 		table.push([item.getMetadataKey("Name"), item.fqdn, item.getMetadataKey('PARENT_FQDN'),_getCertEnd(item) ,item.getKey('PRIVATE_KEY') ? 'Y' : 'N']);
 	});
 	return table;
 };
+/**
+ * Return list of credentials
+ * @public
+ * @method Creds.list
+ * @param {String|null} [regex] entity fqdn
+ * @param {Boolean|null} hasPrivateKey
+ * @param {Number|null} expiration in days
+ * @param {Boolean|null} anyParent
+ * @param {string} [filter]
+ * @returns {Array.<Credential>}
+ */
+function list(regex, hasPrivateKey, expiration, anyParent, filter) {
+	return(sdkCreds.list(regex, hasPrivateKey, expiration, anyParent, filter));
+}
 
 function signers(callback){
 	const store = new BeameStore();
@@ -316,30 +331,35 @@ revokeCert.toText = _lineToText;
  * @param {String|null} [signerAuthToken]
  * @param {String} fqdn
  * @param {Number|null|undefined} [validityPeriod] => in seconds
+ * @param {String} [filter]
+ * @param {String} [regex]
  * @param {Function} callback
  */
-function renewCert(signerAuthToken, fqdn, validityPeriod, callback) {
-
-	if (!fqdn) {
-		throw new Error(`signerAuthToken or fqdn required`);
-	}
-
-	let authToken;
-
-	if (signerAuthToken) {
-		let parsed = CommonUtils.parse(signerAuthToken, false);
-
-		if (typeof parsed == "object") {
-			authToken = parsed;
-		}
-		else {
-			authToken = CommonUtils.parse(parsed, false);
-		}
-	}
-
-	let cred = new Credential(new BeameStore());
-
-	CommonUtils.promise2callback(cred.renewCert(authToken, fqdn, validityPeriod).then(returnOK), callback);
+function renewCert(signerAuthToken, fqdn, validityPeriod, filter, regex, callback) {
+	sdkCreds.renew(signerAuthToken, fqdn, validityPeriod, filter, regex, (err, data) => {
+		if(err)logger.error(err);
+		else returnOK();
+	});
+	// if (!fqdn) {
+	// 	throw new Error(`signerAuthToken or fqdn required`);
+	// }
+	//
+	// let authToken;
+	//
+	// if (signerAuthToken) {
+	// 	let parsed = CommonUtils.parse(signerAuthToken, false);
+	//
+	// 	if (typeof parsed == "object") {
+	// 		authToken = parsed;
+	// 	}
+	// 	else {
+	// 		authToken = CommonUtils.parse(parsed, false);
+	// 	}
+	// }
+	//
+	// let cred = new Credential(new BeameStore());
+	//
+	// CommonUtils.promise2callback(cred.renewCert(authToken, fqdn, validityPeriod).then(returnOK), callback);
 }
 renewCert.toText = _lineToText;
 
@@ -465,6 +485,7 @@ listCredChain.toText = function (list) {
 	}
 	return table;
 };
+
 
 module.exports = {
 	list,
