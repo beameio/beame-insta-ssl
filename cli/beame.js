@@ -190,7 +190,7 @@ function main() {
 	subCmdName = argv._[1];
 	cmd        = commands[cmdName];
 
-	if (`${cmdName} ${subCmdName}` != 'creds getCreds') {
+	if (`${cmdName} ${subCmdName}` != 'creds getCreds' && argv.format != 'json') {
 		let credsCount = require('./creds').list().length;
 
 		if (!credsCount) {
