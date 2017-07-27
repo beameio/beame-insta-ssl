@@ -75,7 +75,7 @@ const parametersSchema = {
 	'trustDepth':         {required: false},
 	'noAuth':             {required: false},
 	'filter':             {required: false},
-	'hasPrivateKey':      {required: false},
+	'hasPrivateKey':      {required: false, default: 'true'},
 	'expiration':         {required: false},
 	'anyParent':          {required: false}
 };
@@ -98,7 +98,7 @@ function defaultTheOnlyFqdn(args) {
 		return args.fqdn;
 	}
 
-	let allCerts = require('./creds').list();
+	let allCerts = require('./creds').list(null, 'true');
 	if (allCerts.length > 1) {
 		console.log("--fqdn parameter is required because you have more than one certificate");
 		console.log("Possible FQDNs are:");

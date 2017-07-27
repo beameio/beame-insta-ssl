@@ -72,38 +72,6 @@ F should_fail_with_text(cp:CommandsPipeline, text:Str) {
 	}
 }
 
-doc Tests non-terminating tunnel
-F https_target_tunnel(cp:CommandsPipeline) {
-	t = time().Str()
-	cp.options['&'] = true
-	processes = [
-		$(node testHttpsServer.js $fqdn $t &)
-		$($cp)
-	]
-	echo("waiting for fqdn $fqdn $t")
-	assert_resolvable(fqdn)
-	out = retry(body={`curl --silent --max-time 30 "https://$fqdn/"`})
-	processes % kill
-	out != t throws TestFail("Result from server is missing or incorrect: '$out' vs '$t'")
-	TestMessage('Result from server is OK')
-}
-
-doc Tests terminating tunnel
-F http_target_tunnel(cp:CommandsPipeline, expected_hostname:Str, proto='https') {
-	t = time().Str()
-	cp.options['&'] = true
-	processes = [
-		$(node testHttpServer.js $t &)
-		$($cp)
-	]
-	echo("waiting for fqdn $fqdn")
-	assert_resolvable(fqdn)
-	out = retry(body={`curl --silent --max-time 30 "$proto://$fqdn/"`})
-	processes % kill
-	out != "$t-$expected_hostname" throws TestFail("Result from server is missing or incorrect: '$out' vs '$t-$expected_hostname'")
-	TestMessage('Result from server is OK')
-}
-
 doc Waits till hostname becomes resolvable (has DNS record)
 F test_dns(fqdn:Str) {
 
@@ -227,8 +195,8 @@ each({
 
 # ---------------------------test_dns(fqdn)
 
-test("Terminating tunnel without fqdn", {
-	http_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel make --dst 65500 --proto http), fqdn)
+test("Tunnel without FQDN", {
+	$(top_level:: ./test_tunnels.ngs --no-use_fqdn $fqdn)
 })
 
 # ---------- 2 or more certificates test ----------
@@ -277,27 +245,14 @@ test("Run tunnel not specifying fqdn", {
 	should_fail_with_text(%($BEAME_INSTA_SSL_BIN tunnel 65500 https), 'more than one')
 })
 
-each({
-	"old": %[65500]
-	"new": %[make --dst 65500 --proto]
-}, F (cli_type:Str, argv:Arr) {
-	test("eehttp tunnel with fqdn ($cli_type CLI)", {
-		http_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel $*argv eehttp --fqdn $fqdn), fqdn, 'http')
-	})
-
-	test("Non-terminating tunnel with fqdn ($cli_type CLI)", {
-		https_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel $*argv https --fqdn $fqdn))
-	})
-
-	test("Terminating tunnel with fqdn ($cli_type CLI)", {
-		http_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel $*argv http --fqdn $fqdn --hostname test1.example.com), 'test1.example.com')
-	})
+test("Tunnels", {
+	$(top_level:: ./test_tunnels.ngs $fqdn)
 })
 
 test("Renewing cert for $fqdn") with {
 	# TODO: check with other args
-	s = ``$BEAME_INSTA_SSL_BIN creds renewCert --fqdn $fqdn --format json``
-	assert_hash_keys_values(s, {'status': 'ok'}, "Status OK")
+	$($BEAME_INSTA_SSL_BIN creds renewCert --fqdn $fqdn --format json)
+	"Renew done"
 }
 
 

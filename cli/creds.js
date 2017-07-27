@@ -33,12 +33,6 @@ function _lineToText(line) {
 	return table;
 }
 
-function _list() {
-	let store = new BeameStore();
-	return store.list(null, {hasPrivateKey: true});
-}
-
-
 /**
  *
  * @param {String|null|undefined} [regToken]
@@ -160,19 +154,6 @@ function syncmeta(fqdn,callback) {
 }
 syncmeta.toText = _lineToText;
 
-//
-// const list = _list;
-//
-list.toText = function (creds) {
-	let table = new Table({
-		head:      ['name', 'fqdn', 'parent','valid' ,'priv/k'],
-		colWidths: [35, 55, 55, 25,10]
-	});
-	creds.forEach(item => {
-		table.push([item.getMetadataKey("Name"), item.fqdn, item.getMetadataKey('PARENT_FQDN'),_getCertEnd(item) ,item.getKey('PRIVATE_KEY') ? 'Y' : 'N']);
-	});
-	return table;
-};
 /**
  * Return list of credentials
  * @public
@@ -187,6 +168,16 @@ list.toText = function (creds) {
 function list(regex, hasPrivateKey, expiration, anyParent, filter) {
 	return(sdkCreds.list(regex, hasPrivateKey, expiration, anyParent, filter));
 }
+list.toText = function (creds) {
+	let table = new Table({
+		head:      ['name', 'fqdn', 'parent','valid' ,'priv/k'],
+		colWidths: [35, 55, 55, 25,10]
+	});
+	creds.forEach(item => {
+		table.push([item.getMetadataKey("Name"), item.fqdn, item.getMetadataKey('PARENT_FQDN'),_getCertEnd(item) ,item.getKey('PRIVATE_KEY') ? 'Y' : 'N']);
+	});
+	return table;
+};
 
 function signers(callback){
 	const store = new BeameStore();
