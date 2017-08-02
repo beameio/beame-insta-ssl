@@ -17,25 +17,9 @@ EXPECTED_EXPORTED_FILE_EXTENSIONS = %[pem key chain.p7b pkcs12 pkcs12.pwd]
 
 # ---------- Utilities ----------
 
-F base64encode(s:Str) {
-	fname = "/tmp/base64.${c_getpid()}"
-	$(echo $s >$fname)
-	ret = `base64 -w0 <$fname`
-	$(rm $fname)
-	log("base64 done")
-	ret
-}
+F base64decode(s:Str) `echo $s | base64 -d`
 
-F base64decode(s:Str) {
-	fname = "/tmp/base64decode.${c_getpid()}"
-	$(echo $s >$fname)
-	ret = `base64 -d <$fname`
-	$(rm $fname)
-	log("base64 decode done")
-	ret
-}
-
-F fqdn_dir(fqdn) "$HOME/.beame/v2/$fqdn"
+F fqdn_dir(fqdn) BEAME_DIR / 'v2' / fqdn
 
 # ---------- Tests code ----------
 
@@ -78,46 +62,14 @@ F remove_from_store() {
 }
 
 doc Checks that process outputs specific text and exists with non-zero code
-F should_fail_with_text(cmd:Command, text:Str) {
+F should_fail_with_text(cp:CommandsPipeline, text:Str) {
 	try {
-		$($cmd)
+		$($cp)
 		throw TestFail('Exited with code 0')
 	} catch(e:ProcessFail) {
 		text not in e.process.stdout throws TestFail("No expected text in output")
 		return 'Expected text found'
 	}
-}
-
-doc Tests non-terminating tunnel
-F https_target_tunnel(cmd:Command) {
-	t = time().Str()
-	cmd.options['&'] = true
-	processes = [
-		$(node testHttpsServer.js $fqdn $t &)
-		$($cmd)
-	]
-	echo("waiting for fqdn $fqdn $t")
-	assert_resolvable(fqdn)
-	out = retry(body={`curl --silent --max-time 30 "https://$fqdn/"`})
-	processes % kill
-	out != t throws TestFail("Result from server is missing or incorrect: '$out' vs '$t'")
-	TestMessage('Result from server is OK')
-}
-
-doc Tests terminating tunnel
-F http_target_tunnel(cmd:Command, expected_hostname:Str, proto='https') {
-	t = time().Str()
-	cmd.options['&'] = true
-	processes = [
-		$(node testHttpServer.js $t &)
-		$($cmd)
-	]
-	echo("waiting for fqdn $fqdn")
-	assert_resolvable(fqdn)
-	out = retry(body={`curl --silent --max-time 30 "$proto://$fqdn/"`})
-	processes % kill
-	out != "$t-$expected_hostname" throws TestFail("Result from server is missing or incorrect: '$out' vs '$t-$expected_hostname'")
-	TestMessage('Result from server is OK')
 }
 
 doc Waits till hostname becomes resolvable (has DNS record)
@@ -201,6 +153,12 @@ test("List certificates - one certificate (new CLI, json)", {
 	TestMessage('List is OK')
 })
 
+test("List signers certificates - one certificate", {
+	certs = ``$BEAME_INSTA_SSL_BIN creds signers --format json``
+	assert(certs.fqdn == [fqdn])
+	TestMessage('Signers list is OK')
+})
+
 test("Fix metadata (old CLI)", {
 	corrupt_metadata_json()
 	$($BEAME_INSTA_SSL_BIN syncmeta)
@@ -216,13 +174,13 @@ test("Fix metadata (new CLI)", {
 each({
 	"old": %($BEAME_INSTA_SSL_BIN export $fqdn DIR)
 	"new": %($BEAME_INSTA_SSL_BIN creds exportCred --fqdn $fqdn --dir DIR)
-}, F(cli_type:Str, c:Command) {
+}, F(cli_type:Str, cp:CommandsPipeline) {
 	test("Export certificate ($cli_type CLI)", {
 		dir = `mktemp --tmpdir -d test-beame-insta-ssl.XXXXXXXXXX` - MaybeSfx('\n')
-		c.argv .= replace('DIR', dir)
+		cp.commands[0].argv .= replace('DIR', dir)
 		finally()
 			body => {
-				$($c)
+				$($cp)
 				EXPECTED_EXPORTED_FILE_EXTENSIONS.each(F(ext) {
 					f = "$dir/$fqdn.$ext"
 					not($(test -s $f)) throws TestFail("File $f not found")
@@ -237,14 +195,11 @@ each({
 
 # ---------------------------test_dns(fqdn)
 
-each({
-	"new": %[make --dst 65500 --proto]
-}, F (cli_type:Str, argv:Arr) {
-
-	test("Terminating tunnel without fqdn ($cli_type CLI)", {
-		http_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel $*argv http), 'localhost')
+if not(ENV.get('SKIP_TUNNELS')) {
+	test("Tunnel without FQDN", {
+		$(top_level:: ./test_tunnels.ngs --no-use_fqdn $fqdn)
 	})
-})
+}
 
 # ---------- 2 or more certificates test ----------
 
@@ -288,31 +243,16 @@ test("List certificates - two certificates (new CLI, json)", {
 	TestMessage('List is OK')
 })
 
-test("Run tunnel not specifying fqdn", {
-	should_fail_with_text(%($BEAME_INSTA_SSL_BIN tunnel 65500 https), 'more than one')
-})
-
-each({
-	"old": %[65500]
-	"new": %[make --dst 65500 --proto]
-}, F (cli_type:Str, argv:Arr) {
-	test("eehttp tunnel with fqdn ($cli_type CLI)", {
-		http_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel $*argv eehttp --fqdn $fqdn), fqdn, 'http')
+if not(ENV.get('SKIP_TUNNELS')) {
+	test("Tunnels", {
+		$(top_level:: ./test_tunnels.ngs $fqdn)
 	})
-
-	test("Non-terminating tunnel with fqdn ($cli_type CLI)", {
-		https_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel $*argv https --fqdn $fqdn))
-	})
-
-	test("Terminating tunnel with fqdn ($cli_type CLI)", {
-		http_target_tunnel(%($BEAME_INSTA_SSL_BIN tunnel $*argv http --fqdn $fqdn --hostname test1.example.com), 'test1.example.com')
-	})
-})
+}
 
 test("Renewing cert for $fqdn") with {
 	# TODO: check with other args
-	s = ``$BEAME_INSTA_SSL_BIN creds renewCert --fqdn $fqdn --format json``
-	assert_hash_keys_values(s, {'status': 'ok'}, "Status OK")
+	$($BEAME_INSTA_SSL_BIN creds renewCert --fqdn $fqdn --format json)
+	"Renew done"
 }
 
 
@@ -338,6 +278,7 @@ F create_entity_under_fqdn(fqdn, idx) {
 	entity.fqdn
 }
 
+tcp_test_fqdn = fqdn
 for(i;2) {
 	# These tests must be towards the end as they update fqdn variable
 	test("Iteration [${i+1}/2] [fqdn $fqdn]") with {
@@ -347,11 +288,21 @@ for(i;2) {
 	}
 }
 
+test("TCP tunnel wrapper") with {
+	$(top_level:: ./test_tcp_tunnel.ngs $tcp_test_fqdn)
+}
+
 test_dns(fqdn)
 
 test("OCSP test") with {
 	s = ``$BEAME_INSTA_SSL_BIN creds checkOcsp --fqdn $fqdn --format json``
 	assert_hash_keys_values(s, {'status': true}, "Ocsp status $fqdn is OK")
+}
+
+test("Certificate before revocation is a signer certificte") with {
+	certs = ``$BEAME_INSTA_SSL_BIN creds signers --format json``
+	assert(fqdn in certs.fqdn)
+	TestMessage("Signers list does contain credentials: $fqdn")
 }
 
 test("Revoke cert") with {
@@ -363,7 +314,15 @@ test("Revoke cert") with {
     assert_has(s.message, "$fqdn Certificate has been revoked successfully")
 }
 
+test("Revoked certificate is not a signer certificte") with {
+	certs = ``$BEAME_INSTA_SSL_BIN creds signers --format json``
+	assert(fqdn not in certs.fqdn)
+	TestMessage("Signers list does not contain revoked credentials: $fqdn")
+}
+
 test("OCSP test after revocation") with {
 	s = retry(body={``$BEAME_INSTA_SSL_BIN creds checkOcsp --fqdn $fqdn --forceCheck true --format json``},success_predicate={A.status==false},fail_cb={throw TestFail("Check OCSP for $fqdn failed")})
     assert_hash_keys_values(s, {'status': false}, "Ocsp status $fqdn revoked")
 }
+
+echo("All tests passed")

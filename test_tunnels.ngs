@@ -1,0 +1,62 @@
+#!/usr/bin/env ngs
+
+BEAME_INSTA_SSL_BIN = './main.js'
+
+doc Tests terminating tunnel
+F http_target_tunnel(fqdn:Str, cp:CommandsPipeline, expected_hostname:Str, proto='https') {
+	t = time().Str()
+	cp.options['&'] = true
+	processes = [
+		$(node testHttpServer.js $t &)
+		$($cp)
+	]
+	echo("waiting for fqdn $fqdn to be resolvable")
+	assert_resolvable(fqdn)
+	out = retry(body={`curl --silent --max-time 30 "$proto://$fqdn/"`})
+	processes % kill
+	out != "$t-$expected_hostname" throws TestFail("Result from server is missing or incorrect: '$out' vs '$t-$expected_hostname'")
+	TestMessage('Result from server is OK')
+}
+
+doc Tests non-terminating tunnel
+F https_target_tunnel(fqdn:Str, cp:CommandsPipeline) {
+	t = time().Str()
+	cp.options['&'] = true
+	processes = [
+		$(node testHttpsServer.js $fqdn $t &)
+		$($cp)
+	]
+	echo("waiting for fqdn $fqdn $t")
+	assert_resolvable(fqdn)
+	out = retry(body={`curl --silent --max-time 30 "https://$fqdn/"`})
+	processes % kill
+	out != t throws TestFail("Result from server is missing or incorrect: '$out' vs '$t'")
+	TestMessage('Result from server is OK')
+}
+
+F main(fqdn:Str, use_fqdn:Bool=true) {
+	each({
+		"old": %[65500]
+		"new": %[make --dst 65500 --proto]
+	}, F (cli_type:Str, argv:Arr) {
+
+		if use_fqdn {
+			test("eehttp tunnel with fqdn ($cli_type CLI)", {
+				http_target_tunnel(fqdn, %($BEAME_INSTA_SSL_BIN tunnel $*argv eehttp --fqdn $fqdn), fqdn, 'http')
+			})
+
+			test("Non-terminating tunnel with fqdn ($cli_type CLI)", {
+				https_target_tunnel(fqdn, %($BEAME_INSTA_SSL_BIN tunnel $*argv https --fqdn $fqdn))
+			})
+
+			test("Terminating tunnel with fqdn ($cli_type CLI)", {
+				http_target_tunnel(fqdn, %($BEAME_INSTA_SSL_BIN tunnel $*argv http --fqdn $fqdn --hostname test1.example.com), 'test1.example.com')
+			})
+		} else {
+			test("Terminating tunnel without fqdn", {
+				http_target_tunnel(fqdn, %($BEAME_INSTA_SSL_BIN tunnel make --dst 65500 --proto http), fqdn)
+			})
+		}
+	})
+	echo("+ All tunnel tests passed")
+}

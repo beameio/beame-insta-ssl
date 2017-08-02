@@ -33,12 +33,6 @@ function _lineToText(line) {
 	return table;
 }
 
-function _list() {
-	let store = new BeameStore();
-	return store.list(null, {hasPrivateKey: true});
-}
-
-
 /**
  *
  * @param {String|null|undefined} [regToken]
@@ -160,9 +154,20 @@ function syncmeta(fqdn,callback) {
 }
 syncmeta.toText = _lineToText;
 
-//
-// const list = _list;
-//
+/**
+ * Return list of credentials
+ * @public
+ * @method Creds.list
+ * @param {String|null} [regex] entity fqdn
+ * @param {Boolean|null} hasPrivateKey
+ * @param {Number|null} expiration in days
+ * @param {Boolean|null} anyParent
+ * @param {string} [filter]
+ * @returns {Array.<Credential>}
+ */
+function list(regex, hasPrivateKey, expiration, anyParent, filter) {
+	return(sdkCreds.list(regex, hasPrivateKey, expiration, anyParent, filter));
+}
 list.toText = function (creds) {
 	let table = new Table({
 		head:      ['name', 'fqdn', 'parent','valid' ,'priv/k'],
@@ -187,6 +192,29 @@ list.toText = function (creds) {
 function list(regex, hasPrivateKey, expiration, anyParent, filter) {
 	return(sdkCreds.list(regex, hasPrivateKey, expiration, anyParent, filter));
 }
+
+function signers(callback){
+	const store = new BeameStore();
+
+	CommonUtils.promise2callback(store.getActiveLocalCreds(), callback);
+}
+signers.toText =  function (creds) {
+	let table = new Table({
+		head:      ['name', 'fqdn'],
+		colWidths: [120, 120]
+	});
+
+	const _setStyle = (value, cred) => {
+		let val = value || '';
+		return cred.expired === true ? colors.red(val) : val;
+	};
+
+	creds.forEach(item => {
+
+		table.push([_setStyle(item.name, item), _setStyle(item.fqdn, item)]);
+	});
+	return table;
+};
 
 function signers(callback){
 	const store = new BeameStore();
