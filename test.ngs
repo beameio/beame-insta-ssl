@@ -195,9 +195,11 @@ each({
 
 # ---------------------------test_dns(fqdn)
 
-test("Tunnel without FQDN", {
-	$(top_level:: ./test_tunnels.ngs --no-use_fqdn $fqdn)
-})
+if not(ENV.get('SKIP_TUNNELS')) {
+	test("Tunnel without FQDN", {
+		$(top_level:: ./test_tunnels.ngs --no-use_fqdn $fqdn)
+	})
+}
 
 # ---------- 2 or more certificates test ----------
 
@@ -241,13 +243,11 @@ test("List certificates - two certificates (new CLI, json)", {
 	TestMessage('List is OK')
 })
 
-test("Run tunnel not specifying fqdn", {
-	should_fail_with_text(%($BEAME_INSTA_SSL_BIN tunnel 65500 https), 'more than one')
-})
-
-test("Tunnels", {
-	$(top_level:: ./test_tunnels.ngs $fqdn)
-})
+if not(ENV.get('SKIP_TUNNELS')) {
+	test("Tunnels", {
+		$(top_level:: ./test_tunnels.ngs $fqdn)
+	})
+}
 
 test("Renewing cert for $fqdn") with {
 	# TODO: check with other args
@@ -278,6 +278,7 @@ F create_entity_under_fqdn(fqdn, idx) {
 	entity.fqdn
 }
 
+tcp_test_fqdn = fqdn
 for(i;2) {
 	# These tests must be towards the end as they update fqdn variable
 	test("Iteration [${i+1}/2] [fqdn $fqdn]") with {
@@ -285,6 +286,10 @@ for(i;2) {
 		fqdn = create_entity_under_fqdn(fqdn, i)
 		TestMessage("New entity: $fqdn")
 	}
+}
+
+test("TCP tunnel wrapper") with {
+	$(top_level:: ./test_tcp_tunnel.ngs $tcp_test_fqdn)
 }
 
 test_dns(fqdn)

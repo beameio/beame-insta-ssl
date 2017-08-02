@@ -1,0 +1,50 @@
+#!/usr/bin/env ngs
+
+# TODO: different order, parallel requests (not starting at same time, like ssh+rsync)
+
+# Port on which testHttpServer listens
+DST_PORT = 65500
+ENTRY_PORT = 65501
+
+F main(server_fqdn:Str, trust_fqdn:Str, client_fqdn:Str) {
+	test("TCP tunnel") with {
+		t = time().Str()
+		host_header = "h${rand(1000)}"
+		processes = [
+			$(node testHttpServer.js $t &)
+			$(./main.js tunnel make --dst $DST_PORT --proto tcp --fqdn $server_fqdn --highestFqdn $trust_fqdn &)
+		]
+
+		$(sleep 2)
+		processes.push($(./main.js tunnelClient make --dst $ENTRY_PORT --fqdn $client_fqdn --src $server_fqdn &))
+		# TODO: debug why this is needed by tunnelClient
+		$(sleep 2)
+
+		finally() 
+			body => {
+				echo("Waiting for fqdn $server_fqdn to be resolvable")
+				assert_resolvable(server_fqdn)
+				echo("Making request via tunnel")
+				out = retry(times=10, sleep=5)
+					body => {`curl --silent --max-time 30 "http://127.0.0.1:$ENTRY_PORT/" -H "Host: $host_header"`}
+				assert_eq(out, "$t-$host_header", "HTTP response over tunnel")
+			}
+			cleanup => {
+				echo("Killing processes")
+				processes.each(kill)
+			}
+	}
+}
+
+F main(l0_fqdn:Str) {
+	echo("+ Got L0 fqdn: $l0_fqdn . Will look for two children for tunnel ends")
+	children = ``./main.js creds list --anyParent $l0_fqdn --format json``.metadata.fqdn
+	# echo(children)
+	signers = ``./main.js creds signers --format json``.fqdn
+	fqdns_to_use = signers.filter(X in children).sort()
+	assert(len(fqdns_to_use) >= 2, "Could not find at least two signers creds under $l0_fqdn")
+	echo("+ Server side: ${fqdns_to_use[0]}")
+	echo("+ Client side: ${fqdns_to_use[1]}")
+	main(fqdns_to_use[0], l0_fqdn, fqdns_to_use[1])
+
+}
