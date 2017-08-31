@@ -61,6 +61,7 @@ function getCreds(regToken, fqdn, name, email, callback) {
 
 	CommonUtils.promise2callback(promise, callback);
 }
+
 getCreds.toText = _lineToText;
 
 /**
@@ -89,6 +90,7 @@ function getRegToken(fqdn, name, email, ttl, callback) {
 	CommonUtils.promise2callback(_get(), callback);
 
 }
+
 getRegToken.toText = x => x;
 
 /**
@@ -109,17 +111,17 @@ function invite(fqdn, name, email, ttl, callback) {
 		return;
 	}
 
-	const emailServices= new (require('../lib/email'))();
-	const Constants = require('../constants');
+	const emailServices = new (require('../lib/email'))();
+	const Constants     = require('../constants');
 
-	function _onTokenReceived(token){
+	function _onTokenReceived(token) {
 
 		return new Promise((resolve, reject) => {
-			logger.info(`Registration token received`);
-			emailServices.sendEmail(fqdn, name, email, token).then(()=>{
-				logger.info(`Registration token sent successfully to ${email}`);
-				resolve(token);
-			}).catch(reject);
+				logger.info(`Registration token received`);
+				emailServices.sendEmail(fqdn, name, email, token).then(() => {
+					logger.info(`Registration token sent successfully to ${email}`);
+					resolve(token);
+				}).catch(reject);
 			}
 		);
 	}
@@ -127,8 +129,8 @@ function invite(fqdn, name, email, ttl, callback) {
 	function _get() {
 		return new Promise((resolve, reject) => {
 
-				let cred = new Credential(new BeameStore()),
-					regToken = {fqdn, name, email, ttl, src:Constants.RegistrationSource.InstaSSL};
+				let cred     = new Credential(new BeameStore()),
+				    regToken = {fqdn, name, email, ttl, src: Constants.RegistrationSource.InstaSSL};
 
 				//noinspection JSCheckFunctionSignatures
 				cred.createRegistrationToken(regToken).then(_onTokenReceived).then(resolve).catch(reject);
@@ -139,6 +141,7 @@ function invite(fqdn, name, email, ttl, callback) {
 	CommonUtils.promise2callback(_get(), callback);
 
 }
+
 invite.toText = x => x;
 
 /**
@@ -146,12 +149,13 @@ invite.toText = x => x;
  * @param {Function} callback
  * @returns {Promise}
  */
-function syncmeta(fqdn,callback) {
+function syncmeta(fqdn, callback) {
 
 	let cred = new Credential(new BeameStore());
 
 	CommonUtils.promise2callback(cred.syncMetadata(fqdn), callback);
 }
+
 syncmeta.toText = _lineToText;
 
 /**
@@ -166,25 +170,27 @@ syncmeta.toText = _lineToText;
  * @returns {Array.<Credential>}
  */
 function list(regex, hasPrivateKey, expiration, anyParent, filter) {
-	return(sdkCreds.list(regex, hasPrivateKey, expiration, anyParent, filter));
+	return (sdkCreds.list(regex, hasPrivateKey, expiration, anyParent, filter));
 }
+
 list.toText = function (creds) {
 	let table = new Table({
-		head:      ['name', 'fqdn', 'parent','valid' ,'priv/k'],
-		colWidths: [35, 55, 55, 25,10]
+		head:      ['name', 'fqdn', 'parent', 'valid', 'priv/k'],
+		colWidths: [35, 55, 55, 25, 10]
 	});
 	creds.forEach(item => {
-		table.push([item.getMetadataKey("Name"), item.fqdn, item.getMetadataKey('PARENT_FQDN'),_getCertEnd(item) ,item.getKey('PRIVATE_KEY') ? 'Y' : 'N']);
+		table.push([item.getMetadataKey("Name"), item.fqdn, item.getMetadataKey('PARENT_FQDN'), _getCertEnd(item), item.getKey('PRIVATE_KEY') ? 'Y' : 'N']);
 	});
 	return table;
 };
 
-function signers(callback){
+function signers(callback) {
 	const store = new BeameStore();
 
 	CommonUtils.promise2callback(store.getActiveLocalCreds(), callback);
 }
-signers.toText =  function (creds) {
+
+signers.toText = function (creds) {
 	let table = new Table({
 		head:      ['name', 'fqdn'],
 		colWidths: [120, 120]
@@ -202,7 +208,7 @@ signers.toText =  function (creds) {
 	return table;
 };
 
-function _getCertEnd(item){
+function _getCertEnd(item) {
 
 	try {
 		return (new Date(item.certData.validity.end)).toLocaleString();
@@ -214,6 +220,7 @@ function _getCertEnd(item){
 function expandFileName(fname, fqdn) {
 	return fname.replace('@FQDN@', fqdn);
 }
+
 /**
  *
  * @param {String} fqdn
@@ -314,6 +321,7 @@ function revokeCert(signerAuthToken, signerFqdn, fqdn, callback) {
 	CommonUtils.promise2callback(cred.revokeCert(authToken, signerFqdn, fqdn), callback);
 	//CommonUtils.promise2callback(cred.revokeCert(signerAuthToken,signerFqdn, fqdn).then(returnOK), callback);
 }
+
 revokeCert.toText = _lineToText;
 
 /**
@@ -328,7 +336,7 @@ revokeCert.toText = _lineToText;
  */
 function renewCert(signerAuthToken, fqdn, validityPeriod, filter, regex, callback) {
 	sdkCreds.renew(signerAuthToken, fqdn, validityPeriod, filter, regex, (err, data) => {
-		if(err)logger.error(err);
+		if (err) logger.error(err);
 		else returnOK();
 	});
 	// if (!fqdn) {
@@ -352,6 +360,7 @@ function renewCert(signerAuthToken, fqdn, validityPeriod, filter, regex, callbac
 	//
 	// CommonUtils.promise2callback(cred.renewCert(authToken, fqdn, validityPeriod).then(returnOK), callback);
 }
+
 renewCert.toText = _lineToText;
 
 
@@ -362,21 +371,22 @@ renewCert.toText = _lineToText;
  * @param {Boolean|string|null} [forceCheck] => ignoring cache, when set to true
  * @param {Function} callback
  */
-function checkOcsp(fqdn, forceCheck, callback){
+function checkOcsp(fqdn, forceCheck, callback) {
 	if (!fqdn) {
 		throw new Error(`Fqdn required`);
 	}
 
 	let cred = (new BeameStore()).getCredential(fqdn);
 
-	if(!cred){
+	if (!cred) {
 		throw new Error(`Credential for ${fqdn} not found`);
 	}
 
 	let check = !!(forceCheck && forceCheck === "true");
 
-	CommonUtils.promise2callback(cred.checkOcspStatus(cred,check), callback);
+	CommonUtils.promise2callback(cred.checkOcspStatus(cred, check), callback);
 }
+
 checkOcsp.toText = x => {
 	return x.status === true ? `Certificate ${x.fqdn} is valid` : x.message;
 };
@@ -396,6 +406,7 @@ function setDns(fqdn, value, useBestProxy, dnsFqdn, callback) {
 	CommonUtils.promise2callback(cred.setDns(fqdn, value, useBestProxy || !value, dnsFqdn), callback);
 
 }
+
 setDns.toText = x => `DNS set to ${x}`;
 
 /**
@@ -411,6 +422,7 @@ function deleteDns(fqdn, dnsFqdn, callback) {
 	CommonUtils.promise2callback(cred.deleteDns(fqdn, dnsFqdn), callback);
 
 }
+
 deleteDns.toText = x => `DNS record for ${x} has been deleted`;
 
 /**
@@ -420,26 +432,39 @@ deleteDns.toText = x => `DNS record for ${x} has been deleted`;
  * @param {String} fqdn - lowest fqdn to start from
  * @param {String} targetFqdn
  * @param {String} highestFqdn
- * @param {int} trustDepth
+ * @param {Number|undefined} [trustDepth]
+ * @param {Boolean|undefined} [allowApprovers]
+ * @param {Boolean|undefined} [allowExpired]
  * @param {Function} callback
  */
-function verifyAncestry(fqdn, targetFqdn, highestFqdn, trustDepth, callback) {
-	if(typeof trustDepth !== 'undefined' && trustDepth!= null){
-		if(!Number.isInteger(trustDepth) || trustDepth<=0){
+function verifyAncestry(fqdn, targetFqdn, highestFqdn, trustDepth, allowApprovers, allowExpired, callback) {
+	if (typeof trustDepth !== 'undefined' && trustDepth !== null) {
+		if (!Number.isInteger(trustDepth) || trustDepth <= 0) {
 			console.error('trustDepth should be >= 1 (omit it to allow infinite depth)');
 			process.exit(1);
 		}
 	}
 	const store = new BeameStore();
-	store.verifyAncestry(fqdn, targetFqdn, highestFqdn, trustDepth, (error, related) => {
-		if(!error){
-			console.log(fqdn,' & ',targetFqdn,' related => ', related?'YES':'NO');
+
+	/** @type {VerifyAncestryOptions} **/
+	let options = {
+		highestFqdn,
+		trustDepth,
+		allowExpired:   CommonUtils.stringToBool(allowExpired ? allowExpired.toString() : false),
+		allowApprovers: CommonUtils.stringToBool(allowApprovers ? allowApprovers.toString() : true)
+	};
+
+	const _cb = (error, related) => {
+		if (!error) {
+			console.log(fqdn, ' & ', targetFqdn, ' related => ', related ? 'YES' : 'NO');
 		}
-		else{
+		else {
 			console.error(error);
 		}
 		callback(error, related);
-	});
+	};
+
+	store.verifyAncestry(fqdn, targetFqdn, options, _cb);
 }
 
 /**
@@ -447,19 +472,32 @@ function verifyAncestry(fqdn, targetFqdn, highestFqdn, trustDepth, callback) {
  * @public
  * @method Creds.listCredChain
  * @param {String} fqdn - lowest fqdn in required chain
+ * @param {Boolean|undefined} [allowApprovers]
  * @param {Function} callback
  */
-function listCredChain(fqdn, callback) {
+function listCredChain(fqdn, allowApprovers, callback) {
 	const store = new BeameStore();
-	store.fetchCredChain(fqdn, null,(error, list) => {
-		if(!error){
+
+	/** @type {FetchCredChainOptions}**/
+	let options = {
+		highestFqdn:    null,
+		allowRevoked:   false,
+		allowExpired:   false,
+		allowApprovers: CommonUtils.stringToBool(allowApprovers ? allowApprovers.toString() : true)
+	};
+
+	const _cb = (error, list) => {
+		if (!error) {
 			callback(null, list);
 		}
-		else{
+		else {
 			callback(error, false);
 		}
-	});
+	};
+
+	store.fetchCredChain(fqdn, options, _cb);
 }
+
 
 listCredChain.toText = function (list) {
 	let table = new Table({
@@ -471,7 +509,7 @@ listCredChain.toText = function (list) {
 		let val = value || '';
 		return cred.expired === true ? colors.red(val) : val;
 	};
-	for(let i=0; i<list.length; i++){
+	for (let i = 0; i < list.length; i++) {
 		table.push([_setStyle(list[i].metadata.level, list[i]), _setStyle(list[i].fqdn, list[i])]);
 	}
 	return table;
