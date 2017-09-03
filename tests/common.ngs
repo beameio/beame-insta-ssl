@@ -1,0 +1,128 @@
+# This file should contain only product agnostic parts
+# It is planned to be used across all relevant Beame.io products
+ns {
+
+	# ---------- type Test - begin ----------
+	type Test
+	global init
+
+	exit_hook_lock = Lock()
+
+	F setup(t:Test) {
+
+		env_vars = [
+			'BEAME_INTERNAL_AUTH_SERVER_FQDN'
+			'BEAME_DEV_AUTH_FQDN'
+		]
+		for e in env_vars {
+			assert(e in ENV, "Environment variable ${e} must be set")
+		}
+		
+		while true {
+			t.home = ENV.HOME / 'test-' + CHARS::ascii_lowercase.rand(4)
+			not(Path(t.home)) breaks
+		}
+		t.beame_dir = t.home / '.beame'
+
+		log("Test home directory is ${t.home}")
+		$(mkdir ${t.home})
+
+		exit_hook_lock.acquire({
+			exit_hook.push({
+				if ENV.get('KEEP_TEST_DIR') {
+					log("Keeping test directory ${t.home} as KEEP_TEST_DIR environment variable is set")
+					return
+				}
+				# Safety check
+				if not(t.home ~ /\/test-/) {
+					error("Not removing test home directory is ${t.home}")
+					return
+				}
+				log("Removing test home directory ${t.home}")
+				$(rm -r ${t.home})
+			})
+		})
+		t
+	}
+
+	global fqdn_dir
+	F fqdn_dir(t:Test, fqdn) t.beame_dir / 'v2' / fqdn
+
+	global copy_dev_cred_to_store
+	F copy_dev_cred_to_store(t:Test) {
+		log("Copying dev credential ${ENV.BEAME_DEV_AUTH_FQDN} to store")
+		$(cp -a "${ENV.HOME}/${ENV.BEAME_DEV_AUTH_FQDN}" ${t.fqdn_dir(ENV.BEAME_DEV_AUTH_FQDN)})
+	}
+
+	doc Removes Beame test requests signing credential from store
+	F remove_from_store() {
+		$(rm -r ${fqdn_dir(BEAME_DEV_AUTH_FQDN)})
+		TestMessage('Removed')
+	}
+
+	global create_token
+	F create_token(t:Test, cp:CommandsPipeline) {
+		token = null
+		test("Create token", {
+			token = ``$cp``
+			assert_string(token, "Token is a string")
+		})
+		token
+	}
+
+	# ---------- type Test - end ----------
+
+	EXPECTED_EXPORTED_FILE_EXTENSIONS = %[pem key chain.p7b pkcs12 pkcs12.pwd]
+
+	F base64decode(s:Str) `echo $s | base64 -d`
+
+	doc Checks that process outputs specific text and exists with non-zero code
+	F should_fail_with_text(cp:CommandsPipeline, text:Str) {
+		try {
+			$($cp)
+			throw TestFail('Exited with code 0')
+		} catch(e:ProcessFail) {
+			text not in e.process.stdout throws TestFail("No expected text in output")
+			return 'Expected text found'
+		}
+	}
+
+	F run(tests_sets:Hash, tests:Arr) {
+
+		all_tests = tests_sets.keys()
+
+		if not(tests) {
+			die("Please specify --tests. Either 'all' or one or more of: ${all_tests.join(',')} (comma separated)")
+		}
+
+		tests_to_run = []
+		for arg in tests {
+			econd {
+				arg == 'all' {
+					tests_to_run += all_tests
+				}
+				m = arg ~ /^[-](.+)$/ {
+					m[1] not in all_tests throws InvalidArgument("Unknown tests set ${m[1]}. Run without arguments to see tests sets.")
+					tests_to_run -= [m[1]]
+					
+				}
+				true {
+					arg not in all_tests throws InvalidArgument("Unknown tests set ${arg}. Run without arguments to see tests sets.")
+					tests_to_run += arg
+				}
+			}
+		}
+
+		results = tests_to_run.pmap(F(test_to_run) {
+			tests_sets[test_to_run](Test().setup())
+		})
+
+		results.each_idx_val(F(idx, e) {
+			if e is Exception {
+				error("-------------------- Exception in test set ${tests_to_run[idx]} --------------------")
+				print_exception(e)
+			}
+		})
+
+	}
+}

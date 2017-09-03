@@ -1,0 +1,67 @@
+#!/usr/bin/env ngs
+# require() does not work like in Node.js yet, you must run the tests
+# from the directory main.ngs resides in.
+
+BEAME_SDK_BIN =  '../node_modules/beame-sdk/src/cli/beame.js'
+BEAME_INSTA_SSL_BIN = '../main.js'
+beame_tests = require('./common.ngs')
+
+
+tests_sets = ns(Test=beame_tests::Test) {
+
+	F creds_basic(t:Test) {
+		test("Run without certificates (old CLI)") with {
+			beame_tests::should_fail_with_text(%(env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN list), 'you have no certificates')
+		}
+
+		test("Run without certificates (new CLI)") with {
+			beame_tests::should_fail_with_text(%(env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN creds list), 'you have no certificates')
+		}
+
+		test("Creds list without certificates (new CLI, json)") with {
+			assert_eq(``env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN creds list --format json``, [], 'Empty creds list')
+		}
+
+		test("Signers list without certificates (new CLI, json)") with {
+			assert_eq(``env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN creds signers --format json``, [], 'Empty signers list')
+		}
+
+
+		t.copy_dev_cred_to_store()
+
+		token_for_l0 = t.create_token(%(env "HOME=${t.home}" $BEAME_SDK_BIN token create --fqdn ${ENV.BEAME_DEV_AUTH_FQDN} --data NONE --format json))
+
+
+	}
+
+	doc Change to A record; Change to CNAME; Delete
+	F dns(t:Test) {
+		test("Change DNS to A record") with {
+			ip = '10.' + (rand.partial(256) * 3).map(Str).join(".")
+			$(env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN creds setDns --fqdn $fqdn --value $ip --format json)
+			assert_resolvable(fqdn, check={A == [ip]})
+		}
+
+		test("Change DNS to CNAME record") with {
+			cname = CHARS::ascii_lowercase.rand(16) + '.example.com'
+			$(env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN creds setDns --fqdn $fqdn --value $cname --format json)
+			assert_resolvable(fqdn, check={"${cname}." in A})
+		}
+
+		test("Delete DNS record") with {
+			deleted_fqdn = ``env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN creds deleteDns --fqdn $fqdn --format json``
+			# -- TODO assert unresolvable
+			assert_eq(deleted_fqdn,fqdn,"Deleted fqdn matched to requested")
+		}
+	}
+
+}
+
+F main(tests:Str) {
+	beame_tests::run(tests_sets, tests.split(','))
+
+}
+
+F main() {
+	beame_tests::run(tests_sets, [])
+}
