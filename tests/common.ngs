@@ -55,7 +55,7 @@ ns {
 
 	global copy_dev_cred_to_store
 	F copy_dev_cred_to_store(t:Test) {
-		log("Copying dev credential ${ENV.BEAME_DEV_AUTH_FQDN} to store")
+		debug("test", "Copying dev credential ${ENV.BEAME_DEV_AUTH_FQDN} to store")
 		$(mkdir -p ${t.beame_dir / 'v2'})
 		$(cp -a "${ENV.HOME}/${ENV.BEAME_DEV_AUTH_FQDN}" ${t.fqdn_dir(ENV.BEAME_DEV_AUTH_FQDN)})
 	}
