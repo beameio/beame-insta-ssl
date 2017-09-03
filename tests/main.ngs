@@ -11,51 +11,73 @@ tests_sets = ns(Test=beame_tests::Test) {
 
 	F creds_basic(t:Test) {
 		test("Run without certificates (old CLI)") with {
-			beame_tests::should_fail_with_text(%(env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN list), 'you have no certificates')
+			beame_tests::should_fail_with_text(%(env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN list 2>${true}), 'you have no certificates')
 		}
 
 		test("Run without certificates (new CLI)") with {
-			beame_tests::should_fail_with_text(%(env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN creds list), 'you have no certificates')
+			beame_tests::should_fail_with_text(%(env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN creds list 2>${true}), 'you have no certificates')
 		}
 
 		test("Creds list without certificates (new CLI, json)") with {
-			assert_eq(``env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN creds list --format json``, [], 'Empty creds list')
+			assert_eq(``env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN creds list --format json 2>${true}``, [], 'Empty creds list')
 		}
 
 		test("Signers list without certificates (new CLI, json)") with {
-			assert_eq(``env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN creds signers --format json``, [], 'Empty signers list')
+			assert_eq(``env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN creds signers --format json 2>${true}``, [], 'Empty signers list')
 		}
-
-
-		t.copy_dev_cred_to_store()
-
-		token_for_l0 = t.create_token(%(env "HOME=${t.home}" $BEAME_SDK_BIN token create --fqdn ${ENV.BEAME_DEV_AUTH_FQDN} --data NONE --format json))
-
 
 	}
 
 	doc Change to A record; Change to CNAME; Delete
 	F dns(t:Test) {
+		fqdn = t.get_creds()
 		test("Change DNS to A record") with {
 			ip = '10.' + (rand.partial(256) * 3).map(Str).join(".")
-			$(env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN creds setDns --fqdn $fqdn --value $ip --format json)
+			$(env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN creds setDns --fqdn $fqdn --value $ip --format json 2>${true})
 			assert_resolvable(fqdn, check={A == [ip]})
 		}
 
 		test("Change DNS to CNAME record") with {
 			cname = CHARS::ascii_lowercase.rand(16) + '.example.com'
-			$(env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN creds setDns --fqdn $fqdn --value $cname --format json)
+			$(env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN creds setDns --fqdn $fqdn --value $cname --format json 2>${true})
 			assert_resolvable(fqdn, check={"${cname}." in A})
 		}
 
 		test("Delete DNS record") with {
-			deleted_fqdn = ``env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN creds deleteDns --fqdn $fqdn --format json``
+			deleted_fqdn = ``env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN creds deleteDns --fqdn $fqdn --format json 2>${true}``
 			# -- TODO assert unresolvable
-			assert_eq(deleted_fqdn,fqdn,"Deleted fqdn matched to requested")
+			assert_eq(deleted_fqdn, fqdn, "Deleted fqdn matched to requested")
 		}
 	}
 
+	F get_creds(t:Test) {
+
+		t.copy_dev_cred_to_store()
+
+		token = t.create_token(%(env "HOME=${t.home}" $BEAME_SDK_BIN token create --fqdn ${ENV.BEAME_DEV_AUTH_FQDN} --data NONE --format json 2>${true}))
+
+		fqdn = null
+
+		beame_insta_ssl_token = {
+			'authToken': token
+			'authSrvFqdn': ENV.BEAME_INTERNAL_AUTH_SERVER_FQDN
+			'name': "test-${t.id}"
+			'email': "test-${t.id}@example.com"
+		}
+
+		test("Get creds", {
+			echo(beame_insta_ssl_token)
+			entity = ``env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN creds getCreds --regToken ${beame_insta_ssl_token.encode_json()} --format json 2>${true}``
+			assert_hash(entity, "Entity must be hash")
+			fqdn = entity.fqdn
+
+			TestMessage("Entity $fqdn created")
+		})
+
+		fqdn
+	}
 }
+
 
 F main(tests:Str) {
 	beame_tests::run(tests_sets, tests.split(','))

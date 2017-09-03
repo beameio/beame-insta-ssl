@@ -6,9 +6,14 @@ ns {
 	type Test
 	global init
 
-	exit_hook_lock = Lock()
+	_exit_hook_lock = Lock()
+
+	_id_lock = Lock()
 
 	F setup(t:Test) {
+
+		id = 1
+		_id_lock.acquire({ t.id = "${time()}-${id}"; id += 1 })
 
 		env_vars = [
 			'BEAME_INTERNAL_AUTH_SERVER_FQDN'
@@ -27,7 +32,7 @@ ns {
 		log("Test home directory is ${t.home}")
 		$(mkdir ${t.home})
 
-		exit_hook_lock.acquire({
+		_exit_hook_lock.acquire({
 			exit_hook.push({
 				if ENV.get('KEEP_TEST_DIR') {
 					log("Keeping test directory ${t.home} as KEEP_TEST_DIR environment variable is set")
@@ -51,6 +56,7 @@ ns {
 	global copy_dev_cred_to_store
 	F copy_dev_cred_to_store(t:Test) {
 		log("Copying dev credential ${ENV.BEAME_DEV_AUTH_FQDN} to store")
+		$(mkdir -p ${t.beame_dir / 'v2'})
 		$(cp -a "${ENV.HOME}/${ENV.BEAME_DEV_AUTH_FQDN}" ${t.fqdn_dir(ENV.BEAME_DEV_AUTH_FQDN)})
 	}
 
@@ -74,7 +80,7 @@ ns {
 
 	EXPECTED_EXPORTED_FILE_EXTENSIONS = %[pem key chain.p7b pkcs12 pkcs12.pwd]
 
-	F base64decode(s:Str) `echo $s | base64 -d`
+	F base64decode(s:Str) `echo $s | base64 -d 2>${true}`
 
 	doc Checks that process outputs specific text and exists with non-zero code
 	F should_fail_with_text(cp:CommandsPipeline, text:Str) {
@@ -119,9 +125,15 @@ ns {
 
 		results.each_idx_val(F(idx, e) {
 			if e is Exception {
-				error("-------------------- Exception in test set ${tests_to_run[idx]} --------------------")
+				error("-------------------- Exception in test set '${tests_to_run[idx]}' --------------------")
 				print_exception(e)
 			}
+		})
+
+		failed_count = results.count(Exception)
+
+		exit_hook.push({
+			echo("TESTS PASSED: ${results.len() - failed_count}/${results.len()}")
 		})
 
 	}
