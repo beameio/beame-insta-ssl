@@ -2,6 +2,8 @@
 # It is planned to be used across all relevant Beame.io products
 ns {
 
+	test
+
 	# ---------- type Test - begin ----------
 	type Test
 	global init
@@ -67,12 +69,9 @@ ns {
 	}
 
 	global create_token
-	F create_token(t:Test, cp:CommandsPipeline) {
-		token = null
-		test("Create token", {
-			token = ``$cp``
-			assert_string(token, "Token is a string")
-		})
+	F create_token(group_name:Str, cp:CommandsPipeline) {
+		token = ``$cp``
+		assert_string(token, "Token is a string")
 		token
 	}
 
@@ -95,7 +94,7 @@ ns {
 
 	F run(tests_sets:Hash, tests:Arr) {
 
-		all_tests = tests_sets.keys()
+		all_tests = tests_sets.keys().reject(/^_/)
 
 		if not(tests) {
 			die("Please specify --tests. Either 'all' or one or more of: ${all_tests.join(',')} (comma separated)")
@@ -114,27 +113,68 @@ ns {
 				}
 				true {
 					arg not in all_tests throws InvalidArgument("Unknown tests set ${arg}. Run without arguments to see tests sets.")
-					tests_to_run += arg
+					tests_to_run += [arg]
 				}
 			}
 		}
 
-		results = tests_to_run.pmap(F(test_to_run) {
-			tests_sets[test_to_run](Test().setup())
-		})
+		r = TestsResults()
+		threads_results = null
 
-		results.each_idx_val(F(idx, e) {
-			if e is Exception {
-				error("-------------------- Exception in test set '${tests_to_run[idx]}' --------------------")
-				print_exception(e)
+		status_display = Thread({
+			$(sleep 1)
+			prev = null
+			while not(threads_results) {
+				x = r.inspect()
+				if x != prev {
+					echo("-------------------- ${Time()} --------------------")
+					x.each(echo)
+				}
+				prev = x
+				$(sleep 2)
 			}
 		})
 
-		failed_count = results.count(Exception)
-
-		exit_hook.push({
-			echo("TESTS PASSED: ${results.len() - failed_count}/${results.len()}")
+		threads_results = tests_to_run.pmap(F(test_to_run) {
+			tests_sets[test_to_run](r, Test().setup())
 		})
+		status_display.join()
+
+		exit_code = 0
+		threads_results.each_idx_val(F(idx, e) {
+			if e is Exception {
+				error("-------------------- [THREAD] Exception in test set '${tests_to_run[idx]}' --------------------")
+				print_exception(e)
+				exit_code += 1
+			}
+		})
+
+		echo("-------------------- ${Time()} (final results) --------------------")
+		r.inspect().each(echo)
+
+		stats = Stats()
+		r.each_group_test(F(group, test, result) {
+			if result is Failure {
+				error("-------------------- Exception in test ${group}/${test} --------------------")
+				print_exception(e)
+				exit_code += 1
+			}
+			stats.push(result.typeof().name)
+		})
+
+		echo("Stats: $stats")
+
+		if exit_code {
+			echo("FAILURE")
+		} else {
+			echo("SUCCESS")
+		}
+
+		min(100, exit_code)
+
+		# exit_hook.push({
+		# 	echo("TESTS PASSED: ${threads_results.len() - failed_count}/${threads_results.len()}")
+		# })
 
 	}
 }
