@@ -11,5 +11,7 @@ const srv = https.createServer(cred.getHttpsServerOptions(), (req, res) =>{
 	res.end(process.argv[3]);
 });
 
-console.log('testHttpsServer - Listening on 65500');
-srv.listen(65500);
+var port = parseInt(process.env.PORT) || 65000;
+
+console.log('testHttpsServer - Listening on', port);
+srv.listen(port);

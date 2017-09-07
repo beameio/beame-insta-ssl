@@ -8,58 +8,221 @@ beame_tests = require('./common.ngs')
 
 tests_sets = ns(Test=beame_tests::Test) {
 
-	F no_creds(r, t:Test) {
-		r.test("no_creds", "Run without certificates (old CLI)") with {
+	F no_creds(tests_results, t:Test, test:Fun) {
+
+		test("Run without certificates (old CLI)") with {
 			beame_tests::should_fail_with_text(%(env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN list 2>${true}), 'you have no certificates')
 		}
 
-		r.test("no_creds", "Run without certificates (new CLI)") with {
+		test("Run without certificates (new CLI)") with {
 			beame_tests::should_fail_with_text(%(env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN creds list 2>${true}), 'you have no certificates')
 		}
 
-		r.test("no_creds", "Creds list without certificates (new CLI, json)") with {
+		test("Creds list without certificates (new CLI, json)") with {
 			assert_eq(``env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN creds list --format json 2>${true}``, [], 'Empty creds list')
 		}
 
-		r.test("no_creds", "Signers list without certificates (new CLI, json)") with {
+		test("Signers list without certificates (new CLI, json)") with {
 			assert_eq(``env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN creds signers --format json 2>${true}``, [], 'Empty signers list')
 		}
 
 	}
 
-	doc Change to A record; Change to CNAME; Delete
-	F dns(r, t:Test) {
+	F single_cred(tests_results, t:Test, test:Fun) {
+
 		fqdn = null
-		r.test("dns", "setup", {
-			fqdn = t._get_creds("dns")
+		test("setup") with {
+			fqdn = t._get_common_creds()
+			TestMessage("Got FQDN: $fqdn")
+		}
+
+		test("List certificates - one certificate (old CLI)") with {
+			fqdns = `env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN list 2>${true}`.lines()
+			assert_eq(fqdns, [fqdn], 'Only one, expected FQDN')
+			TestMessage('List is OK')
+		}
+
+		test("List certificates - one certificate (new CLI, text)") with {
+			out = `env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN creds list 2>${true}`.lines()
+			assert_eq(out.len(), 5, 'Expected number of lines')
+			assert_match(out[1], /name.*fqdn.*parent.*valid.*priv/, 'Good columns names')
+			assert_in(fqdn, out[3], 'FQDN presence')
+			TestMessage('List is OK')
+		}
+
+		test("List certificates - one certificate (new CLI, json)") with {
+			certs = ``env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN creds list --format json 2>${true}``
+			assert_eq(certs.metadata.fqdn, [fqdn], 'Only one, expected FQDN')
+			TestMessage('List is OK')
+		}
+
+		test("List signers certificates - one certificate") with {
+			certs = ``env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN creds signers --format json 2>${true}``
+			assert_eq(certs.fqdn, [fqdn], 'Only one, expected FQDN')
+			TestMessage('Signers list is OK')
+		}
+
+		test("Fix metadata (old CLI)") with {
+			t._corrupt_metadata_json(fqdn)
+			$(env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN syncmeta 2>${true})
+			t._metadata_json_ok(fqdn).not() throws TestFail("Metadata JSON is not OK")
+		}
+
+		test("Fix metadata (new CLI)") with {
+			t._corrupt_metadata_json(fqdn)
+			$(env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN creds syncmeta --fqdn $fqdn 2>${true})
+			t._metadata_json_ok(fqdn).not() throws TestFail("Metadata JSON is not OK")
+		}
+
+	}
+
+	F two_creds(tests_results, t:Test, test:Fun) {
+
+	}
+
+	F export_cert(tests_results, t:Test, test:Fun) {
+
+		fqdn = null
+		test("setup") with { fqdn = t._get_common_creds() }
+
+		each({
+			"old": %(env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN export $fqdn DIR 2>${true})
+			"new": %(env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN creds exportCred --fqdn $fqdn --dir DIR 2>${true})
+		}, F(cli_type:Str, cp:CommandsPipeline) {
+			test("Export certificate ($cli_type CLI)") with {
+				dir = t.home / 'export-' + cli_type
+				$(mkdir $dir)
+				cp.commands[0].argv .= replace('DIR', dir)
+				$($cp)
+				beame_tests::EXPECTED_EXPORTED_FILE_EXTENSIONS.each(F(ext) {
+					f = "$dir/$fqdn.$ext"
+					not($(test -s $f)) throws TestFail("File $f not found")
+				})
+				TestMessage('All expected files are present')
+			}
 		})
 
-		r.test("dns", "Change DNS to A record") with {
+
+	}
+
+	doc Change to A record; Change to CNAME; Delete
+	F dns(tests_results, t:Test, test:Fun) {
+		fqdn = null
+
+		test("setup") with { fqdn = t._get_creds() }
+
+		test("Change DNS to A record") with {
 			ip = '10.' + (rand.partial(256) * 3).map(Str).join(".")
 			$(env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN creds setDns --fqdn $fqdn --value $ip --format json 2>${true})
 			assert_resolvable(fqdn, check={A == [ip]})
 		}
 
-		r.test("dns", "Change DNS to CNAME record") with {
+		test("Change DNS to CNAME record") with {
 			cname = CHARS::ascii_lowercase.rand(16) + '.example.com'
 			$(env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN creds setDns --fqdn $fqdn --value $cname --format json 2>${true})
 			assert_resolvable(fqdn, check={"${cname}." in A})
 		}
 
-		r.test("dns", "Delete DNS record") with {
+		test("Delete DNS record") with {
 			deleted_fqdn = ``env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN creds deleteDns --fqdn $fqdn --format json 2>${true}``
 			# -- TODO assert unresolvable
 			assert_eq(deleted_fqdn, fqdn, "Deleted fqdn matched to requested")
 		}
 	}
 
-	F _get_creds(t:Test, group_name:Str) {
+	F http_tunnel(tests_results, t:Test, test:Fun) {
+		fqdn = null
+
+		test("setup") with { fqdn = t._get_creds() }
+
+		doc Tests terminating tunnel
+		F http_target_tunnel(cp:CommandsPipeline, expected_hostname:Str, proto='https') {
+			test_time = time().Str()
+			cp.options['&'] = true
+			processes = [
+				$(env "HOME=${t.home}" node ../testHttpServer.js $test_time 2>${true} &)
+				$($cp)
+			]
+			assert_resolvable(fqdn)
+			out = Result({ retry(body={`curl --silent --max-time 30 "$proto://$fqdn/"`}) })
+			processes % kill
+			if out is Failure {
+				throw TestFail("Could not access via tunnel").set('nodejs_process', processes[0])
+			}
+			out .= get()
+			out != "$test_time-$expected_hostname" throws TestFail("Result from server is missing or incorrect: '$out' vs '$test_time-$expected_hostname'")
+			TestMessage('Result from server is OK')
+		}
+
+		# Without FQDN
+		each({
+			"old": %[65500]
+			"new": %[make --dst 65500 --proto]
+		}, F (cli_type:Str, argv:Arr) {
+
+			test("Terminating tunnel without fqdn", {
+				http_target_tunnel(%(env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN tunnel $*argv http 2>${true}), fqdn)
+			})
+		})
+
+		# With FQDN
+		each({
+			"old": %[65500]
+			"new": %[make --dst 65500 --proto]
+		}, F (cli_type:Str, argv:Arr) {
+			test("eehttp tunnel with fqdn ($cli_type CLI)", {
+				http_target_tunnel(%(env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN tunnel $*argv eehttp --fqdn $fqdn 2>${true}), fqdn, 'http')
+			})
+
+			test("Terminating tunnel with fqdn ($cli_type CLI)", {
+				http_target_tunnel(%(env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN tunnel $*argv http --fqdn $fqdn --hostname test1.example.com 2>${true}), 'test1.example.com')
+			})
+
+		})
+
+	}
+
+	F https_tunnel(tests_results, t:Test, test:Fun) {
+		fqdn = null
+
+		test("setup") with { fqdn = t._get_creds() }
+
+		doc Tests non-terminating tunnel
+		F https_target_tunnel(cp:CommandsPipeline) {
+			test_time = time().Str()
+			cp.options['&'] = true
+			processes = [
+				$(env "HOME=${t.home}" "PORT=65501" node ../testHttpsServer.js $fqdn $test_time 2>${true} &)
+				$($cp)
+			]
+			assert_resolvable(fqdn)
+			out = Result({ retry(body={`curl --silent --max-time 30 "https://$fqdn/"`}) })
+			processes % kill
+			if out is Failure {
+				throw TestFail("Could not access via tunnel").set('nodejs_process', processes[0])
+			}
+			out .= get()
+			out != test_time throws TestFail("Result from server is missing or incorrect: '$out' vs '$test_time'")
+			TestMessage('Result from server is OK')
+		}
+
+
+		each({
+			"old": %[65501]
+			"new": %[make --dst 65501 --proto]
+		}, F (cli_type:Str, argv:Arr) {
+			test("Terminating tunnel with fqdn ($cli_type CLI)", {
+				https_target_tunnel(%(env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN tunnel $*argv https --fqdn $fqdn 2>${true}))
+			})
+		})
+
+	}
+
+	F _get_creds(t:Test) {
 
 		t.copy_dev_cred_to_store()
 
-		token = create_token(group_name, %(env "HOME=${t.home}" $BEAME_SDK_BIN token create --fqdn ${ENV.BEAME_DEV_AUTH_FQDN} --data NONE --format json 2>${true}))
-
-		fqdn = null
+		token = create_token(%(env "HOME=${t.home}" $BEAME_SDK_BIN token create --fqdn ${ENV.BEAME_DEV_AUTH_FQDN} --data NONE --format json 2>${true}))
 
 		beame_insta_ssl_token = {
 			'authToken': token
@@ -70,8 +233,38 @@ tests_sets = ns(Test=beame_tests::Test) {
 
 		entity = ``env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN creds getCreds --regToken ${beame_insta_ssl_token.encode_json()} --format json 2>${true}``
 		assert_hash(entity, "Entity must be hash")
+		t.remove_dev_cred_from_store()
+
 		entity.fqdn
 	}
+
+	_common_creds_test = null
+	_common_creds_lock = Lock()
+	_common_creds_fqdn = null
+	F _get_common_creds(t:Test) {
+		_common_creds_lock.acquire() do {
+			if _common_creds_fqdn is Null {
+				_common_creds_test = beame_tests::setup(Test())
+				_common_creds_fqdn = _get_creds(_common_creds_test)
+			}
+			t.copy_cred_to_store(_common_creds_fqdn, _common_creds_test.fqdn_dir(_common_creds_fqdn))
+			_common_creds_fqdn
+		}
+	}
+
+	F _corrupt_metadata_json(t:Test, fqdn:Str) {
+		metadata = ``cat "${t.fqdn_dir(fqdn)}/metadata.json"``
+		metadata.name = 'corrupted'
+		$(echo ${metadata.encode_json()} >"${t.fqdn_dir(fqdn)}/metadata.json")
+		_metadata_json_ok(t, fqdn) throws TestFail("Metadata JSON is OK while should be corrupted")
+		TestMessage("Metadata file corrupted")
+	}
+
+	F _metadata_json_ok(t:Test, fqdn:Str) {
+		metadata = ``cat "${t.fqdn_dir(fqdn)}/metadata.json"``
+		metadata.name != 'corrupted'
+	}
+
 }
 
 

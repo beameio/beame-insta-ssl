@@ -55,21 +55,24 @@ ns {
 	global fqdn_dir
 	F fqdn_dir(t:Test, fqdn) t.beame_dir / 'v2' / fqdn
 
-	global copy_dev_cred_to_store
-	F copy_dev_cred_to_store(t:Test) {
-		debug("test", "Copying dev credential ${ENV.BEAME_DEV_AUTH_FQDN} to store")
+	global copy_cred_to_store
+	F copy_cred_to_store(t:Test, fqdn:Str, src:Str) {
+		debug("test", "Copying dev credential fqdn ${fqdn} to store from ${src}")
 		$(mkdir -p ${t.beame_dir / 'v2'})
-		$(cp -a "${ENV.HOME}/${ENV.BEAME_DEV_AUTH_FQDN}" ${t.fqdn_dir(ENV.BEAME_DEV_AUTH_FQDN)})
+		$(cp -a $src ${t.fqdn_dir(fqdn)})
 	}
 
+	global copy_dev_cred_to_store
+	F copy_dev_cred_to_store(t:Test) copy_cred_to_store(t, ENV.BEAME_DEV_AUTH_FQDN, "${ENV.HOME}/${ENV.BEAME_DEV_AUTH_FQDN}")
+
+	global remove_dev_cred_from_store
 	doc Removes Beame test requests signing credential from store
-	F remove_from_store() {
-		$(rm -r ${fqdn_dir(BEAME_DEV_AUTH_FQDN)})
-		TestMessage('Removed')
+	F remove_dev_cred_from_store(t:Test) {
+		$(rm -r ${t.fqdn_dir(ENV.BEAME_DEV_AUTH_FQDN)})
 	}
 
 	global create_token
-	F create_token(group_name:Str, cp:CommandsPipeline) {
+	F create_token(cp:CommandsPipeline) {
 		token = ``$cp``
 		assert_string(token, "Token is a string")
 		token
@@ -123,22 +126,43 @@ ns {
 
 		status_display = Thread({
 			$(sleep 1)
-			prev = null
+			prev = {'rows': null}
+			need_newline = false
 			while not(threads_results) {
-				x = r.inspect()
-				if x != prev {
-					echo("-------------------- ${Time()} --------------------")
-					x.each(echo)
+				try {
+					x = Table("Tests progress, ${Time()}", r)
+					if x.rows == prev.rows {
+						1.write('.')
+						need_newline = true
+					} else {
+						if need_newline {
+							echo("")
+							need_newline = false
+						}
+						echo(x)
+					}
+					prev = x
+				} catch(e:Exception) {
+					print_exception(e)
+
 				}
-				prev = x
 				$(sleep 2)
+			}
+			if need_newline {
+				echo("")
 			}
 		})
 
+		global_test = test
 		threads_results = tests_to_run.pmap(F(test_to_run) {
-			tests_sets[test_to_run](r, Test().setup())
+			F test(name:Str, cb:Fun) global_test(r, test_to_run, name, cb)
+			tests_sets[test_to_run](r, Test().setup(), test)
 		})
-		status_display.join()
+
+		e = status_display.join()
+		if e is Exception {
+			print_exception(e)
+		}
 
 		exit_code = 0
 		threads_results.each_idx_val(F(idx, e) {
@@ -149,32 +173,34 @@ ns {
 			}
 		})
 
-		echo("-------------------- ${Time()} (final results) --------------------")
-		r.inspect().each(echo)
+		results_table = Table("Tests final results, ${Time()}", r)
 
 		stats = Stats()
 		r.each_group_test(F(group, test, result) {
+			# if result is Success {
+			# 	echo("-------------------- Status in test ${group}/${test} --------------------")
+			# 	x = result.get()
+			# 	echo(x)
+			# }
 			if result is Failure {
 				error("-------------------- Exception in test ${group}/${test} --------------------")
-				print_exception(e)
+				print_exception(result.val)
 				exit_code += 1
 			}
 			stats.push(result.typeof().name)
 		})
 
-		echo("Stats: $stats")
+		exit_hook.push({
+			echo("")
+			echo(results_table)
+			echo("")
+			if exit_code {
+				echo("FAILURE")
+			} else {
+				echo("SUCCESS")
+			}
+		})
 
-		if exit_code {
-			echo("FAILURE")
-		} else {
-			echo("SUCCESS")
-		}
-
-		min(100, exit_code)
-
-		# exit_hook.push({
-		# 	echo("TESTS PASSED: ${threads_results.len() - failed_count}/${threads_results.len()}")
-		# })
-
+		min([100, exit_code])
 	}
 }
