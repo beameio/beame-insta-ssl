@@ -1,5 +1,5 @@
 /**
- * Created by zenit1 on 26/02/2017.
+ * Created by Ron Tamerin on 12/03/2018.
  */
 "use strict";
 const beameSDK   = require('beame-sdk');

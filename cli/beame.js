@@ -14,7 +14,7 @@ const logger      = new BeameLogger("BeameInstaSSL");
 const pem         = require('pem');
 
 let commands = {};
-['creds', 'tunnel', 'system', 'tunnelClient','termProxy'].forEach(cmdName => {
+['creds', 'tunnel', 'system', 'tunnelClient', 'termProxy'].forEach(cmdName => {
 	commands[cmdName] = require('./' + cmdName + '.js');
 });
 
