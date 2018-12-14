@@ -1,7 +1,7 @@
 <img align="right" src="img/beame.png">
 
 # beame-insta-ssl
-
+[![Build Status](https://travis-ci.org/beameio/beame-insta-ssl.svg?branch=master)](https://travis-ci.org/beameio/beame-insta-ssl) [![npm version](https://badge.fury.io/js/beame-insta-ssl.svg)](https://www.npmjs.com/package/beame-insta-ssl) [![HitCount](http://hits.dwyl.io/beameio/beame-insta-ssl.svg)](https://github.com/beameio/beame-insta-ssl)
 
 ## What is beame-insta-ssl?
 
