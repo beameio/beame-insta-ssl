@@ -181,7 +181,7 @@ function main() {
 	if (do_warn) {
 		console.warn(`+---------------------------------------------------------------------`)
 		console.warn(`| Warning: you are using deprecated command "${orig_command}". Use "${argv._.join(' ')}" instead.`)
-		console.warn(`| Run beame-insta-ssl without any arguments to see all the commands and swithces.`);
+		console.warn(`| Run beame-insta-ssl without any arguments to see all the commands and switches.`);
 		console.warn(`+---------------------------------------------------------------------`)
 	}
 
