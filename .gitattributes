@@ -1,0 +1,7 @@
+CHANGELOG_1.1.5 merge=ours
+Jenkinsfile merge=ours
+Makefile merge=ours
+help-messages/no-certificates.txt merge=ours
+package.json merge=ours
+validDump.pcapng merge=ours
+invalidDump.pcapng merge=ours

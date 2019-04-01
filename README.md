@@ -1,13 +1,13 @@
 <img align="right" src="img/beame.png">
 
 # beame-insta-ssl
-
+[![Build Status](https://travis-ci.org/beameio/beame-insta-ssl.svg?branch=master)](https://travis-ci.org/beameio/beame-insta-ssl) [![npm version](https://badge.fury.io/js/beame-insta-ssl.svg)](https://www.npmjs.com/package/beame-insta-ssl) [![HitCount](http://hits.dwyl.io/beameio/beame-insta-ssl.svg)](https://github.com/beameio/beame-insta-ssl)
 
 ## What is beame-insta-ssl?
 
 This is a free, open-source tool that allows you to expose securely a machine with HTTP or HTTPS server via a random hostname without needing to have a public IP address.
 
-When using Beame.io, the private key never leaves your computer/server. Beame cannot look into your traffic. While, theoretically, Beame.io could issue a wildcard `*.beameio.net` certificate and terminate your traffic (which we don't do), this is preventable by checking certificate fingerprints.
+When using Beame.io, the private key never leaves your computer/server. Beaqme cannot look into your traffic. While, theoretically, Beame.io could issue a wildcard `*.beameio.net` certificate and terminate your traffic (which we don't do), this is preventable by checking certificate fingerprints.
 
 ## Who is beame-insta-ssl for?
 

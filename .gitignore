@@ -39,3 +39,8 @@ jspm_packages
 .node_repl_history
 
 .idea
+.idea/watcherTasks.xml
+package-lock.json
+package.json
+.idea/watcherTasks.xml
+package.json

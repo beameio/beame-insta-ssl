@@ -14,7 +14,7 @@ const logger      = new BeameLogger("BeameInstaSSL");
 const pem         = require('pem');
 
 let commands = {};
-['creds', 'tunnel', 'system', 'tunnelClient'].forEach(cmdName => {
+['creds', 'tunnel', 'system', 'tunnelClient', 'termProxy'].forEach(cmdName => {
 	commands[cmdName] = require('./' + cmdName + '.js');
 });
 
@@ -80,7 +80,8 @@ const parametersSchema = {
 	'filter':             {required: false},
 	'hasPrivateKey':      {required: false, default: 'true'},
 	'expiration':         {required: false},
-	'anyParent':          {required: false}
+	'anyParent':          {required: false},
+	'listenPort':         {required: false, default: 443}, //for terminating proxy mode
 };
 
 function InvalidArgv(message) {
@@ -183,7 +184,7 @@ function main() {
 	if (do_warn) {
 		console.warn(`+---------------------------------------------------------------------`)
 		console.warn(`| Warning: you are using deprecated command "${orig_command}". Use "${argv._.join(' ')}" instead.`)
-		console.warn(`| Run beame-insta-ssl without any arguments to see all the commands and swithces.`);
+		console.warn(`| Run beame-insta-ssl without any arguments to see all the commands and switches.`);
 		console.warn(`+---------------------------------------------------------------------`)
 	}
 
@@ -207,7 +208,7 @@ function main() {
 		process.exit(1);
 	}
 
-	if (`${cmdName} ${subCmdName}` == 'tunnel make') {
+	if (`${cmdName} ${subCmdName}` == 'tunnel make' || `${cmdName} ${subCmdName}` == 'termProxy start') {
 		defaultTheOnlyFqdn(argv);
 	}
 	/*

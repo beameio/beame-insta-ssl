@@ -183,6 +183,20 @@ list.toText = function (creds) {
 	});
 	return table;
 };
+/**
+ * Return list of credentials
+ * @public
+ * @method Creds.list
+ * @param {String|null} [regex] entity fqdn
+ * @param {Boolean|null} hasPrivateKey
+ * @param {Number|null} expiration in days
+ * @param {Boolean|null} anyParent
+ * @param {string} [filter]
+ * @returns {Array.<Credential>}
+ */
+function list(regex, hasPrivateKey, expiration, anyParent, filter) {
+	return(sdkCreds.list(regex, hasPrivateKey, expiration, anyParent, filter));
+}
 
 function signers(callback) {
 	const store = new BeameStore();

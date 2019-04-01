@@ -82,17 +82,3 @@ Usage information and examples:
 
 		Revoke certificate. If revoking your own certificate, for which you
 		have a private key, SIGNER_FQDN should be same as FQDN.
-
-	beame-insta-ssl creds setDns --fqdn <FQDN> --value <IP_OR_CNAME>
-
-		Set your DNS entry to custom value, whatever you want.
-		Note: you will not be able to use Beame.io infrastructure for tunneling.
-
-	beame-insta-ssl creds setDns --fqdn <FQDN> --useBestProxy true
-
-		Set your DNS entry to Beame.io infrastructure.
-		Do this if you intend to use Beame.io infrastructure for tunneling.
-
-		You do not need to run this command after you get your credentials,
-		the default for new credentials is to use Beame.io infrastructure
-		for tunneling.
