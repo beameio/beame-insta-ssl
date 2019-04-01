@@ -12,6 +12,7 @@ const BeameStore  = beameSDK.BeameStore;
 const BeameLogger = beameSDK.Logger;
 const logger      = new BeameLogger("BeameInstaSSL");
 const pem         = require('pem');
+const Constants = require('../constants');
 
 let commands = {};
 ['creds', 'tunnel', 'system', 'tunnelClient', 'termProxy'].forEach(cmdName => {
@@ -91,8 +92,12 @@ function InvalidArgv(message) {
 
 InvalidArgv.prototype = Error.prototype;
 
-function getHelpMessage(fileName) {
-	return fs.readFileSync(path.join(__dirname, '..', 'help-messages', fileName), {'encoding': 'utf-8'});
+function getHelpMessage(fileName, templateStr) {
+	let file = fs.readFileSync(path.join(__dirname, '..', 'help-messages', fileName), {'encoding': 'utf-8'});
+	if(templateStr) {
+		file = file.replace('%TEMPLATE_STR%', templateStr);
+	}
+	return file;
 }
 
 function defaultTheOnlyFqdn(args) {
@@ -198,7 +203,7 @@ function main() {
 		let credsCount = require('./creds').list().length;
 
 		if (!credsCount) {
-			console.log(getHelpMessage('no-certificates.txt'));
+			console.log(getHelpMessage('no-certificates.txt', Constants.SelectedProfile.AuthServerUrl));
 			process.exit(1);
 		}
 	}
