@@ -11,7 +11,7 @@ const BeameLogger = beameSDK.Logger;
 const logger      = new BeameLogger("BIS-Credentials");
 const fs          = require('fs');
 const path        = require('path');
-const Table       = require('cli-table2');
+const Table       = require('cli-table3');
 const sdkCreds    = beameSDK.creds;
 
 const properties2fnames = {

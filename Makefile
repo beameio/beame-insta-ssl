@@ -1,5 +1,10 @@
+.PHONY: clean build test
+
 default:
 	exit 1
+
+clean:
+	rm -rf node_modules
 
 build:
 	npm install

@@ -1,8 +1,14 @@
-/**
- * Created by zenit1 on 10/07/2017.
- */
+const environments = {
+	dev: {
+		EmailServerUrl: "https://rem064h0jljfwh4f.mpk3nobb568nycf5.v1.d.beameio.net"
+	},
 
-const EmailServerUrl =  "https://p3wiktq9ccu6bsqv.tl5h1ipgobrdqsj6.v1.p.beameio.net";
+	prod: {
+		EmailServerUrl: "https://p3wiktq9ccu6bsqv.tl5h1ipgobrdqsj6.v1.p.beameio.net"
+	},
+};
+const SelectedProfile = require('beame-sdk').makeEnv(environments);
+const EmailServerUrl = SelectedProfile.EmailServerUrl;
 
 const EmailServerEndpoints = {
 	"SendInvitation": {
@@ -17,7 +23,7 @@ const RegistrationSource = {
 	"IOSSDK":         4
 };
 
-module.exports             = {
+module.exports = {
 	EmailServerUrl,
 	EmailServerEndpoints,
 	RegistrationSource

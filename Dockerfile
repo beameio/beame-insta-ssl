@@ -1,6 +1,6 @@
 # debootstrap stretch stretch
 # tar -C stretch -c . | docker import - beame:stretch
-FROM beame:stretch
+FROM debian:stretch
 
 # RUN bash -c "(echo 'deb http://httpredir.debian.org/debian jessie main contrib non-free'; echo 'deb http://security.debian.org/ jessie/updates main contrib non-free'; echo 'deb http://httpredir.debian.org/debian jessie-updates main contrib non-free') >/etc/apt/sources.list"
 

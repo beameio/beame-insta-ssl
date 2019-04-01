@@ -4,7 +4,7 @@
   "description": "Quick TLS (SSL) security for you server by Beame.io",
   "main": "index.js",
   "engines": {
-    "node": "node >= 6.9.0"
+    "node": ">= 8.0.0"
   },
   "bin": {
     "beame-insta-ssl": "main.js"
@@ -32,13 +32,15 @@
   },
   "homepage": "https://github.com/beameio/beame-insta-ssl#readme",
   "dependencies": {
-    "beame-sdk": "2.0.54",
-    "cli-table2": "^0.2.0",
-    "http-proxy": "^1.15.1",
+    "beame-sdk": "git+https://github.com/beameio/beame-sdk.git#dev",
+    "cli-table3": "^0.5.1",
+    "http-proxy": "^1.17.0",
     "minimist": "^1.2.0",
-    "socket.io": "1.7.3",
-    "socket.io-client": "1.7.3",
-    "sync-request": "^4.0.3",
-    "underscore": "^1.8.3"
+    "node-uuid": "^1.4.8",
+    "pem": "https://github.com/beameio/pem/archive/v1.8.3-beame2.tar.gz",
+    "socket.io": "^2.2.0",
+    "socket.io-client": "^2.2.0",
+    "sync-request": "^6.1.0",
+    "underscore": "^1.9.1"
   }
 }
