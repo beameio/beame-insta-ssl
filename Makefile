@@ -10,5 +10,7 @@ build:
 	npm install
 
 test: build
-	rm -r ~/.beame || true
-	./test.ngs
+ifndef BEAME_TESTS_CREDS_FQDN
+	$(error BEAME_TESTS_CREDS_FQDN is undefined)
+endif
+	(cd tests && ./main.ngs --tests all)

@@ -19,7 +19,7 @@ ns {
 
 		env_vars = [
 			'BEAME_INTERNAL_AUTH_SERVER_FQDN'
-			'BEAME_DEV_AUTH_FQDN'
+			'BEAME_TESTS_CREDS_FQDN'
 		]
 		for e in env_vars {
 			assert(e in ENV, "Environment variable ${e} must be set")
@@ -63,12 +63,12 @@ ns {
 	}
 
 	global copy_dev_cred_to_store
-	F copy_dev_cred_to_store(t:Test) copy_cred_to_store(t, ENV.BEAME_DEV_AUTH_FQDN, "${ENV.HOME}/${ENV.BEAME_DEV_AUTH_FQDN}")
+	F copy_dev_cred_to_store(t:Test) copy_cred_to_store(t, ENV.BEAME_TESTS_CREDS_FQDN, "${ENV.HOME}/${ENV.BEAME_TESTS_CREDS_FQDN}")
 
 	global remove_dev_cred_from_store
 	doc Removes Beame test requests signing credential from store
 	F remove_dev_cred_from_store(t:Test) {
-		$(rm -r ${t.fqdn_dir(ENV.BEAME_DEV_AUTH_FQDN)})
+		$(rm -r ${t.fqdn_dir(ENV.BEAME_TESTS_CREDS_FQDN)})
 	}
 
 	global create_token

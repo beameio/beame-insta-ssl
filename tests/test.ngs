@@ -1,18 +1,15 @@
 #!/usr/bin/env ngs
 
-assert('BEAME_INTERNAL_AUTH_SERVER_FQDN' in ENV, 'Environment variable BEAME_INTERNAL_AUTH_SERVER_FQDN must be set')
-
 HOME = ENV.HOME
-
-BEAME_DIR = HOME / '.beame'
-
+BEAME_DIR = ENV.get('BEAME_DIR', HOME) / '.beame'
 if Path(BEAME_DIR) {
 	throw Error("Beame directory exists ($BEAME_DIR). Will not run tests.")
 }
 
-BEAME_INSTA_SSL_BIN = './main.js'
+BEAME_INSTA_SSL_BIN = '../main.js'
 BEAME_SDK_BIN =  './node_modules/beame-sdk/src/cli/beame.js'
-BEAME_DEV_AUTH_FQDN = ENV.get('BEAME_DEV_AUTH_FQDN', 'am53rz8o6cjsm0xm.gjjpak0yxk8jhlxv.v1.p.beameio.net')
+BEAME_TESTS_CREDS_FQDN = ENV.get('BEAME_TESTS_CREDS_FQDN', 'n6ge8i9q4b4b5vb6.h40d7vrwir2oxlnn.v1.d.beameio.net')
+BEAME_INTERNAL_AUTH_SERVER_FQDN = ENV.get('BEAME_INTERNAL_AUTH_SERVER_FQDN', 'p2payp4q8f5ruo22.q6ujqecc83gg6fod.v1.d.beameio.net')
 EXPECTED_EXPORTED_FILE_EXTENSIONS = %[pem key chain.p7b pkcs12 pkcs12.pwd]
 
 # ---------- Utilities ----------
@@ -26,13 +23,13 @@ F fqdn_dir(fqdn) BEAME_DIR / 'v2' / fqdn
 
 doc Copies Beame test requests signing credential into store for L0 entity creation
 F copy_to_store() {
-	$(cp -a "$HOME/$BEAME_DEV_AUTH_FQDN" ${fqdn_dir(BEAME_DEV_AUTH_FQDN)})
+	$(cp -a "$HOME/$BEAME_TESTS_CREDS_FQDN" ${fqdn_dir(BEAME_TESTS_CREDS_FQDN)})
 	TestMessage('Copied')
 }
 
 doc Creates token needed for signing request for level 0 entity
 F create_token() {
-	global token = `$BEAME_SDK_BIN token create --fqdn $BEAME_DEV_AUTH_FQDN --data NONE`
+	global token = `$BEAME_SDK_BIN token create --fqdn $BEAME_TESTS_CREDS_FQDN --data NONE`
 	assert(token is Str, "Token expected to be a string")
 	TestMessage(token)
 }
@@ -57,7 +54,7 @@ F create_entity() {
 
 doc Removes Beame test requests signing credential from store
 F remove_from_store() {
-	$(rm -r ${fqdn_dir(BEAME_DEV_AUTH_FQDN)})
+	$(rm -r ${fqdn_dir(BEAME_TESTS_CREDS_FQDN)})
 	TestMessage('Removed')
 }
 
@@ -128,10 +125,10 @@ test("Signers list without certificates (new CLI, json)") with {
 
 # ---------- One certificate test ----------
 
-test("Copy $BEAME_DEV_AUTH_FQDN into store", copy_to_store)
+test("Copy $BEAME_TESTS_CREDS_FQDN into store", copy_to_store)
 test("Create token for test L0 entity", create_token)
 test("Create test L0 entity", create_entity);
-test("Remove $BEAME_DEV_AUTH_FQDN from store", remove_from_store)
+test("Remove $BEAME_TESTS_CREDS_FQDN from store", remove_from_store)
 
 test("List certificates - one certificate (old CLI)", {
 	fqdns = `$BEAME_INSTA_SSL_BIN list`.lines()
@@ -204,10 +201,10 @@ if not(ENV.get('SKIP_TUNNELS')) {
 # ---------- 2 or more certificates test ----------
 
 old_fqdn = fqdn
-test("Copy $BEAME_DEV_AUTH_FQDN into store", copy_to_store)
+test("Copy $BEAME_TESTS_CREDS_FQDN into store", copy_to_store)
 test("Create token for additional test L0 entity", create_token)
 test("Create additional test L0 entity", create_entity)
-test("Remove $BEAME_DEV_AUTH_FQDN from store", remove_from_store)
+test("Remove $BEAME_TESTS_CREDS_FQDN from store", remove_from_store)
 
 test("Fix metadata (old CLI)", {
 	corrupt_metadata_json()

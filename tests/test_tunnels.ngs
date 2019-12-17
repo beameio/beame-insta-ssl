@@ -1,13 +1,13 @@
 #!/usr/bin/env ngs
 
-BEAME_INSTA_SSL_BIN = './main.js'
+BEAME_INSTA_SSL_BIN = '../main.js'
 
 doc Tests terminating tunnel
 F http_target_tunnel(fqdn:Str, cp:CommandsPipeline, expected_hostname:Str, proto='https') {
 	t = time().Str()
 	cp.options['&'] = true
 	processes = [
-		$(node testHttpServer.js $t &)
+		$(node ./testHttpServer.js $t &)
 		$($cp)
 	]
 	echo("waiting for fqdn $fqdn to be resolvable")
@@ -23,7 +23,7 @@ F https_target_tunnel(fqdn:Str, cp:CommandsPipeline) {
 	t = time().Str()
 	cp.options['&'] = true
 	processes = [
-		$(node testHttpsServer.js $fqdn $t &)
+		$(node ./testHttpsServer.js $fqdn $t &)
 		$($cp)
 	]
 	echo("waiting for fqdn $fqdn $t")
