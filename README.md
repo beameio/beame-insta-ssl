@@ -26,9 +26,9 @@ Step 1: Sign up super-fast [here!](https://ypxf72akb6onjvrq.ohkv8odznwh5jpwm.v1.
 
 (if you use Windows, see [Windows System Requirements](#windows-system-requirements) below before Step 2)
 
-Step 2 for Mac/Linux: Run `sudo npm install -g beame-insta-ssl` (**please make sure you are using NodeJS version 8.0.X or newer**). Depending on your configuration you might want to run `npm install -g beame-insta-ssl` instead (if you are using [`n`](https://github.com/tj/n) or other methods for creating per-user NodejS installations).
+Step 2 for Mac/Linux: Run `sudo npm install -g beame-insta-ssl` (**please make sure you are using NodeJS version 8.16.X or newer**). Depending on your configuration you might want to run `npm install -g beame-insta-ssl` instead (if you are using [`n`](https://github.com/tj/n) or other methods for creating per-user NodejS installations).
 
-Step 2 for Windows: Run `npm install -g beame-insta-ssl` (**please make sure you are using NodeJS version 8.0.X or newer**).
+Step 2 for Windows: Run `npm install -g beame-insta-ssl` (**please make sure you are using NodeJS version 8.16.X or newer**).
 
 Step 3: Run the command in the sign up confirmation email you just got from us. beame-insta-ssl will obtain your very own beame hostname, and issue a valid public certificate for it.
 
@@ -36,7 +36,9 @@ The certificate will be ready in moments and you can start using your tunnel rig
 
 ### Windows System Requirements
 
-Before running `npm install -g beame-insta-ssl` please make sure you have OpenSSL installed in `C:\OpenSSL-Win64` . If you you already have OpenSSL installed at that location, skip the instructions below and just issue `npm install -g beame-insta-ssl`. If you don't have OpenSSL in `C:\OpenSSL-Win64`, one of the possible ways of installing OpenSSL is described below (Install Visual C++ Build Tools and Python 2.7, Upgrade NPM, Install Perl, Install OpenSSL). The procedure was tested on Microsoft Windows Server 2012 R2 Standard and Windows 10. We recommend to use your “Windows PowerShell” and run it with administrator rights for the following commands:
+Before running `npm install -g beame-insta-ssl` please make sure you have OpenSSL installed in `C:\OpenSSL-Win64` . If you you already have OpenSSL installed at that location, skip the instructions below and just issue `npm install -g beame-insta-ssl`.
+
+If you don't have OpenSSL in `C:\OpenSSL-Win64`, one of the possible ways of installing OpenSSL is described below (Install Visual C++ Build Tools and Python 2.7, Upgrade NPM, Install Perl, Install OpenSSL). The procedure was tested on Microsoft Windows Server 2012 R2 Standard and Windows 10. We recommend to use your “Windows PowerShell” and run it with administrator rights for the following commands:
 
 ### Install Visual C++ Build Tools and Python 2.7
 
