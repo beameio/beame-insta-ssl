@@ -1,4 +1,4 @@
-.PHONY: clean build test
+.PHONY: clean build tests
 
 default:
 	exit 1
