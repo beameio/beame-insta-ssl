@@ -120,7 +120,7 @@ tests_sets = ns(Test=beame_tests::Test) {
 		test("Change DNS to CNAME record") with {
 			cname = CHARS::ascii_lowercase.rand(16) + '.example.com'
 			$(env "HOME=${t.home}" $BEAME_INSTA_SSL_BIN creds setDns --fqdn $fqdn --value $cname --format json 2>${true})
-			retry(body={ try assert_resolvable(fqdn, check={"${cname}." in A}) })
+			assert_resolvable(fqdn, times=120, sleep=5, check={"${cname}." in A})
 		}
 
 		test("Delete DNS record") with {
