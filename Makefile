@@ -9,7 +9,7 @@ clean:
 build:
 	npm install
 
-tests: build
+tests:
 ifndef BEAME_TESTS_ROOT_CREDS_FQDN
 	$(error BEAME_TESTS_ROOT_CREDS_FQDN is undefined)
 endif
