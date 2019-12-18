@@ -318,7 +318,7 @@ test("Revoked certificate is not a signer certificte") with {
 }
 
 test("OCSP test after revocation") with {
-	s = retry(body={``$BEAME_INSTA_SSL_BIN creds checkOcsp --fqdn $fqdn --format json``},success_predicate={A=='Bad'},fail_cb={throw TestFail("Check OCSP for $fqdn failed")})
+	s = retry(body={try ``$BEAME_INSTA_SSL_BIN creds checkOcsp --fqdn $fqdn --format json``},success_predicate={A=='Bad'},fail_cb={throw TestFail("Check OCSP for $fqdn failed")})
 	assert_eq(s, 'Bad', "Ocsp status ${fqdn} is OK")
 }
 

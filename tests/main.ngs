@@ -144,7 +144,7 @@ tests_sets = ns(Test=beame_tests::Test) {
 				$($cp)
 			]
 			assert_resolvable(fqdn)
-			out = Result({ retry(body={`curl --silent --max-time 30 "$proto://$fqdn/"`}) })
+			out = Result({ retry(body={try `curl --silent --max-time 30 "$proto://$fqdn/"`}) })
 			processes % kill
 			if out is Failure {
 				throw TestFail("Could not access via tunnel").set('nodejs_process', processes[0])
@@ -196,7 +196,7 @@ tests_sets = ns(Test=beame_tests::Test) {
 				$($cp)
 			]
 			assert_resolvable(fqdn)
-			out = Result({ retry(body={`curl --silent --max-time 30 "https://$fqdn/"`}) })
+			out = Result({ retry(body={try `curl --silent --max-time 30 "https://$fqdn/"`}) })
 			processes % kill
 			if out is Failure {
 				throw TestFail("Could not access via tunnel").set('nodejs_process', processes[0])

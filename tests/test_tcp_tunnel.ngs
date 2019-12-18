@@ -27,7 +27,7 @@ F main(server_fqdn:Str, trust_fqdn:Str, client_fqdn:Str) {
 				assert_resolvable(server_fqdn)
 				echo("Making request via tunnel")
 				out = retry(times=10, sleep=5)
-					body => {`curl --silent --max-time 30 "http://127.0.0.1:$ENTRY_PORT/" -H "Host: $host_header"`}
+					body => {try `curl --silent --max-time 30 "http://127.0.0.1:$ENTRY_PORT/" -H "Host: $host_header"`}
 				assert_eq(out, "$t-$host_header", "HTTP response over tunnel")
 			}
 			cleanup => {
