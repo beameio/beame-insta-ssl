@@ -35,8 +35,7 @@ jobs:
         run: |
           echo "+ Deploying test creds"
           echo "$CREDS" | base64 --decode > creds.tgz
-          mkdir -p ~/.beame/v2
-          tar -xvzf creds.tgz -C ~/.beame/v2
+          tar -xvzf creds.tgz -C ~/
           echo ""
           echo "+ Installing NGS"
           ( git clone -b dev --single-branch https://github.com/ngs-lang/ngs.git && cd ngs && ./install-linux.sh && make install )
