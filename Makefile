@@ -9,8 +9,11 @@ clean:
 build:
 	npm install
 
-test: build
-ifndef BEAME_TESTS_CREDS_FQDN
-	$(error BEAME_TESTS_CREDS_FQDN is undefined)
+tests: build
+ifndef BEAME_TESTS_ROOT_CREDS_FQDN
+	$(error BEAME_TESTS_ROOT_CREDS_FQDN is undefined)
+endif
+ifndef BEAME_INTERNAL_AUTH_SERVER_FQDN
+	$(error BEAME_INTERNAL_AUTH_SERVER_FQDN is undefined)
 endif
 	(cd tests && ./main.ngs --tests all)

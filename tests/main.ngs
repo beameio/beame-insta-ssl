@@ -222,7 +222,7 @@ tests_sets = ns(Test=beame_tests::Test) {
 
 		t.copy_dev_cred_to_store()
 
-		token = create_token(%(env "HOME=${t.home}" $BEAME_SDK_BIN token create --fqdn ${ENV.BEAME_TESTS_CREDS_FQDN} --data NONE --format json 2>${true}))
+		token = create_token(%(env "HOME=${t.home}" $BEAME_SDK_BIN token create --fqdn ${ENV.BEAME_TESTS_ROOT_CREDS_FQDN} --data NONE --format json 2>${true}))
 
 		beame_insta_ssl_token = {
 			'authToken': token

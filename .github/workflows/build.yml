@@ -15,5 +15,32 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node }}
-      - run: node --version
-      - run: npm install
+      - name: Build
+        run: |
+          node --version
+          npm install
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    env:
+      CREDS: ${{ secrets.CREDS }}
+      BEAME_ENV: dev
+      BEAME_INTERNAL_AUTH_SERVER_FQDN:  ${{ secrets.BEAME_INTERNAL_AUTH_SERVER_FQDN }}
+      BEAME_TESTS_CREDS_FQDN: ${{ secrets.BEAME_TESTS_CREDS_FQDN }}
+      BEAME_TESTS_ROOT_CREDS_FQDN: ${{ secrets.BEAME_TESTS_ROOT_CREDS_FQDN }}
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '12'
+      - name: Prepare test environment
+        run: |
+          echo "+ Deploying test creds"
+          echo "$CREDS" | base64 --decode > creds.tgz
+          mkdir -p ~/.beame/v2
+          tar -xvzf creds.tgz -C ~/.beame/v2
+          echo ""
+          echo "+ Installing NGS"
+          ( git clone -b dev --single-branch https://github.com/ngs-lang/ngs.git && cd ngs && ./install-linux.sh && make install )
+      - name: Tests
+        run:  make tests
