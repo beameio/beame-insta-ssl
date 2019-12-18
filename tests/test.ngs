@@ -1,16 +1,28 @@
 #!/usr/bin/env ngs
 
+# ---------- Environment sanity checks ----------
+if 'BEAME_DIR' in ENV {
+	throw Error("BEAME_DIR environment variable must be unset for tests")
+}
+
 HOME = ENV.HOME
-BEAME_DIR = ENV.get('BEAME_DIR', HOME) / '.beame'
+BEAME_DIR = HOME / '.beame'
 if Path(BEAME_DIR) {
 	throw Error("Beame directory exists ($BEAME_DIR). Will not run tests.")
 }
 
 BEAME_INSTA_SSL_BIN = '../main.js'
-BEAME_SDK_BIN =  './node_modules/beame-sdk/src/cli/beame.js'
+BEAME_SDK_BIN =  '../node_modules/beame-sdk/src/cli/beame.js'
 BEAME_TESTS_ROOT_CREDS_FQDN = ENV.get('BEAME_TESTS_ROOT_CREDS_FQDN', 'n6ge8i9q4b4b5vb6.h40d7vrwir2oxlnn.v1.d.beameio.net')
 BEAME_INTERNAL_AUTH_SERVER_FQDN = ENV.get('BEAME_INTERNAL_AUTH_SERVER_FQDN', 'p2payp4q8f5ruo22.q6ujqecc83gg6fod.v1.d.beameio.net')
 EXPECTED_EXPORTED_FILE_EXTENSIONS = %[pem key chain.p7b pkcs12 pkcs12.pwd]
+
+if not(File(BEAME_INSTA_SSL_BIN)) {
+   die("Could not find beame binary BEAME_INSTA_SSL_BIN $BEAME_INSTA_SSL_BIN")
+}
+if not(File(BEAME_SDK_BIN)) {
+   die("Could not find beame binary BEAME_SDK_BIN $BEAME_SDK_BIN")
+}
 
 # ---------- Utilities ----------
 
@@ -23,8 +35,8 @@ F fqdn_dir(fqdn) BEAME_DIR / 'v2' / fqdn
 
 doc Copies Beame test requests signing credential into store for L0 entity creation
 F copy_to_store() {
-	$(cp -a "$HOME/$BEAME_TESTS_ROOT_CREDS_FQDN" ${fqdn_dir(BEAME_TESTS_ROOT_CREDS_FQDN)})
-	TestMessage('Copied')
+	$(cp -a "$HOME/$BEAME_TESTS_ROOT_CREDS_FQDN" "$HOME/.beame/v2/$BEAME_TESTS_ROOT_CREDS_FQDN")
+	'Copied'
 }
 
 doc Creates token needed for signing request for level 0 entity
