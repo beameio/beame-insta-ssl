@@ -4,7 +4,7 @@
   "description": "Quick TLS (SSL) security for you server by Beame.io",
   "main": "index.js",
   "engines": {
-    "node": ">= 8.0.0"
+    "node": ">= 8.16.0"
   },
   "bin": {
     "beame-insta-ssl": "main.js"
