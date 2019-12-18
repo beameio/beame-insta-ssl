@@ -34,16 +34,17 @@ jobs:
       - name: Prepare test environment
         run: |
           echo "+ Setting NameServers"
-          cat /etc/resolv.conf
           echo "nameserver 1.1.1.1" > resolv.conf.new
           echo "nameserver 8.8.8.8" >> resolv.conf.new
           cat /etc/resolv.conf >> resolv.conf.new
           sudo mv /etc/resolv.conf /etc/resolv.conf.old
           sudo mv resolv.conf.new /etc/resolv.conf
-          cat /etc/resolv.conf
+
+          echo ""
           echo "+ Deploying test creds"
           echo "$CREDS" | base64 --decode > creds.tgz
           tar -xvzf creds.tgz -C ~/
+
           echo ""
           echo "+ Installing NGS"
           ( git clone -b dev --single-branch https://github.com/ngs-lang/ngs.git && cd ngs && ./install-linux.sh && make install )
