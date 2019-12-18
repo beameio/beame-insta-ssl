@@ -35,10 +35,11 @@ jobs:
         run: |
           echo "+ Setting NameServers"
           cat /etc/resolv.conf
-          mv /etc/resolv.conf /etc/resolv.conf.old
-          echo "nameserver 1.1.1.1" > /etc/resolv.conf
-          echo "nameserver 8.8.8.8" >> /etc/resolv.conf
-          cat /etc/resolv.conf.old >> /etc/resolv.conf
+          echo "nameserver 1.1.1.1" > resolv.conf.new
+          echo "nameserver 8.8.8.8" >> resolv.conf.new
+          cat /etc/resolv.conf >> resolv.conf.new
+          sudo mv /etc/resolv.conf /etc/resolv.conf.old
+          sudo mv resolv.conf.new /etc/resolv.conf
           cat /etc/resolv.conf
           echo "+ Deploying test creds"
           echo "$CREDS" | base64 --decode > creds.tgz
