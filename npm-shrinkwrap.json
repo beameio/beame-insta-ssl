@@ -100,7 +100,7 @@
       "integrity": "sha512-lGe34o6EHj9y3Kts9R4ZYs/Gr+6N7MCaMlIFA3F1R2O5/m7K06AxfSeO5530PEERE6/WyEg3lsuyw4GHlPZHog=="
     },
     "beame-sdk": {
-      "version": "git+https://github.com/beameio/beame-sdk.git#68e151091f2e4dea99a294536949a6cc7ab4f839",
+      "version": "git+https://github.com/beameio/beame-sdk.git#67701df141890d042994921edd335aab8a00b105",
       "from": "git+https://github.com/beameio/beame-sdk.git#dev",
       "requires": {
         "async": "^2.6.3",
@@ -4927,7 +4927,7 @@
         },
         "pretty-hrtime": {
           "version": "1.0.3",
-          "resolved": "http://registry.npmjs.org/pretty-hrtime/-/pretty-hrtime-1.0.3.tgz",
+          "resolved": "https://registry.npmjs.org/pretty-hrtime/-/pretty-hrtime-1.0.3.tgz",
           "integrity": "sha1-t+PqQkNaTJsnWdmeDyAesZWALuE="
         },
         "process-nextick-args": {
