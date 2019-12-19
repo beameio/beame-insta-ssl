@@ -12,8 +12,8 @@ F http_target_tunnel(fqdn:Str, cp:CommandsPipeline, expected_hostname:Str, proto
 	]
 	echo("waiting for fqdn $fqdn to be resolvable")
 	assert_resolvable(fqdn)
-	out = retry(body={`curl --silent --max-time 30 "$proto://$fqdn/"`})
-	processes % kill
+	out = retry(body={try `curl --silent --max-time 30 "$proto://$fqdn/"`})
+	processes.each(kill)
 	out != "$t-$expected_hostname" throws TestFail("Result from server is missing or incorrect: '$out' vs '$t-$expected_hostname'")
 	TestMessage('Result from server is OK')
 }
@@ -29,7 +29,7 @@ F https_target_tunnel(fqdn:Str, cp:CommandsPipeline) {
 	echo("waiting for fqdn $fqdn $t")
 	assert_resolvable(fqdn)
 	out = retry(body={try `curl --silent --max-time 30 "https://$fqdn/"`})
-	processes % kill
+	processes.each(kill)
 	out != t throws TestFail("Result from server is missing or incorrect: '$out' vs '$t'")
 	TestMessage('Result from server is OK')
 }
@@ -54,7 +54,7 @@ F main(fqdn:Str, use_fqdn:Bool=true) {
 			})
 		} else {
 			test("Terminating tunnel without fqdn", {
-				http_target_tunnel(fqdn, %($BEAME_INSTA_SSL_BIN tunnel make --dst 65500 --proto http), fqdn)
+				http_target_tunnel(fqdn, %($BEAME_INSTA_SSL_BIN tunnel $*argv http), fqdn)
 			})
 		}
 	})

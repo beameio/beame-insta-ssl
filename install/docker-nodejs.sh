@@ -1,7 +1,7 @@
 #!/bin/bash -eu
 
-: ${NODEJS_VER:=8.15.1}
-: ${NODEJS_SHA256:=16e203f2440cffe90522f1e1855d5d7e2e658e759057db070a3dafda445d6d1f}
+: ${NODEJS_VER:=12.14.0}
+: ${NODEJS_SHA256:=52207f643ab0fba66d5189a51aac280c4834c81f24a7297446896386ec93a5ed}
 
 NODEJS_URL="https://nodejs.org/dist/v${NODEJS_VER}/node-v${NODEJS_VER}-linux-x64.tar.gz"
 

@@ -25,5 +25,5 @@ endif
 	rm -rf /tmp/tests/
 	mkdir /tmp/tests
 	cp -R ~/.beame/v2/$$BEAME_TESTS_ROOT_CREDS_FQDN /tmp/tests/
-	(cd tests && HOME=/tmp/tests ./test.ngs)
-	rm -rf /tmp/tests/
+	# skip tunnels since they are already tested with the main.ngs
+	(cd tests && SKIP_TUNNELS=true HOME=/tmp/tests ./test.ngs)

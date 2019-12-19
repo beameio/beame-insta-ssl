@@ -52,3 +52,5 @@ jobs:
         run:  make build
       - name: Tests
         run:  make tests
+      - name: Extra Tests
+        run:  make tests_extra

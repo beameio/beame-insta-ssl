@@ -51,7 +51,7 @@ F create_entity() {
 	global fqdn
 	t = time()
 	beame_insta_ssl_token = {
-		'authToken': token.base64decode().parse()
+		'authToken': token.base64decode().decode()
 		'authSrvFqdn': ENV.BEAME_INTERNAL_AUTH_SERVER_FQDN
 		'name': "insta-ssl-test-L0-$t"
 		'email': "insta-ssl-L0-${t}@example.com"
@@ -185,7 +185,7 @@ each({
 	"new": %($BEAME_INSTA_SSL_BIN creds exportCred --fqdn $fqdn --dir DIR)
 }, F(cli_type:Str, cp:CommandsPipeline) {
 	test("Export certificate ($cli_type CLI)", {
-		dir = `mktemp --tmpdir -d test-beame-insta-ssl.XXXXXXXXXX` - MaybeSfx('\n')
+		dir = `mktemp -d test-beame-insta-ssl.XXXXXXXXXX` - MaybeSfx('\n')
 		cp.commands[0].argv .= replace('DIR', dir)
 		finally()
 			body => {
@@ -330,8 +330,8 @@ test("Revoked certificate is not a signer certificte") with {
 }
 
 test("OCSP test after revocation") with {
-	s = retry(body={try ``$BEAME_INSTA_SSL_BIN creds checkOcsp --fqdn $fqdn --format json``},success_predicate={A=='Bad'},fail_cb={throw TestFail("Check OCSP for $fqdn failed")})
-	assert_eq(s, 'Bad', "Ocsp status ${fqdn} is OK")
+	s = retry(body={try ``$BEAME_INSTA_SSL_BIN creds checkOcsp --fqdn $fqdn --format json``},success_predicate={A=='Revoked'},fail_cb={throw TestFail("Check OCSP for $fqdn failed")})
+	assert_eq(s, 'Revoked', "Ocsp status ${fqdn} is OK")
 }
 
 echo("All tests passed")

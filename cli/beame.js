@@ -326,11 +326,10 @@ function main() {
 			return;
 		}
 		if (argv.format == 'json' || !commands[cmdName][subCmdName].toText) {
-
 			//noinspection ES6ModulesDependencies,NodeModulesDependencies
 			output = JSON.stringify(output);
 		} else {
-			output = commands[cmdName][subCmdName].toText(output).toString();
+			output = (commands[cmdName][subCmdName].toText(output) || output).toString();
 		}
 
 		console.log(output);
