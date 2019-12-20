@@ -17,7 +17,7 @@ jobs:
           node-version: ${{ matrix.node }}
       - run: node --version
       - run: npm install
-      - run: node main.js system checkVersion
+      - run: node main.js system checkVersion --format json
   tests:
     name: Tests
     runs-on: ubuntu-latest
