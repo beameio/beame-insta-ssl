@@ -60,5 +60,5 @@ jobs:
     container: nextcloud:latest
     steps:
       - run: |
-          echo "Hello World"
-          sudo -u www-data php /var/www/Nextcloud/occ -C
+          echo "NextCloud version is"
+          /usr/src/nextcloud/occ -V
