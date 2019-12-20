@@ -33,7 +33,7 @@ function checkVersion() {
 
 checkVersion.toText = data => {
 	if (data['update-available']) {
-		return `You are using and older ${data.installed} version of beame sdk but the latest version is ${data.available}`;
+		return `You are using and older ${data.installed} version of insta-ssl but the latest version is ${data.available}`;
 	} else {
 		return `You are using the latest beame-sdk version ${data.installed}`;
 	}
