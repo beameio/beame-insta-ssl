@@ -3,7 +3,7 @@ on: [push, pull_request]
 
 jobs:
   build:
-    name: Build
+    name: Build & Run
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -22,7 +22,7 @@ jobs:
           node main.js system checkVersion --format json
           node main.js creds list --format json
   tests:
-    name: Tests
+    name: NGS Tests
     runs-on: ubuntu-latest
     env:
       CREDS: ${{ secrets.CREDS }}
@@ -59,10 +59,23 @@ jobs:
       - name: Extra Tests
         run:  make tests_extra
   nextcloud:
-    name: NextCloud
+    name: NextCloud Integration
     runs-on: ubuntu-latest
     container: nextcloud:latest
     steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
       - run: |
+          echo "Npm installing beame-insta-ssl"
+          npm install && npm pack && npm install -g beame-insta-ssl-*
+
           echo "NextCloud version is"
           /usr/src/nextcloud/occ -V
+
+          echo "Installing beame-insta-ssl plugin for nextcloud"
+          curl -L -o /usr/src/nextcloud/apps/beame_insta_ssl.tar.gz https://github.com/nextcloud/beame_insta_ssl/releases/download/v0.0.6/beame_insta_ssl.tar.gz
+          tar -zxf /usr/src/nextcloud/apps/beame_insta_ssl.tar.gz -C /usr/src/nextcloud/apps
+          rm /usr/src/nextcloud/apps/beame_insta_ssl.tar.gz
+          /usr/src/nextcloud/occ app:check-code beame_insta_ssl
