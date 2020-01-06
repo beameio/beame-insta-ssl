@@ -68,8 +68,11 @@ jobs:
         with:
           node-version: 12
       - run: |
+          echo "Install dependencies"
+          apt-get update
+          apt-get install -y git
+
           echo "Npm installing beame-insta-ssl"
-          apt-get install git
           npm install
           npm pack
           npm install -g ./beame-insta-ssl-*
