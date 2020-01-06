@@ -72,8 +72,8 @@ jobs:
           echo "nameserver 1.1.1.1" > resolv.conf.new
           echo "nameserver 8.8.8.8" >> resolv.conf.new
           cat /etc/resolv.conf >> resolv.conf.new
-          sudo mv /etc/resolv.conf /etc/resolv.conf.old
-          sudo mv resolv.conf.new /etc/resolv.conf
+          mv /etc/resolv.conf /etc/resolv.conf.old
+          mv resolv.conf.new /etc/resolv.conf
 
           echo "Npm installing beame-insta-ssl"
           npm install
