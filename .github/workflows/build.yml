@@ -62,26 +62,40 @@ jobs:
     name: NextCloud Integration
     runs-on: ubuntu-latest
     container: nextcloud:latest
+    env:
+      CREDS: ${{ secrets.CREDS }}
+      BEAME_ENV: dev
+      BEAME_TESTS_ROOT_CREDS_FQDN: ${{ secrets.BEAME_TESTS_ROOT_CREDS_FQDN }}
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
         with:
           node-version: 12
       - run: |
-          echo "Install dependencies"
+          echo "+ Deploying test creds"
+          echo "$CREDS" | base64 --decode > creds.tgz
+          mkdir -p ~/.beame/v2
+          tar -xvzf creds.tgz -C ~/.beame/v2
+
+          echo ""
+          echo "+ Install dependencies"
           apt-get update
           apt-get install -y git
 
-          echo "Npm installing beame-insta-ssl"
+          echo ""
+          echo "+ Npm installing beame-insta-ssl"
           npm install
           npm pack
           npm install -g ./beame-insta-ssl-*
 
-          echo "NextCloud version is"
-          /usr/src/nextcloud/occ -V
+          echo ""
+          echo "+ Test beame-ssl installation"
+          beame-insta-ssl system checkVersion
+          beame-insta-ssl creds list --format json
 
-          echo "Installing beame-insta-ssl plugin for nextcloud"
-          curl -L -o /usr/src/nextcloud/apps/beame_insta_ssl.tar.gz https://github.com/nextcloud/beame_insta_ssl/releases/download/v0.0.6/beame_insta_ssl.tar.gz
-          tar -zxf /usr/src/nextcloud/apps/beame_insta_ssl.tar.gz -C /usr/src/nextcloud/apps
-          rm /usr/src/nextcloud/apps/beame_insta_ssl.tar.gz
-          /usr/src/nextcloud/occ app:check-code beame_insta_ssl
+          echo ""
+          echo "+ Install NextCloud & plugin"
+          /usr/src/nextcloud/occ maintenance:install --admin-pass "Test1"
+          /usr/src/nextcloud/occ -V
+          /usr/src/nextcloud/occ status
+          /usr/src/nextcloud/occ app:install beame_insta_ssl
