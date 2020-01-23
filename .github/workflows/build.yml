@@ -9,7 +9,7 @@ jobs:
       matrix:
         os: [macos-latest, windows-latest, ubuntu-latest]
         # setup-node action doesn't deploy latest node 8 in windows. Specifying version is a workaround => https://github.com/actions/setup-node/issues/27
-        node: [ '12', '10', '8.16.x' ]
+        node: [ '13', '12', '10', '8.16.x' ]
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
