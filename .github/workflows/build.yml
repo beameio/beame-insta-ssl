@@ -9,7 +9,7 @@ jobs:
       matrix:
         os: [macos-latest, windows-latest, ubuntu-latest]
         # setup-node action doesn't deploy latest node 8 in windows. Specifying version is a workaround => https://github.com/actions/setup-node/issues/27
-        node: [ '12', '10', '8.16.x' ]
+        node: [ '12', '10', '8.17.x' ]
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
@@ -51,7 +51,7 @@ jobs:
 
           echo ""
           echo "+ Installing NGS"
-          ( git clone -b dev --single-branch https://github.com/ngs-lang/ngs.git && cd ngs && ./install-linux.sh && make install )
+          ( git clone https://github.com/ngs-lang/ngs.git && cd ngs && ./install-linux.sh && make install )
       - name: Build
         run:  make build
       - name: Tests
@@ -93,9 +93,9 @@ jobs:
           beame-insta-ssl system checkVersion
           beame-insta-ssl creds list --format json
 
-         # echo ""
-         # echo "+ Install NextCloud & plugin"
-         # /usr/src/nextcloud/occ maintenance:install --admin-pass "Test1"
-         # /usr/src/nextcloud/occ -V
-         # /usr/src/nextcloud/occ status
-         # /usr/src/nextcloud/occ app:install beame_insta_ssl
+          echo ""
+          echo "+ Install NextCloud & plugin"
+          /usr/src/nextcloud/occ maintenance:install --admin-pass "Test1"
+          /usr/src/nextcloud/occ -V
+          /usr/src/nextcloud/occ status
+    #     /usr/src/nextcloud/occ app:install beame_insta_ssl
