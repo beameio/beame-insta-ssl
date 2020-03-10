@@ -39,8 +39,9 @@ jobs:
       - name: Prepare environment
         run: |
           echo ""
-          echo "+ Apt install"
-          apt update && apt install make
+          echo "+ Install dependencies"
+          apt-get update
+          apt-get install -y make openssl
 
           echo ""
           echo "+ Deploying test creds"
@@ -78,7 +79,7 @@ jobs:
           echo ""
           echo "+ Install dependencies"
           apt-get update
-          apt-get install -y git
+          apt-get install -y git openssl
 
           echo ""
           echo "+ Npm installing beame-insta-ssl"
