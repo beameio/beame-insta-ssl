@@ -52,6 +52,10 @@ jobs:
           echo ""
           echo "+ Installing NGS"
           ( git clone https://github.com/ngs-lang/ngs.git && cd ngs && ./install-linux.sh && make install )
+
+          echo ""
+          echo "+ OpenSSL version"
+          openssl version
       - name: Build
         run:  make build
       - name: Tests
