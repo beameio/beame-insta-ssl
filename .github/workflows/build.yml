@@ -23,7 +23,7 @@ jobs:
           node main.js creds list --format json
   ngstests:
     name: NGS Tests
-    runs-on: ngslang/ngs:latest
+    runs-on: ngslang/ngs
     env:
       CREDS: ${{ secrets.CREDS }}
       BEAME_ENV: dev
@@ -44,6 +44,7 @@ jobs:
           sudo mv /etc/resolv.conf /etc/resolv.conf.old
           sudo mv resolv.conf.new /etc/resolv.conf
 
+          echo ""
           echo "+ Apt install"
           apt update && apt install make
 
