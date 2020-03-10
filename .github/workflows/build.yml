@@ -41,7 +41,7 @@ jobs:
           echo ""
           echo "+ Install dependencies"
           apt-get update
-          apt-get install -y make openssl
+          apt-get install -y make openssl tar
 
           echo ""
           echo "+ Deploying test creds"
