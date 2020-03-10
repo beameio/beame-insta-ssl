@@ -187,17 +187,17 @@ each({
 	test("Export certificate ($cli_type CLI)", {
 		dir = `mktemp -d test-beame-insta-ssl.XXXXXXXXXX` - MaybeSfx('\n')
 		cp.commands[0].argv .= replace('DIR', dir)
-		finally()
-			body => {
+		finally(
+			body = {
 				$($cp)
 				EXPECTED_EXPORTED_FILE_EXTENSIONS.each(F(ext) {
 					f = "$dir/$fqdn.$ext"
 					not($(test -s $f)) throws TestFail("File $f not found")
 				})
-			}
-			cleanup => {
+			},
+			cleanup = {
 				$(rm -r $dir)
-			}
+			})
 		TestMessage('All expected files are present')
 	})
 })
