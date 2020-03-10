@@ -23,7 +23,8 @@ jobs:
           node main.js creds list --format json
   ngstests:
     name: NGS Tests
-    runs-on: ngslang/ngs
+    runs-on: ubuntu-latest
+    container: ngslang/ngs
     env:
       CREDS: ${{ secrets.CREDS }}
       BEAME_ENV: dev
