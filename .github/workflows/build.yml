@@ -24,7 +24,6 @@ jobs:
   ngstests:
     name: NGS Tests
     runs-on: ubuntu-latest
-    container: ngslang/ngs
     env:
       CREDS: ${{ secrets.CREDS }}
       BEAME_ENV: dev
@@ -38,15 +37,21 @@ jobs:
           node-version: '12'
       - name: Prepare environment
         run: |
-          echo ""
-          echo "+ Install dependencies"
-          apt-get update
-          apt-get install -y make openssl tar
+          echo "+ Setting NameServers"
+          echo "nameserver 1.1.1.1" > resolv.conf.new
+          echo "nameserver 8.8.8.8" >> resolv.conf.new
+          cat /etc/resolv.conf >> resolv.conf.new
+          sudo mv /etc/resolv.conf /etc/resolv.conf.old
+          sudo mv resolv.conf.new /etc/resolv.conf
 
           echo ""
           echo "+ Deploying test creds"
           echo "$CREDS" | base64 --decode > creds.tgz
           tar -xvzf creds.tgz -C ~/
+
+          echo ""
+          echo "+ Installing NGS"
+          ( git clone https://github.com/ngs-lang/ngs.git && cd ngs && ./install-linux.sh && make install )
 
           echo ""
           echo "+ OpenSSL version"
