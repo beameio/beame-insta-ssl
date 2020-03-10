@@ -38,13 +38,6 @@ jobs:
           node-version: '12'
       - name: Prepare environment
         run: |
-          echo "+ Setting NameServers"
-          echo "nameserver 1.1.1.1" > resolv.conf.new
-          echo "nameserver 8.8.8.8" >> resolv.conf.new
-          cat /etc/resolv.conf >> resolv.conf.new
-          mv /etc/resolv.conf /etc/resolv.conf.old
-          mv resolv.conf.new /etc/resolv.conf
-
           echo ""
           echo "+ Apt install"
           apt update && apt install make
