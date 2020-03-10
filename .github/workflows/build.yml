@@ -21,9 +21,9 @@ jobs:
         run: |
           node main.js system checkVersion --format json
           node main.js creds list --format json
-  tests:
+  ngstests:
     name: NGS Tests
-    runs-on: ubuntu-latest
+    runs-on: ngslang/ngs:latest
     env:
       CREDS: ${{ secrets.CREDS }}
       BEAME_ENV: dev
@@ -35,7 +35,7 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: '12'
-      - name: Prepare test environment
+      - name: Prepare environment
         run: |
           echo "+ Setting NameServers"
           echo "nameserver 1.1.1.1" > resolv.conf.new
@@ -44,23 +44,22 @@ jobs:
           sudo mv /etc/resolv.conf /etc/resolv.conf.old
           sudo mv resolv.conf.new /etc/resolv.conf
 
+          echo "+ Apt install"
+          apt update && apt install make
+
           echo ""
           echo "+ Deploying test creds"
           echo "$CREDS" | base64 --decode > creds.tgz
           tar -xvzf creds.tgz -C ~/
 
           echo ""
-          echo "+ Installing NGS"
-          ( git clone https://github.com/ngs-lang/ngs.git && cd ngs && ./install-linux.sh && make install )
-
-          echo ""
           echo "+ OpenSSL version"
           openssl version
       - name: Build
         run:  make build
-      - name: Tests
+      - name: Main tests
         run:  make tests
-      - name: Extra Tests
+      - name: Extra tests
         run:  make tests_extra
   nextcloud:
     name: NextCloud Integration
