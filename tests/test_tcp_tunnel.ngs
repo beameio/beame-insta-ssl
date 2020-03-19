@@ -21,18 +21,18 @@ F main(server_fqdn:Str, trust_fqdn:Str, client_fqdn:Str) {
 		# TODO: debug why this is needed by tunnelClient
 		$(sleep 2)
 
-		finally() 
-			body => {
+		finally(
+			body = {
 				echo("Waiting for fqdn $server_fqdn to be resolvable")
 				assert_resolvable(server_fqdn)
 				echo("Making request via tunnel")
 				out = retry(sleep=5, body={try `curl --silent --max-time 30 "http://127.0.0.1:$ENTRY_PORT/" -H "Host: $host_header"`})
 				assert_eq(out, "$t-$host_header", "HTTP response over tunnel")
-			}
-			cleanup => {
+			},
+			cleanup = {
 				echo("Killing processes")
 				processes.each(kill)
-			}
+			})
 	}
 }
 
