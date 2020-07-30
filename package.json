@@ -34,7 +34,7 @@
   "dependencies": {
     "beame-sdk": "git+https://github.com/beameio/beame-sdk.git#dev",
     "cli-table3": "^0.5.1",
-    "http-proxy": "^1.18.0",
+    "http-proxy": "^1.18.1",
     "minimist": "^1.2.5",
     "node-uuid": "^1.4.8",
     "socket.io": "^2.3.0",
