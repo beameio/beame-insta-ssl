@@ -1,5 +1,5 @@
 
-:warning: **2020-11 - The project is discontinued**
+:warning: **2020-11 - The project is discontinued** :warning: 
 
 <img align="right" src="img/beame.png">
 
