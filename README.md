@@ -1,4 +1,5 @@
-*2020-12 - The project is discontinued*
+
+:warning: **2020-11 - The project is discontinued**
 
 <img align="right" src="img/beame.png">
 
